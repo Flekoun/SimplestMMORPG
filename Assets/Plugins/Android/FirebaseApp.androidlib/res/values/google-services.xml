@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/firebase_database_url,@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id,@string/default_web_client_id">
+  <string name="firebase_database_url" translatable="false">https://simplestmmorpg-default-rtdb.firebaseio.com/</string>
+  <string name="gcm_defaultSenderId" translatable="false">41009291810</string>
+  <string name="google_storage_bucket" translatable="false">simplestmmorpg.appspot.com</string>
+  <string name="project_id" translatable="false">simplestmmorpg</string>
+  <string name="google_api_key" translatable="false">AIzaSyDBRm1MwYaribnatTnZNx9iRlxlM4D40mA</string>
+  <string name="google_crash_reporting_api_key" translatable="false">AIzaSyDBRm1MwYaribnatTnZNx9iRlxlM4D40mA</string>
+  <string name="google_app_id" translatable="false">1:41009291810:android:7c54ad7c33643e4e6b207b</string>
+  <string name="default_web_client_id" translatable="false">41009291810-5jk1h55rvo66tgh4mg3dgmvp2muggfl3.apps.googleusercontent.com</string>
+</resources>

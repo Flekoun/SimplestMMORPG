@@ -1,0 +1,517 @@
+
+// [START import]
+import * as functions from "firebase-functions";
+import { CharacterDocument, characterDocumentConverter, QuerryIsCharacterIsInAnyEncounter, WorldPosition } from ".";
+import { EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT } from "./encounter";
+
+const admin = require('firebase-admin');
+// // [END import]
+
+
+// [Party]
+export class Party {
+  constructor(
+    public uid: string,
+    public partyLeaderUid: string,
+    public partySizeMax: number,
+    public partyMembers: PartyMember[],
+    public partyMembersUidList: string[],
+
+  ) { }
+}
+
+// [Party]
+export class PartyMember {
+  constructor(
+    public uid: string,
+    public displayName: string,
+    public characterClass: string,
+    public level: number,
+    public position: WorldPosition,
+    public isPartyLeader: boolean,
+    public isOnline: boolean,
+    public characterPortrait : string
+  ) { }
+}
+
+//Nemuze tu byt PartyUid na kterou je invite poslany, protoze kdyz hrac nema jeste partu a posle vic lidem invite, tak co? Prvni acceptne zalozi partu a ostatni? ti nevi jaky je party Uid vubec
+export class PartyInvite {
+  constructor(
+    //public uid: string,
+    public partyLeaderUid: string,
+    public partyLeaderDisplayName: string,
+    public invitedCharacterUid: string
+    //  public partyUid: string,
+  ) { }
+}
+
+
+exports.sendPartyInvite = functions.https.onCall(async (data, context) => {//1 R , 1 W
+
+  let callerCharacterName = data.callerCharacterName;
+  let callerCharacterUid = data.callerCharacterUid;
+  let invitedCharacterUid = data.invitedCharacterUid;
+
+  const partyInviteDb = admin.firestore().collection('partyInvites').doc(callerCharacterUid);
+  const myPartyDb = admin.firestore().collection('parties').where("partyMembersUidList", "array-contains", callerCharacterUid);
+  const invitedCharacterPartyDb = admin.firestore().collection('parties').where("partyMembersUidList", "array-contains", invitedCharacterUid);
+  const invitedCharacterPartyInviteDb = admin.firestore().collection('partyInvites').where("invitedCharacterUid", "==", invitedCharacterUid);
+  ///  const characterDb = await admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter).get();
+
+
+  try {
+    const result = await admin.firestore().runTransaction(async (t: any) => {
+
+      let myPartyData: Party = new Party("", "", 0, [], []);
+      //  let myPartyUid = "";
+      //Nemuzes invitnout sam sebe
+      if (invitedCharacterUid == callerCharacterUid)
+        throw "you cant invite self!";
+
+      //ziskam tvoji partu
+      await t.get(myPartyDb).then(querry => {
+        if (querry.size == 1) {
+          querry.docs.forEach(doc => {
+
+            myPartyData = doc.data();
+            //   myPartyUid = myPartyData.uid;
+            if (myPartyData.partyLeaderUid != callerCharacterUid)
+              throw "Only party leader can invite new members!";
+
+            if (myPartyData.partyMembers.length == myPartyData.partySizeMax)
+              throw "Party is already full!";
+
+          });
+        }
+        else if (querry.size > 1)
+          throw "You are more than in 1 party! How could this be? DATABASE ERROR!";
+      });
+
+      //zkontroluje ze invited player neni uz v parte
+      await t.get(invitedCharacterPartyDb).then(querry => {
+        if (querry.size > 0) {
+          throw "Player you want to invite is already in party!";
+        }
+
+      });
+
+      //zkontroluje ze invited player nema uz invite nejaky jiny
+      await t.get(invitedCharacterPartyInviteDb).then(querry => {
+        if (querry.size > 0) {
+          throw "Player is bussy!";
+        }
+
+      });
+
+
+      const partyInvite = new PartyInvite(callerCharacterUid, callerCharacterName, invitedCharacterUid);
+      t.set(partyInviteDb, JSON.parse(JSON.stringify(partyInvite)));
+      return "Party invite created";
+
+    });
+
+    console.log('Transaction success', result);
+    return result;
+  } catch (e) {
+    console.log('Transaction failure:', e);
+
+    throw new functions.https.HttpsError("aborted", "Eerror : " + e);
+  }
+
+
+});
+
+
+
+exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1 R , 1 W
+
+  const PARTY_MAX_SIZE = 5;
+
+  var partyLeaderUid: string = data.partyLeaderUid;
+  var callerCharacterUid: string = data.callerCharacterUid;
+  // console.log("partyInviteUid: " + partyInviteUid);
+  const encountersDb = admin.firestore().collection('encounters');
+  const callerPersonalEncounters = encountersDb.where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).withConverter(encounterDocumentConverter);
+
+  const PartiesDb = admin.firestore().collection('parties');
+  const partyInviteDb = admin.firestore().collection('partyInvites').doc(partyLeaderUid);
+  const callerCharacterDb = admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
+
+
+  try {
+    const result = await admin.firestore().runTransaction(async (t: any) => {
+
+      const characterDoc = await t.get(callerCharacterDb);
+      let callerCharacterData: CharacterDocument = characterDoc.data();
+
+      const partyInviteDoc = await t.get(partyInviteDb);
+      const partyInviteData: PartyInvite = partyInviteDoc.data();
+
+      const partyLeaderUidCharacterDb = admin.firestore().collection('characters').doc(partyInviteData.partyLeaderUid).withConverter(characterDocumentConverter);
+      const partyLeaderPersonalEncounters = encountersDb.where("foundByCharacterUid", "==", partyInviteData.partyLeaderUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).withConverter(encounterDocumentConverter);
+
+      console.log("null 0 : " + partyInviteData.partyLeaderUid);
+      //podle me nestaci ziskat tam kde jsi leader....muze se stat ze ten co ti poslal invite do party se stane party memberem jine party do ktere ho pozval nekdo jiny! a tim padem je v parte ale neni paryt leader! Proto toto  misto toho zakomentovaneho
+      const partyDb = admin.firestore().collection('parties').where("partyMembersUidList", "array-contains", partyInviteData.partyLeaderUid);
+     // const partyDb = admin.firestore().collection('parties').where("partyLeaderUid", "==", partyInviteData.partyLeaderUid);
+
+
+
+      let partyData: Party | undefined;
+      //ziskam  partu
+      await t.get(partyDb).then(querry => {
+        if (querry.size == 1) {
+          querry.docs.forEach(doc => {
+
+            partyData = doc.data();
+          });
+        }
+        else if (querry.size > 1)
+          throw "Party leader has more than in 1 party! How could this be? DATABASE ERROR!";
+      });
+
+
+
+      //Parta jeste nebyla vytvorena, budeme prvni dvojka...teoreticky bych mohl i checkovat na "partyUid ==""  "
+      if (partyData == undefined) {
+        console.log("Parta neexistuje jeste, vytvorim ji a pridam vas dva do ni");
+
+        const partyLeaderUidCharacterDoc = await t.get(partyLeaderUidCharacterDb);
+        let partyLeaderUidCharacterData: CharacterDocument = partyLeaderUidCharacterDoc.data();
+
+        let partyMembers: PartyMember[] = [];
+        let partyMembersUidList: string[] = [];
+
+
+        //pridam invitovaneho hrace
+        partyMembers.push(new PartyMember(callerCharacterUid, callerCharacterData.characterName, callerCharacterData.characterClass, callerCharacterData.stats.level, callerCharacterData.position, false, true, callerCharacterData.characterPortrait));
+        partyMembersUidList.push(callerCharacterUid);
+
+        //TODO: Jeste by tu mel byt check na presenceStatus jestli je skutecne online.....
+        //pridam hosta, tedy partyLeadera
+        partyMembers.push(new PartyMember(partyLeaderUidCharacterData.uid, partyLeaderUidCharacterData.characterName, partyLeaderUidCharacterData.characterClass, partyLeaderUidCharacterData.stats.level, partyLeaderUidCharacterData.position, true, true, partyLeaderUidCharacterData.characterPortrait));
+        partyMembersUidList.push(partyLeaderUidCharacterData.uid);
+
+        partyData = new Party(PartiesDb.doc().id, partyLeaderUidCharacterData.uid, PARTY_MAX_SIZE, partyMembers, partyMembersUidList);
+        // t.set(PartiesDb, JSON.parse(JSON.stringify(newParty)));
+      }
+      //parta uz existuje, tak se tam jen pridame
+      else {
+
+        console.log("Parta uz existuje pridam te do ni");
+        //TODO: tady transakce failne a nesmaze se tim padem ten partyInvite
+        if (partyData.partyMembers.length == partyData.partySizeMax) {
+          // await t.delete(partyInviteDb);
+          throw "Party is already full!";  //TODO: tady transakce failne a nesmaze se tim padem ten partyInvite, dat tam return misto throwM??? ale pak klient tezko zjisti ze byla full nejak?
+        }
+
+        //pridam invitovaneho hrace
+        partyData.partyMembers.push(new PartyMember(callerCharacterUid, callerCharacterData.characterName, callerCharacterData.characterClass, callerCharacterData.stats.level, callerCharacterData.position, false, true, callerCharacterData.characterPortrait));
+        partyData.partyMembersUidList.push(callerCharacterUid);
+
+
+      }
+
+
+      //ziskam  personal encounter invitovaneho hace pokud existuje....
+      let callerPersonalEncounter: EncounterDocument | undefined;
+      await t.get(callerPersonalEncounters).then(querry => {
+        querry.docs.forEach(doc => {
+          callerPersonalEncounter = doc.data();
+          console.log("jo invitovany hrac ma encounter personal :" + callerPersonalEncounter?.uid);
+        });
+      });
+
+      //...  pokud existuje, jako watchery pridam sve party membery
+      if (callerPersonalEncounter != undefined) {
+        partyData.partyMembersUidList.forEach(partyMemberUid => {
+          console.log("je tam uz tento watacher? :" + partyMemberUid);
+          if (!callerPersonalEncounter!.watchersList.includes(partyMemberUid))
+            callerPersonalEncounter!.watchersList.push(partyMemberUid);
+          console.log("pridavam jako watchera :" + partyMemberUid);
+        });
+
+      }
+
+      //ziskam  personal encounter leadera  pokud existuje....
+      let leaderPersonalEncounter: EncounterDocument | undefined;
+      await t.get(partyLeaderPersonalEncounters).then(querry => {
+        querry.docs.forEach(doc => {
+          leaderPersonalEncounter = doc.data();
+
+        });
+      });
+
+      //...  pokud existuje, jako watchery pridam sve party membery 
+      if (leaderPersonalEncounter != undefined) {
+        partyData.partyMembersUidList.forEach(partyMemberUid => {
+          if (!leaderPersonalEncounter!.watchersList.includes(partyMemberUid))
+            leaderPersonalEncounter!.watchersList.push(partyMemberUid);
+        });
+
+      }
+
+      if (callerPersonalEncounter != undefined)
+        t.set(encountersDb.doc(callerPersonalEncounter.uid), JSON.parse(JSON.stringify(callerPersonalEncounter)), { merge: true });
+
+      if (leaderPersonalEncounter != undefined)
+        t.set(encountersDb.doc(leaderPersonalEncounter.uid), JSON.parse(JSON.stringify(leaderPersonalEncounter)), { merge: true });
+
+
+      t.set(PartiesDb.doc(partyData.uid), JSON.parse(JSON.stringify(partyData)), { merge: true });
+
+
+      //smazeme party invite
+      t.delete(partyInviteDb);
+
+
+
+
+    });
+
+    console.log('Transaction success', result);
+    return result;
+  } catch (e) {
+    console.log('Transaction failure:', e);
+    throw new functions.https.HttpsError("aborted", "Error : " + e);
+  }
+
+});
+
+//UNUSED!
+export async function addPartyMembersAsWatchersToMyPersonalEncounters(characterUid: string, partyData: Party) {
+  //asi dat jako samostanout funkci?
+  //ziskam vsechny encountery
+  const encountersDb = admin.firestore().collection('encounters');
+  const myPersonalEncounters = encountersDb.where("foundByCharacterUid", "==", characterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).withConverter(encounterDocumentConverter);
+  const myPartyDb = admin.firestore().collection('parties').where("partyMembersUidList", "array-contains", characterUid);
+
+
+  try {
+    const result = await admin.firestore().runTransaction(async (t: any) => {
+
+      //pokud mi nebyly predany data party, ziskam si ji z db
+      if (partyData == null) {
+        await t.get(myPartyDb).then(querry => {
+          if (querry.size > 1)
+            throw "You are more than in 1 party! How could this be? DATABASE ERROR!";
+
+          querry.docs.forEach(doc => {
+            partyData = doc.data();
+          });
+
+        });
+      }
+
+      //projdu vsechny sve personal encountery a jako watchery pridam sve party membery
+      await t.get(myPersonalEncounters).then(querry => {
+        querry.docs.forEach(doc => {
+
+          const encounter: EncounterDocument = doc.data();
+
+          partyData.partyMembersUidList.forEach(partyMemberUid => {
+            if (!encounter.watchersList.includes(partyMemberUid))
+              encounter.watchersList.push(partyMemberUid);
+          });
+
+          t.set(encountersDb, JSON.parse(JSON.stringify(encounter)), { merge: true });
+
+        });
+
+      });
+
+      return "OK";
+    });
+
+
+    console.log('Transaction success', result);
+    return result;
+  } catch (e) {
+    console.log('Transaction failure:', e);
+    throw new functions.https.HttpsError("aborted", "Error : " + e);
+  }
+
+}
+
+
+exports.declinePartyInvite = functions.https.onCall(async (data, context) => {
+
+  //TODO: zadne checky kdo declinuje atd???
+  var partyLeaderUid: string = data.partyLeaderUid;
+  console.log("partyLeaderUid: " + partyLeaderUid);
+  const partyInviteDb = admin.firestore().collection('partyInvites').doc(partyLeaderUid);
+
+  //smazneme invite
+  partyInviteDb.delete(partyInviteDb);
+
+
+});
+
+
+exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 W
+
+
+  //TODO KDYZ ochazi party leader at preda nekomu leadership!
+  var callerCharacterUid: string = data.callerCharacterUid;
+
+  const partiesDb = admin.firestore().collection('parties');
+
+  const callerCharacterDb = admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
+  const encountersDb = admin.firestore().collection('encounters');
+  const leaverPersonalEncountersDb = encountersDb.where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).withConverter(encounterDocumentConverter);
+  //ALERT: Vyzaduje composite Index , vytvoren v consoli
+  const otherThanLeaverPersonalEncountersDb = encountersDb.where("foundByCharacterUid", "!=", callerCharacterUid).where("watchersList", "array-contains", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).withConverter(encounterDocumentConverter);
+
+
+  try {
+    const result = await admin.firestore().runTransaction(async (t: any) => {
+
+      const characterDoc = await t.get(callerCharacterDb);
+      let callerCharacterData: CharacterDocument = characterDoc.data();
+
+
+      //   if (callerCharacterData.isJoinedInEncounter)
+      if (await QuerryIsCharacterIsInAnyEncounter(t,callerCharacterData.uid))
+        throw "Cant leave party while in combat!";
+
+
+      let partyData: Party = new Party("", "", 0, [], []);
+      //najdu partu ktere jsi clenem
+      await t.get(partiesDb.where("partyMembersUidList", "array-contains", callerCharacterUid)).then(querry => {
+        if (querry.size == 0) {
+          throw "You are not in any party!";
+        }
+        if (querry.size > 1) {
+          throw "You are in more than 1 party?! Database error!";
+        }
+
+        querry.docs.forEach(doc => {
+
+          partyData = doc.data();
+        }
+        );
+      });
+
+
+      //Smazu ostatni party membery jako watchery ze sveho personal encounteru
+
+      //ziskam  personal encounter hrace co leavuje ...
+      let leaverPersonalEncounter: EncounterDocument | undefined;
+      await t.get(leaverPersonalEncountersDb).then(querry => {
+        querry.docs.forEach(doc => {
+          leaverPersonalEncounter = doc.data();
+
+        });
+      });
+
+      //smazu ostatni party membery 
+      if (leaverPersonalEncounter != undefined) {
+        if (leaverPersonalEncounter.combatantList.length == 0) { //jan pokud v tom encounteru nikdo nebojuje, abych ho nesmazal ostatnim kdyz sou v boji
+          leaverPersonalEncounter.watchersList = [];   //uplne smazu cely watchers list a pridam zas jen sebe , nemely by tam byt stejne nikdo jini nez party memberi a ja
+          leaverPersonalEncounter.watchersList.push(callerCharacterUid);
+        }
+      }
+
+      //smazu hrace co leavuje z personal encounteru party memberu 
+
+      //ziskam  encountery ostatnich party memberu a odeberu leavera z watcher listu
+      let otherThanLeaverPersonalEncounters: EncounterDocument[] = [];
+      await t.get(otherThanLeaverPersonalEncountersDb).then(querry => {
+        querry.docs.forEach(doc => {
+          let encounter: EncounterDocument = doc.data();
+          console.log("encounter " + encounter.uid)
+          if (encounter.watchersList.includes(callerCharacterUid)) {
+            console.log("obsahuje  jako watchera leavera tedy" + callerCharacterUid + " pocet :" + encounter.watchersList.length);
+            encounter.watchersList.splice(encounter.watchersList.indexOf(callerCharacterUid), 1);
+          }
+          console.log("nove tedy pocet :" + encounter.watchersList.length);
+          otherThanLeaverPersonalEncounters.push(encounter);
+        });
+      });
+
+
+
+      //jsem posledni clen co odchazi z party....smazu ji i vsechny partyInvite  
+      if (partyData.partyMembers.length == 2) {
+        const partyInviteDb = admin.firestore().collection('partyInvites').where("partyLeaderUid", "==", partyData.partyLeaderUid);
+        console.log("Jsem 2 posledni v parte, smazu ji");
+        //smazu vsechny PartyInvite
+        await t.get(partyInviteDb).then(querry => {
+          querry.docs.forEach(doc => {
+            t.delete(doc);
+          });
+
+        });
+
+
+        //smazu partu
+        t.delete(partiesDb.doc(partyData.uid));
+        console.log("B");
+      }
+      else {
+
+        //smazu svoje zaznamy z party
+
+        console.log("nejsem  posledni v parte, smazu jen sebe");
+        partyData.partyMembers.forEach(member => { //prohledam membery party
+
+          let index: number = -1;
+
+          if (member.uid == callerCharacterUid) //nase sem sebe mezi memberama,
+            index = partyData.partyMembers.indexOf(member);
+
+          if (index > -1) // only splice array when item is found
+            partyData.partyMembers.splice(index, 1);  //smazu se z Party zaznamu
+
+        });
+
+        partyData.partyMembersUidList.forEach(member => { //prohledam uid list
+
+          let index: number = -1;
+
+          if (member == callerCharacterUid) //nase sem sebe mezi memberama,
+            index = partyData.partyMembersUidList.indexOf(member);
+
+          if (index > -1) // only splice array when item is found
+            partyData.partyMembersUidList.splice(index, 1);  //smazu se z Party zaznamu
+
+        });
+
+        //predam leadership dalsimu v poradi
+        partyData.partyLeaderUid = partyData.partyMembersUidList[0];
+        partyData.partyMembers.forEach(element => {
+          if (element.uid == partyData.partyLeaderUid) element.isPartyLeader = true;
+
+        });
+
+
+        t.set(partiesDb.doc(partyData.uid), JSON.parse(JSON.stringify(partyData)), { merge: true });
+
+      }
+
+      otherThanLeaverPersonalEncounters.forEach(encounter => {
+        console.log("ukladam encounter : " + encounter.uid)
+        console.log("ukladam encounter length : " + encounter.watchersList.length)
+        t.set(encountersDb.doc(encounter.uid), JSON.parse(JSON.stringify(encounter)), { merge: true });
+      });
+
+      if (leaverPersonalEncounter != undefined) {
+        console.log("ukladam leaverPersonalEncounter : " + leaverPersonalEncounter.uid)
+        t.set(encountersDb.doc(leaverPersonalEncounter.uid), JSON.parse(JSON.stringify(leaverPersonalEncounter)), { merge: true });
+      }
+
+
+      return "Party Left!";
+    });
+
+
+
+    console.log('Transaction success', result);
+    return result;
+  } catch (e) {
+    console.log('Transaction failure:', e);
+    throw new functions.https.HttpsError("aborted", "Error : " + e);
+  }
+
+
+});

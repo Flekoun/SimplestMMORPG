@@ -1,0 +1,40 @@
+{
+    "project_info": {
+        "project_number": "41009291810",
+        "project_id": "simplestmmorpg",
+        "storage_bucket": "simplestmmorpg.appspot.com",
+        "firebase_url": "https://simplestmmorpg-default-rtdb.firebaseio.com/"
+    },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:41009291810:android:7c54ad7c33643e4e6b207b",
+        "android_client_info": {
+          "package_name": "com.runningpillow.simplestMMORPG"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "41009291810-5jk1h55rvo66tgh4mg3dgmvp2muggfl3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBRm1MwYaribnatTnZNx9iRlxlM4D40mA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "41009291810-5jk1h55rvo66tgh4mg3dgmvp2muggfl3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
