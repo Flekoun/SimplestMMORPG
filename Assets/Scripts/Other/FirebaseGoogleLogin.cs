@@ -15,14 +15,15 @@ using UnityEngine.Events;
 public class FirebaseGoogleLogin : MonoBehaviour
 {
 
+    public FirebaseAuthenticate FirebaseAuthenticate;
     //TOHLE VYTVORI NOVY! GOOLE account potrebuju spis link
     public string GoogleWebAPI = "41009291810-5jk1h55rvo66tgh4mg3dgmvp2muggfl3.apps.googleusercontent.com";
 
     private GoogleSignInConfiguration configuration;
 
     DependencyStatus dependencyStatus = DependencyStatus.UnavailableOther;
-    FirebaseAuth auth;
-    FirebaseUser user;
+   // FirebaseAuth auth;
+    //FirebaseUser user;
 
 
 
@@ -36,18 +37,18 @@ public class FirebaseGoogleLogin : MonoBehaviour
 
     }
 
-    void Start()
-    {
-        InitFirebase();
-    }
+    //void Start()
+    //{
+    //    InitFirebase();
+    //}
 
-    void InitFirebase()
-    {
-        auth = FirebaseAuth.DefaultInstance;
+    //void InitFirebase()
+    //{
+    //    auth = FirebaseAuth.DefaultInstance;
 
-        //tohle pry pouzit na to jaky ma kde linkle ucty ale potrebuju email.....
-        // auth.FetchProvidersForEmailAsync()
-    }
+    //    //tohle pry pouzit na to jaky ma kde linkle ucty ale potrebuju email.....
+    //    // auth.FetchProvidersForEmailAsync()
+    //}
 
     public void GoogleLinkClick()
     {
@@ -55,13 +56,15 @@ public class FirebaseGoogleLogin : MonoBehaviour
         GoogleSignIn.Configuration.UseGameSignIn = false;
         GoogleSignIn.Configuration.RequestIdToken = true;
         GoogleSignIn.Configuration.RequestEmail = true;
-
+        Debug.Log("link clicked start");
         GoogleSignIn.DefaultInstance.SignIn().ContinueWith(OnGoogleAuthenticatedFinsihedLetsLink);
+        Debug.Log("link clicked over");
 
     }
 
     void OnGoogleAuthenticatedFinsihedLetsLink(Task<GoogleSignInUser> task)
     {
+        Debug.Log("link finished...");
         if (task.IsFaulted)
         {
             Debug.LogError("Fault");
@@ -74,8 +77,8 @@ public class FirebaseGoogleLogin : MonoBehaviour
         {
             Credential credential = GoogleAuthProvider.GetCredential(task.Result.IdToken, null);
 
-
-            auth.CurrentUser.LinkWithCredentialAsync(credential).ContinueWith(task =>
+            Debug.Log("link started...");
+            FirebaseAuthenticate.GetAuth().CurrentUser.LinkWithCredentialAsync(credential).ContinueWith(task =>
             {
                 if (task.IsCanceled)
                 {
@@ -91,8 +94,9 @@ public class FirebaseGoogleLogin : MonoBehaviour
                     return;
                 }
 
-                Firebase.Auth.FirebaseUser newUser = task.Result;
-                Debug.LogFormat("Credentials successfully linked to Firebase user: {0} ({1})", newUser.DisplayName, newUser.UserId);
+//                Firebase.Auth.FirebaseUser newUser = task.Result;
+                FirebaseAuthenticate.SetUser(task.Result);
+                Debug.LogFormat("Credentials successfully linked to Firebase user: {0} ({1})", FirebaseAuthenticate.GetUser().DisplayName, FirebaseAuthenticate.GetUser().UserId);
 
             });
         }
@@ -126,7 +130,7 @@ public class FirebaseGoogleLogin : MonoBehaviour
         {
             Credential credential = GoogleAuthProvider.GetCredential(task.Result.IdToken, null);
 
-            auth.SignInWithCredentialAsync(credential).ContinueWithOnMainThread(task =>
+            FirebaseAuthenticate.GetAuth().SignInWithCredentialAsync(credential).ContinueWithOnMainThread(task =>
             {
                 if (task.IsCanceled)
                 {
@@ -144,11 +148,11 @@ public class FirebaseGoogleLogin : MonoBehaviour
                     return;
                 }
 
-                user = auth.CurrentUser;
+                FirebaseAuthenticate.SetUser(FirebaseAuthenticate.GetAuth().CurrentUser);  //tohle je asi debilita
 
                 Debug.Log("Everyhting seems ok!");
-                Debug.Log(user.DisplayName);
-                Debug.Log(user.Email);
+                Debug.Log(FirebaseAuthenticate.GetUser().DisplayName);
+                Debug.Log(FirebaseAuthenticate.GetUser().Email);
 
                 if (OnFinished != null)
                     OnFinished.Invoke(true);

@@ -52,6 +52,13 @@ public class UIContentFoodDetail : MonoBehaviour
 
     public void ConsumeClicked()
     {
+        if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail protoze nejspis nebude brzy co konzumovat (az se vrati update z DB)
+        {
+            Hide();
+        }
+
         FirebaseCloudFunctionSO.EatFood(Data.uid);
+
+       
     }
 }

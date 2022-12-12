@@ -838,9 +838,9 @@ export const encounterDocumentConverter = {
 };
 
 
+//NEJVOLANEJSI FUNKCE 
+// R - 1 , W- 1 ( + 1 delete / +1 create / -1 write, pokud encounter skonci)
 exports.applySkillOnEncounter = functions.https.onCall(async (data, context) => {
-
- 
 
   const encounterUid = data.encounterUid;
   const callerCharacterUid = data.characterUid;
@@ -1025,12 +1025,13 @@ function restEncounter(_characterUid: string, _encounterData: EncounterDocument)
 
 }
 
+//2. nejvolanejsi funkce
+//R - 2 (ten druhy je jen kvuli chater detection... ) 
+//W - 1
 exports.restEncounter = functions.https.onCall(async (data, context) => {
 
-  //const userUid = data.userUid;
   const encounterUid = data.encounterUid;
   const callerCharacterUid = data.characterUid;
-  //const iWantToForceRestOnThisCharacterUid = data.iWantToForceRestOnThisCharacterUid;
 
   console.log("callerCharacterUid :" + callerCharacterUid);
 
@@ -1057,28 +1058,6 @@ exports.restEncounter = functions.https.onCall(async (data, context) => {
         throw "You are not joined to this ecnounter, you cant rest!";
 
       restEncounter(callerCharacterUid, encounterData);
-      // //Pridam kazemu enemy malinko threat na me, aby me targetnuli pokud nikoho netargetujou
-      // encounterData.addThreatForCombatantOnAllEnemies(callerCharacterUid, 1);
-
-      // let myCombatEntry = encounterData.getCombatMemberByUid(callerCharacterUid);
-
-      // if (myCombatEntry == undefined)
-      //   throw "cannot find your combat entry in encounter! How can you try to end turn?! character Id ! - " + callerCharacterUid;
-
-      // if (myCombatEntry.stats.health <= 0)
-      //   throw "You are dead. Cannot rest!";
-
-      // if (myCombatEntry.hasRested)
-      //   throw "You have already rested this turn!";
-
-      // //zvednu si pocet restu o 1
-      // myCombatEntry.hasRested = true;
-
-      // //Pridam zaznam o restu do chatLogu
-      // encounterData.addEntryToCombatLog(myCombatEntry.displayName + " rested!");
-
-      // //neni konec kola?
-      // encounterData.checkForEndOfTurn();
 
       t.set(encounterDb, JSON.parse(JSON.stringify(encounterData)), { merge: true });
 

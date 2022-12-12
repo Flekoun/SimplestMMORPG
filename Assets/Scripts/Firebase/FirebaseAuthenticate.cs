@@ -20,6 +20,25 @@ public class FirebaseAuthenticate : MonoBehaviour
     public UnityAction OnSignedInEvent;
     public UnityAction OnSignedOutEvent;
 
+    public FirebaseUser GetUser()
+    {
+        return user;
+    }
+
+    public FirebaseAuth GetAuth()
+    {
+        return auth;
+    }
+
+    public void SetAuth(FirebaseAuth _auth)
+    {
+        auth = _auth;
+    }
+
+    public void SetUser(FirebaseUser _user)
+    {
+        user = _user;
+    }
 
     void Awake()
     {
@@ -29,38 +48,15 @@ public class FirebaseAuthenticate : MonoBehaviour
 
         auth = Firebase.Auth.FirebaseAuth.DefaultInstance;
 
-
+     //   Debug.Log("auth UserId:" + auth.CurrentUser.UserId);
         auth.StateChanged += AuthStateChanged;
         AuthStateChanged(this, null);
 
 
     }
 
-    //internal void ProcessAuthentication(SignInStatus status)
-    //{
-    //    if (status == SignInStatus.Success)
-    //    {
-    //        Debug.Log("vse vypada ok ");
-    //        // Continue with Play Games Services
-    //    }
-    //    else
-    //    {
-    //        Debug.Log("nemas zadny play games account!");
-    //        PlayGamesPlatform.Instance.ManuallyAuthenticate(ManualSignIn);
-    //        // Disable your integration with Play Games Services or show a login button
-    //        // to ask users to sign-in. Clicking it should call
-    //        // PlayGamesPlatform.Instance.ManuallyAuthenticate(ProcessAuthentication).
-    //    }
-    //}
-
-    //internal void ManualSignIn(SignInStatus status)
-    //{
-    //    Debug.Log("ManualSignIn : " + status);
-    //}
-
     public void Start()
     {
-       // PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
 
     }
 

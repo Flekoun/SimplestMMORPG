@@ -20,6 +20,8 @@ public class UIManager : MonoBehaviour
     [Header("Other")]
     public GameObject MainScreen;
     public GameObject LoginScreen;
+
+    public ImportantMessage ImportantMessage;
     //   public GameObject CharacterScreen;
     //    public UISkillChooserSpawner UISkillChooserSpawner;
 

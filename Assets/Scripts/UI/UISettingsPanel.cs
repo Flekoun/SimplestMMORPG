@@ -10,14 +10,16 @@ public class UISettingsPanel : MonoBehaviour
 
     public GameObject Model;
     public TextMeshProUGUI emailText;
-
+    public TextMeshProUGUI VersionText;
+    public FirebaseAuthenticate FirebaseAuthenticate;
     public GameObject LinkGoogleButtonGO;
 
     public void Show()
     {
         Model.gameObject.SetActive(true);
-        string email = FirebaseAuth.DefaultInstance.CurrentUser.Email;
+        string email = FirebaseAuthenticate.GetUser().Email;
         Debug.Log("email: " + email);
+        Debug.Log("UserId: " + FirebaseAuthenticate.GetUser().UserId);
         if (String.IsNullOrEmpty(email))
         {
             LinkGoogleButtonGO.SetActive(true);
@@ -31,6 +33,7 @@ public class UISettingsPanel : MonoBehaviour
 
         emailText.SetText(email);
 
+        VersionText.SetText("v"+Application.version);
     }
 
 

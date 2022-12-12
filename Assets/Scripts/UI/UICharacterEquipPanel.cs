@@ -9,27 +9,33 @@ public class UICharacterEquipPanel : MonoBehaviour
 {
     public AccountDataSO AccountDataSO;
     public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
-    //   public PrefabFactory Factory;
     public UIInventory UIInventoryPanel;
     public List<UIEquipSlotItem> EquipSlots;
     public UIEquipDetail UIEquipDetail_SelectedItem;
     public UIEquipDetail UIEquipDetail_EquipedItemToCompare;
     public UICharacterInfoPanel UICharacterInfoPanel;
-    //public Button ApplyButton;
     public Button EquipButton;
     public Button UnequipButton;
-    //public EquipSlotDefinitionSOSet AllEquipSlotDefinitionSOSet;
     public ContentFitterRefresh ContentFitterRefresh;
 
     public GameObject Model;
-    public CharacterData Data;
-    // Start is called before the first frame update
+   // public CharacterData Data;
 
-    //  public List<Equip> currentEquipment = new List<Equip>();
 
     private bool changesToEquipMade = false;
     private Equip chooosenInventoryItem;
     private UIEquipSlotItem choosenSlot;
+
+    public void OnEnable()
+    {
+        AccountDataSO.OnCharacterDataChanged += Refresh;
+    }
+
+    public void OnDisable()
+    {
+        AccountDataSO.OnCharacterDataChanged -= Refresh;
+    }
+
 
     public void Awake()
     {
@@ -40,7 +46,6 @@ public class UICharacterEquipPanel : MonoBehaviour
     public void Start()
     {
         UIInventoryPanel.OnContentItemClicked += OnInventoryItemClicked;
-        //  AccountDataSO.OnCharacterDataChanged += OnCharacterDataChanged;
 
         foreach (var equipSlot in EquipSlots)
         {
@@ -58,28 +63,26 @@ public class UICharacterEquipPanel : MonoBehaviour
         UnequipButton.gameObject.SetActive(false);
     }
 
-    public void ShowPlayerCurrentCharacterInfo()
-    {
-
-        Show(AccountDataSO.CharacterData);
-        UIInventoryPanel.Refresh(AccountDataSO.CharacterData.inventory.content);
-    }
-
-    public void Show(CharacterData _data)
+    private void Refresh()
     {
         changesToEquipMade = false;
-        Data = _data;
+        UIInventoryPanel.Refresh(AccountDataSO.CharacterData.inventory.content);
+    }
+    public void ShowPlayerCurrentCharacterInfo()
+    {
+        //  Data = AccountDataSO.CharacterData;
         Model.gameObject.SetActive(true);
+        Refresh();
+
+        // Show(AccountDataSO.CharacterData);
     }
 
-
-
-    //   public void OnCharacterDataChanged()
-    //   {
-    //   ShowPlayerCurrentCharacterInfo();
-    //   }
-
-
+    //public void Show(CharacterData _data)
+    //{
+    //    changesToEquipMade = false;
+    //    Data = _data;
+    //    Model.gameObject.SetActive(true);
+    //}
 
 
     private void OnInventoryItemClicked(UIContentItem _item)
@@ -130,7 +133,6 @@ public class UICharacterEquipPanel : MonoBehaviour
     public void OnDestroy()
     {
         UIInventoryPanel.OnContentItemClicked -= OnInventoryItemClicked;
-        //        AccountDataSO.OnCharacterDataChanged -= OnCharacterDataChanged;
 
         foreach (var equipSlot in EquipSlots)
         {
@@ -143,7 +145,6 @@ public class UICharacterEquipPanel : MonoBehaviour
     {
         foreach (var equipSlot in EquipSlots)
         {
-            // if (equipSlot.IsSlotOccupied())
             if (equipSlot.EquipSlotDefinition.EquipSlotId == _equip.equipSlotId) // a ma to ten samy equip slot jako to na co sem klikl
                 return equipSlot;
         }
@@ -153,15 +154,17 @@ public class UICharacterEquipPanel : MonoBehaviour
 
     public void EquipClicked() // v detailu itemu kliknu na equip
     {
+        if (chooosenInventoryItem.level>AccountDataSO.CharacterData.stats.level)
+        {
+            UIManager.instance.ImportantMessage.ShowMesssage("Your level is too low!");
+            return;
+        }
 
-        //najdu si equip slot na doll
-        UIEquipSlotItem equipedAlterntive = GetCorrespondingEquipSlot(chooosenInventoryItem);
-
+            //najdu si equip slot na doll
+            UIEquipSlotItem equipedAlterntive = GetCorrespondingEquipSlot(chooosenInventoryItem);
 
         if (equipedAlterntive.IsSlotOccupied())//uz tam neco je vybaveneho
         {
-
-
 
             //item z doll dam do inventare
             ContentContainer dummyContent = new ContentContainer();
@@ -213,7 +216,6 @@ public class UICharacterEquipPanel : MonoBehaviour
         Debug.Log("Equip Changed");
         changesToEquipMade = true;
         UIEquipDetail_SelectedItem.Hide();
-        //   ShowPlayerCurrentCharacterInfo();
 
         UICharacterInfoPanel.ShowPlayerCurrentCharacterInfo();
         UnequipButton.gameObject.SetActive(false);
@@ -237,17 +239,6 @@ public class UICharacterEquipPanel : MonoBehaviour
         }
     }
 
-    //private void TryToFixScrollReckGlitches()
-    //{
-    //    StartCoroutine(Wait());
 
-    //}
-
-    //private IEnumerator Wait()
-    //{
-    //    yield return new WaitForSecondsRealtime(0.1f);
-    //    LayoutRebuilder.ForceRebuildLayoutImmediate(ScrollRect);
-    //    Canvas.ForceUpdateCanvases();
-    //}
 
 }

@@ -290,7 +290,10 @@ public class UIEncounterDetailPanel : MonoBehaviour
         //  SelectedSkillDetail.SetData(_skill.Data);
         //SelectedSkillDetail.gameObject.SetActive(true);
         if (SelectedCombatEntity == null)
+        {
+            UIManager.instance.ImportantMessage.ShowMesssage("Choose your target!");
             return;
+        }
 
         FirebaseCloudFunctionSO.ApplySkillOnEncounter(Data.uid, SelectedSkill.Data.handSlotIndex, SelectedCombatEntity.Data.uid);
 

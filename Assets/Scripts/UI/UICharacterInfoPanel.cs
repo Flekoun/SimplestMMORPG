@@ -66,18 +66,16 @@ public class UICharacterInfoPanel : MonoBehaviour
         Debug.Log("REFRESHING CHARACTER INFO");
         CharacterNameText.SetText(Data.characterName);
         ClassText.SetText("Level " + Data.stats.level + " " + Utils.ColorizeGivenTextWithClassColor(Data.characterClass, Data.characterClass));
-        //   GoldText.SetText(Data.currency.gold.ToString() + " gold");
         UIXPProgressBar.SetValues(Data.stats.expNeededToReachNextLevel - Data.stats.expNeededToReachLastLevel, Data.stats.exp - Data.stats.expNeededToReachLastLevel);
         Level.SetText("Level " + Data.stats.level.ToString());
-        //    SilverText.SetText( Data.currency.silver.ToString()+ " silver");
-        //     FoodText.SetText(Data.currency.food.ToString() + " food");
-        int totalHealth = Mathf.RoundToInt(Data.stats.healthMultiplier * (Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.STAMINA) + Data.stats.stamina));
-        int totalMana = Mathf.RoundToInt(Data.stats.manaMultiplier * (Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.INTELLECT) + Data.stats.intellect));
-        UIHealthProgress.SetValues(totalHealth, totalHealth);
-        UIManaProgress.SetValues(totalMana, totalMana);
+
+        //int totalHealth = Mathf.RoundToInt(Data.stats.healthMultiplier * (Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.STAMINA) + Data.stats.stamina));
+        //int totalMana = Mathf.RoundToInt(Data.stats.manaMultiplier * (Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.INTELLECT) + Data.stats.intellect));
+        //UIHealthProgress.SetValues(totalHealth, totalHealth);
+        //UIManaProgress.SetValues(totalMana, totalMana);
 
         int totalStamina = (Data.stats.stamina + Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.STAMINA));
-        int totalIntelect = (Data.stats.stamina + Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.INTELLECT));
+        int totalIntelect = (Data.stats.intellect + Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.INTELLECT));
 
         Attribute_StrengthText.SetText("Strength: " + (Data.stats.strength + Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.STRENGTH)).ToString());
         Attribute_StaminaText.SetText("Stamina: " + totalStamina.ToString());

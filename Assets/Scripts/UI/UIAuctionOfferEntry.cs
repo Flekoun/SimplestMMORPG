@@ -60,11 +60,11 @@ public class UIAuctionOfferEntry : UISelectableEntry
         }
 
         ExpireDateText.SetText(Data.GetTimeLeft());
-        BidPriceText.SetText(Data.nextBidPrice.ToString() + " Gold");
+        BidPriceText.SetText(Data.nextBidPrice.ToString() );
 
         BuyoutPriceGO.SetActive(Data.hasBuyoutPrice);
         if (Data.hasBuyoutPrice)
-            BuyoutPriceText.SetText(Data.buyoutPrice + " Gold");
+            BuyoutPriceText.SetText(Data.buyoutPrice.ToString());
         else
             BuyoutPriceText.gameObject.SetActive(false);
 

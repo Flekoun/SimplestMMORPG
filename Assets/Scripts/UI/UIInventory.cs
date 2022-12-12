@@ -109,14 +109,6 @@ public class UIInventory : UISelectableSpawner
     public void AddItemOffline(ContentContainer _item)
     {
 
-        //if (_item is Equip)
-        //{
-        //    inventoryData.GetItemsEquip().Add((Equip)_item);
-        //}
-        //else if (_item is InventoryItemSimple)
-        //    inventoryData.GetInventoryItemsSimple().Add((InventoryItemSimple)_item);
-
-
         inventoryData.Add(_item);
 
         SpawnInventory();
