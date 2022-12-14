@@ -37,7 +37,20 @@ public class UIEncounterEntry : MonoBehaviour
             OnClicked.Invoke(this);
     }
 
+    public UICombatEntity GetRandomEnemy()
+    {
+        if (UICombatEnemyList.Count > 0)
+            return UICombatEnemyList[Random.Range(0, UICombatEnemyList.Count - 1)];
+        else
+            return null;
+    }
 
+    public void SelectRandomEnemy()
+    {
+        UICombatEntity entity = GetRandomEnemy();
+        if (entity != null)
+            OnEntryClicked(entity);
+    }
 
     private void OnEntryClicked(UICombatEntity _entry)
     {

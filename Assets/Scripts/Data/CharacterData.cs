@@ -104,7 +104,7 @@ namespace simplestmmorpg.data
             {
                 if (GetKillsForEnemyId(item.id) < item.count)
                 {
-                    Debug.Log("nedokncil jsi! : mas " + (GetKillsForEnemyId(item.id)));
+               //     Debug.Log("nedokncil jsi! : mas " + (GetKillsForEnemyId(item.id)));
 
                     areKillsFulfiled = false;
                 }
@@ -116,7 +116,7 @@ namespace simplestmmorpg.data
             {
                 if (inventory.GetAmountOfItemsInInventory(item.id) < item.count)
                 {
-                    Debug.Log("nedokncil jsi! : mas " + (inventory.GetAmountOfItemsInInventory(item.id)));
+                //    Debug.Log("nedokncil jsi! : mas " + (inventory.GetAmountOfItemsInInventory(item.id)));
 
                     areItemsFulfiled = false;
                 }

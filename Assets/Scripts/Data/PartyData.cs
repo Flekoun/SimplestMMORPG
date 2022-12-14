@@ -30,9 +30,51 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public List<PartyMember> partyMembers { get; set; }
 
-       
+        [field: SerializeField]
+        [FirestoreProperty]
+        public DungeonProgress dungeonProgress { get; set; }
+
+        public bool AreAllPartyMembersOnSameLocation(string _locationId)
+        {
+            foreach (var member in partyMembers)
+            {
+                if (member.position.locationId != _locationId)
+                    return false;
+            }
+
+            return true;
+        }
+
 
     }
+
+
+    [Serializable]
+    [FirestoreData]
+    public class DungeonProgress
+    {
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string dungeonLocationId { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<string> exploredPointsOnInterest { get; set; }
+
+
+        public bool IsPositionExplored(string _position)
+        {
+            foreach (var item in exploredPointsOnInterest)
+            {
+                if (item == _position)
+                    return true;
+            }
+
+            return false;
+        }
+    }
+
+
 
     [Serializable]
     [FirestoreData]
@@ -73,7 +115,7 @@ namespace simplestmmorpg.data
 
     }
 
- 
+
 
     [Serializable]
     [FirestoreData]

@@ -83,11 +83,11 @@ public class UICharacterInfoPanel : MonoBehaviour
         Attribute_AgilityText.SetText("Agility: " + totalIntelect.ToString());
         Attribute_SpiritText.SetText("Spirit: " + (Data.stats.spirit + Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.SPIRIT)).ToString());
 
-        int totalHealthMax = Mathf.RoundToInt(totalStamina * Data.stats.healthMultiplier);
-        int totalHealthTakenByFatigue = Mathf.RoundToInt(((totalStamina * Data.stats.healthMultiplier) /100f)* Data.currency.fatigue) ;
+        int totalHealthMax = Utils.RoundToInt(totalStamina * Data.stats.healthMultiplier);
+        int totalHealthTakenByFatigue = Utils.RoundToInt(((totalStamina * Data.stats.healthMultiplier) /100f)* Data.currency.fatigue) ;
 
-        int totalManaMax = Mathf.RoundToInt(totalIntelect * Data.stats.manaMultiplier);
-        int totalManaTakenByFatigue = Mathf.RoundToInt(((totalIntelect * Data.stats.manaMultiplier) / 100f) * Data.currency.fatigue);
+        int totalManaMax = Utils.RoundToInt(totalIntelect * Data.stats.manaMultiplier);
+        int totalManaTakenByFatigue = Utils.RoundToInt(((totalIntelect * Data.stats.manaMultiplier) / 100f) * Data.currency.fatigue);
 
 
         HealthText.SetText("Health: "+totalHealthMax.ToString() + "( <color=\"red\">-" + totalHealthTakenByFatigue + "</color>)");

@@ -13,6 +13,7 @@ public class LocationIdDefinition : BaseIdDefinition, IHasScreenPosition
     public Sprite BackgroudImage;
     public bool IsTownLocation = false;
     public bool IsEncounterLocation = false;
+    public bool IsDungeonLocation = false;
     public Vector2 GetScreenPosition()
     {
         return Position;

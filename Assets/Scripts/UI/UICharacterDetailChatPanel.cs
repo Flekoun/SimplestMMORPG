@@ -28,6 +28,7 @@ public class UICharacterDetailChatPanel : MonoBehaviour
     public void InviteToParty()
     {
         FirebaseCloudFunctionSO.SendPartyInvite(Data.Data.characterUid);
+        UIManager.instance.ImportantMessage.ShowMesssage("Invite sent to " + Data.Data.characterName);
         Model.SetActive(false);
     }
 

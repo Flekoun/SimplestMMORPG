@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: FirebaseCloudFunctionsSO
   m_EditorClassIdentifier: 
   AccountDataSO: {fileID: 11400000, guid: 55905d11d69c645c98d632ec3cb9745b, type: 2}
-  UseLocalHost: 0
+  UseLocalHost: 1

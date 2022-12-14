@@ -10,7 +10,7 @@ public class Dijkstra : MonoBehaviour
 
     public DijskraResult GetShortestPath(string _start, string _end)
     {
-        Debug.Log("getting shortest path from : " + _start + " to: " + _end);
+//        Debug.Log("getting shortest path from : " + _start + " to: " + _end);
         var result = graph.shortest_path(_start, _end);
 
         result.nodes.Add(_start); //ten dijskra algo vracti cestu od konce a jeste k tomu startovaci pozici tam nema, takze ji rucne pridam
@@ -18,13 +18,13 @@ public class Dijkstra : MonoBehaviour
         {
 
 
-            Debug.Log(result.nodes[i] + " > ");
+//            Debug.Log(result.nodes[i] + " > ");
 
             foreach (var vertice in graph.vertices)
             {
                 if (vertice.Key == result.nodes[i])
                 {
-                    Debug.Log("vertice: " + vertice.Key);
+                //    Debug.Log("vertice: " + vertice.Key);
 
                     foreach (var node in vertice.Value)
                     {
@@ -32,7 +32,7 @@ public class Dijkstra : MonoBehaviour
                         {
                             if (node.Key == result.nodes[i + 1])
                             {
-                                Debug.Log("node: " + node.Key + " : " + node.Value);
+                      //          Debug.Log("node: " + node.Key + " : " + node.Value);
                                 result.totalWeight += node.Value;
                             }
                         }
@@ -47,7 +47,7 @@ public class Dijkstra : MonoBehaviour
 
 
 
-        Debug.Log("timeTaken: " + result.totalWeight);
+   //     Debug.Log("timeTaken: " + result.totalWeight);
 
         return result;
     }

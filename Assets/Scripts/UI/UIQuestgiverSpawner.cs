@@ -25,12 +25,12 @@ public class UIQuestgiverSpawner : UISelectableSpawner
         ListenOnQuestgivers.StartListeningOnQuestgiversAtCharacterPosition();
         ListenOnQuestgivers.OnQuestgiversAtCharacterWorldPositionChanged += Setup;
         AccountDataSO.OnCharacterDataChanged += Refresh;
-
+        
     }
 
     public void Refresh()
     {
-        Debug.Log("REFRESHING QUESTS IN SPAWNER");
+    //    Debug.Log("REFRESHING QUESTS IN SPAWNER");
         Utils.DestroyAllChildren(Parent, 1);
 
         //TADY SE FILTRUJOU QUEST GIVERI...DOBRE MISTO?!!
@@ -40,7 +40,7 @@ public class UIQuestgiverSpawner : UISelectableSpawner
 
         for (int i = tempListToBeFiltered.Count - 1; i >= 0; i--)
         {
-            if (AccountDataSO.CharacterData.questgiversClaimed.Contains(Data[i].uid))
+            if (AccountDataSO.CharacterData.questgiversClaimed.Contains(Data[i].id))
                 tempListToBeFiltered.RemoveAt(i);
         }
 
@@ -58,7 +58,7 @@ public class UIQuestgiverSpawner : UISelectableSpawner
 
             if (prereqsFound < tempListToBeFiltered[i].prereqQuests.Count)
             {
-                Debug.Log("Fillteriung out : " + tempListToBeFiltered[i].uid + " prereqsQuestsFound:  " + prereqsFound + " needed : " + tempListToBeFiltered[i].prereqQuests.Count);
+            //    Debug.Log("Fillteriung out : " + tempListToBeFiltered[i].uid + " prereqsQuestsFound:  " + prereqsFound + " needed : " + tempListToBeFiltered[i].prereqQuests.Count);
                 tempListToBeFiltered.RemoveAt(i);
             }
         }
@@ -77,7 +77,7 @@ public class UIQuestgiverSpawner : UISelectableSpawner
 
             if (prereqsFound < tempListToBeFiltered[i].prereqExploredPointsOfInterest.Count)
             {
-                Debug.Log("Fillteriung out : " + tempListToBeFiltered[i].uid + " prereqsPoIFound:  " + prereqsFound + " needed : " + tempListToBeFiltered[i].prereqExploredPointsOfInterest.Count);
+         //       Debug.Log("Fillteriung out : " + tempListToBeFiltered[i].uid + " prereqsPoIFound:  " + prereqsFound + " needed : " + tempListToBeFiltered[i].prereqExploredPointsOfInterest.Count);
                 tempListToBeFiltered.RemoveAt(i);
             }
         }

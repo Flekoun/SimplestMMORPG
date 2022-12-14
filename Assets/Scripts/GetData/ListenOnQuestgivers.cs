@@ -19,18 +19,10 @@ public class ListenOnQuestgivers : MonoBehaviour
 
     public AccountDataSO AccountDataSO;
     private ListenerRegistration listenerRegistrationOnWorldPosition;
-    // private ListenerRegistration listenerRegistrationOnAllOffersIPutOnAuction;
-    // private ListenerRegistration listenerRegistrationOnAllOffersIBiddedOn;
     public List<QuestgiverMeta> Questgivers = new List<QuestgiverMeta>();
 
     public UnityAction<List<QuestgiverMeta>> OnQuestgiversAtCharacterWorldPositionChanged;
-    //public UnityAction<List<AuctionOffer>> OnAllOffersIPutOnAuctionChanged;
-    //  public UnityAction<List<AuctionOffer>> OnnAllOffersIBiddedOnChanged;
-
-    //public void Awake()
-    //{
-    //    AccountDataSO.OnCharacterLoadedFirstTime += StartListening;
-    //}
+  
 
     public void StartListeningOnQuestgiversAtCharacterPosition()
     {
@@ -74,30 +66,6 @@ public class ListenOnQuestgivers : MonoBehaviour
         listenerRegistrationOnWorldPosition.Stop();
     }
 
-    //public void StopListeningOnAllOffersIPutOnAuction()
-    //{
-    //    listenerRegistrationOnAllOffersIPutOnAuction.Stop();
-    //}
-
-    //public void StopListeningOnAllOffersIBiddedOn()
-    //{
-    //    listenerRegistrationOnAllOffersIBiddedOn.Stop();
-    //}
-
-
-    //public void OnDestroy()
-    //{
-    //    if (listenerRegistrationOnAllAuctions != null)
-    //        listenerRegistrationOnAllAuctions.Stop();
-
-    //    if (listenerRegistrationOnAllOffersIPutOnAuction != null)
-    //        listenerRegistrationOnAllOffersIPutOnAuction.Stop();
-
-    //    if (listenerRegistrationOnAllOffersIBiddedOn != null)
-    //        listenerRegistrationOnAllOffersIBiddedOn.Stop();
-
-    //}
-    //  public UnityEvent OnListenerStarted;
-
+    
 
 }

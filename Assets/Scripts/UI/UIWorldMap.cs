@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using simplestmmorpg.data;
 using UnityEngine;
 using UnityEngine.Events;
 using static UnityEngine.EventSystems.EventTrigger;
@@ -50,10 +51,17 @@ public class UIWorldMap : MonoBehaviour
         {
             DijkstraMapMaker.ClearPlannedTravelPath();
 
-            if (_entry.LocationDef.IsTownLocation)
+            LocationMap locationMap = AccountDataSO.MapsData.GetLocationById(_entry.LocationDef.Id);
+
+            Debug.Log("POZICE NA KTEROU CESTUJU  AKLIKAM :  " + locationMap.locationType);
+            if (locationMap.locationType == Utils.LOCATION_TYPE.TOWN)
+            {
                 OnOpenTownLocation.Invoke();
-            else if (_entry.LocationDef.IsEncounterLocation)
+            }
+            else if (locationMap.locationType == Utils.LOCATION_TYPE.ENCOUNTERS || locationMap.locationType == Utils.LOCATION_TYPE.DUNGEON)
                 OnOpenEncounterLocation.Invoke();
+            //else if (locationMap.locationType == Utils.LOCATION_TYPE.DUNGEON)
+            //    OnOpenDungeonLocation.Invoke();
         }
         else //jinak ti ukazu kolik by te stala cesta tam
         {
@@ -95,7 +103,7 @@ public class UIWorldMap : MonoBehaviour
         Model.gameObject.SetActive(true);
         OnWorldPositionChanged();
 
-        Debug.Log("------TTTESSSSZTZZZ----------");
+        //Debug.Log("------TTTESSSSZTZZZ----------");
     }
 
     public void Hide()
@@ -105,4 +113,5 @@ public class UIWorldMap : MonoBehaviour
 
     public UnityEvent OnOpenEncounterLocation;
     public UnityEvent OnOpenTownLocation;
+    //public UnityEvent OnOpenDungeonLocation;
 }

@@ -6,7 +6,7 @@ import { Equip, EQUIP_SLOT_ID, RARITY, EquipAttributes, ContentItem, Content, Co
 import { firestoreAutoId } from "./general2";
 import * as firebase from 'firebase-admin';
 import { Skill, convertSkillToGiveniLevel, Combatskill } from "./skills";
-import { CombatBuff, CombatStats } from "./encounter";
+import { CombatBuff, CombatStats, ENCOUNTER_CONTEXT } from "./encounter";
 import { EncounterResult, EncounterResultEnemy } from "./encounterResult";
 import { LOC, POI, ZONE } from "./worldMap";
 
@@ -923,7 +923,7 @@ export async function QuerryHasCharacterAnyUnclaimedEncounterResult(_transaction
   return hasUnclaimedEncounterResult
 }
 
-export async function QuerryIsCharacterIsInAnyEncounter(_transaction: any, _characterUid: string): Promise<boolean> {
+export async function QuerryIfCharacterIsInAnyEncounter(_transaction: any, _characterUid: string): Promise<boolean> {
   const encounterDb = admin.firestore().collection("encounters").where("combatantList", "array-contains", _characterUid);
 
   //najdu jestli si v nejakem encounteru clenem
@@ -934,6 +934,20 @@ export async function QuerryIsCharacterIsInAnyEncounter(_transaction: any, _char
 
   return participatingInEncounter
 }
+
+
+export async function QuerryIfCharacterIsWatcherInAnyDungeonEncounter(_transaction: any, _characterUid: string): Promise<boolean> {
+  const encounterDb = admin.firestore().collection("encounters").where("watchersList", "array-contains", _characterUid).where("encounterContext","==",ENCOUNTER_CONTEXT.DUNGEON);
+
+  //najdu jestli si v nejakem encounteru clenem
+  let participatingInEncounter = false;
+  await _transaction.get(encounterDb).then(querry => {
+    participatingInEncounter = querry.size > 0
+  });
+
+  return participatingInEncounter
+}
+
 
 //creates Player and starting Character for him
 exports.createPlayer = functions.auth.user().onCreate(async (user) => {

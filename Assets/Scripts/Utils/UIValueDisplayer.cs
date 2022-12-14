@@ -31,8 +31,7 @@ public class UIValueDisplayer : MonoBehaviour
 
     public void DisplayValue(float _value)
     {
-
-        ValueToDisplay.Value = Mathf.RoundToInt(_value);
+        ValueToDisplay.Value = Utils.RoundToInt(_value);
         Refresh();
     }
 }

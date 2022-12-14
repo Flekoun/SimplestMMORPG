@@ -13,7 +13,7 @@ namespace simplestmmorpg.data
     {
         [field: SerializeField]
         [FirestoreProperty]
-        public List<LocationPointsOfInterest> locations { get; set; }
+        public List<LocationMap> locations { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]
@@ -31,7 +31,7 @@ namespace simplestmmorpg.data
             return false;
         }
 
-        public LocationPointsOfInterest GetLocationById(string _locationId)
+        public LocationMap GetLocationById(string _locationId)
         {
             foreach (var item in locations)
             {
@@ -47,11 +47,15 @@ namespace simplestmmorpg.data
 
     [Serializable]
     [FirestoreData]
-    public class LocationPointsOfInterest
+    public class LocationMap
     {
         [field: SerializeField]
         [FirestoreProperty]
         public string locationId { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string locationType { get; set; }
 
         //[field: SerializeField]
         //[FirestoreProperty]
@@ -66,29 +70,17 @@ namespace simplestmmorpg.data
     }
 
 
-    //[Serializable]
-    //[FirestoreData]
-    //public class DijkstraMap
-    //{
-    //    [field: SerializeField]
-    //    [FirestoreProperty]
-    //    public List<DijkstraMapVertex> dijkstraMap { get; set; }
-
-
-    //}
+    
 
     [Serializable]
     [FirestoreData]
     public class DijkstraMapVertex
     {
+      
         [field: SerializeField]
         [FirestoreProperty]
         public string id { get; set; }
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int weight { get; set; }
-
+      
         [field: SerializeField]
         [FirestoreProperty]
         public List<DijkstraMapNode> nodes { get; set; }

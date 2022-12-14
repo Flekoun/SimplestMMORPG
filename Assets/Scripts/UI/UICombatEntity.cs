@@ -35,7 +35,7 @@ public class UICombatEntity : MonoBehaviour
 
         if (OldData == null) //pokud je to prvni inicializace
         {
-            Debug.Log("PRVNI!!");
+//            Debug.Log("PRVNI!!");
             OldData = Data;
         }
 

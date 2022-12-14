@@ -17,7 +17,7 @@ public class ListenOnAccountData : MonoBehaviour
 {
 
     public AccountDataSO AccountDataSO;
-
+    public FirebaseAuthenticate FirebaseAuthenticate;
     private bool isListening = false;
     //    public List<Action> OnDataRefreshed = new List<Action>();
 
@@ -26,7 +26,7 @@ public class ListenOnAccountData : MonoBehaviour
     {
         get
         {
-            return "players/" + FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+            return "players/" + FirebaseAuthenticate.GetUser().UserId;// FirebaseAuth.DefaultInstance.CurrentUser.UserId;
         }
     }
 
@@ -46,10 +46,15 @@ public class ListenOnAccountData : MonoBehaviour
         {
             FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
 
+            Debug.Log("starting to listen on Player");
+
+            Debug.Log("playerDataPath : " + playerDataPath);
+
             listenerRegistration_Player = db.Document(playerDataPath).Listen(snapshot =>   //player
             {
-                AccountDataSO.SetPlayerData(snapshot);
                 Debug.Log("New Data for PLAYER recieved : " + JsonConvert.SerializeObject(AccountDataSO.PlayerData, Formatting.Indented));
+
+                AccountDataSO.SetPlayerData(snapshot);
 
 
 
@@ -60,7 +65,7 @@ public class ListenOnAccountData : MonoBehaviour
         }
         isListening = true;
 
-       // OnListenerStarted.Invoke();
+        // OnListenerStarted.Invoke();
 
     }
 
@@ -78,9 +83,9 @@ public class ListenOnAccountData : MonoBehaviour
         {
             AccountDataSO.SetCharacterData(snapshot);
 
-      //      Debug.Log("New Data for CHARACTER recieved : " + JsonConvert.SerializeObject(AccountDataSO.CharacterData, Formatting.Indented));
+            //      Debug.Log("New Data for CHARACTER recieved : " + JsonConvert.SerializeObject(AccountDataSO.CharacterData, Formatting.Indented));
 
-           
+
         });
 
 

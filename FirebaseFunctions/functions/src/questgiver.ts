@@ -6,12 +6,11 @@ import { generateEquip } from "./equip";
 const admin = require('firebase-admin');
 // // [END import]
 
-export class QuestgiverMeta {
+export class Questgiver {
   constructor(
 
-    public uid: string,
+    public id: string,
     public position: WorldPosition,
-    public displayName: string,
     public minLevel: number, //slouzi k limitaci zobrazeni/splneni questu
     public qLevel: number, //slouzi k definici jakeho levelu maji byt random itemy co generuje
     public killsRequired: SimpleTally[],
@@ -59,14 +58,14 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
       let callerCharacterData: CharacterDocument = callerCharacterDoc.data();
 
       const questgiverDoc = await t.get(questgiverDb);
-      let questgiverData: QuestgiverMeta = questgiverDoc.data();
+      let questgiverData: Questgiver = questgiverDoc.data();
 
       //zkontroluju jestli jste ve stejne lokaci
       if (!callerCharacterData.isOnSameWorldPosition(questgiverData.position))
-        throw ("Questgiver : " + questgiverData.displayName + " is not at same location as you are! Cannot claim rewards!");
+        throw ("Questgiver : " + questgiverData.id + " is not at same location as you are! Cannot claim rewards!");
 
       //zkontroluju jesttli jsi uz neclaimnul reward od tohodle questgivera
-      if (callerCharacterData.questgiversClaimed.includes(questgiverData.uid))
+      if (callerCharacterData.questgiversClaimed.includes(questgiverData.id))
         throw ("You have already claimed reward from this quest giver!");
 
       //zkontroluju jesttli mas level
@@ -111,7 +110,7 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
       }
 
       //ulozim si ze sem questgivera claimul
-      callerCharacterData.questgiversClaimed.push(questgiverData.uid);
+      callerCharacterData.questgiversClaimed.push(questgiverData.id);
 
       t.set(callerCharacterDb, JSON.parse(JSON.stringify(callerCharacterData)), { merge: true });
 

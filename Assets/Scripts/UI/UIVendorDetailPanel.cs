@@ -98,7 +98,7 @@ public class UIVendorDetailPanel : MonoBehaviour
 
     public void Buy()
     {
-        FirebaseCloudFunctionSO.BuyVendorItems(UIVendorGoodsSpawner.GetSelectedItemsUids(), Data.uid);
+        FirebaseCloudFunctionSO.BuyVendorItems(UIVendorGoodsSpawner.GetSelectedItemsUids(), Data.id);
         UIVendorGoodsSpawner.ClearItemsSelected();
     }
 }

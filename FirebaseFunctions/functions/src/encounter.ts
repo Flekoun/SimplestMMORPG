@@ -2,13 +2,13 @@
 // [START import]
 
 import * as functions from "firebase-functions";
-import { CharacterDocument, characterDocumentConverter, CHARACTER_CLASS, ContentContainer, CONTENT_TYPE, CURRENCY_ID, getCurrentDateTime, getCurrentDateTimeVersionSecondsAdd, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, INSTAKILL, millisToSeconds, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIsCharacterIsInAnyEncounter, SimpleTally, WorldPosition } from ".";
+import { CharacterDocument, characterDocumentConverter, CHARACTER_CLASS, ContentContainer, CONTENT_TYPE, CURRENCY_ID, getCurrentDateTime, getCurrentDateTimeVersionSecondsAdd, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, INSTAKILL, millisToSeconds, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInAnyEncounter, QuerryIfCharacterIsWatcherInAnyDungeonEncounter, SimpleTally, WorldPosition } from ".";
 import { EncounterResult, EncounterResultContentLoot, EncounterResultEnemy, EncounterResultCombatant, RESULT_ITEM_WANT_DURATION_SECONDS } from "./encounterResult";
 import { EQUIP_SLOT_ID, generateContentItemSimple, generateEquip, generateFood, RARITY } from "./equip";
 import { applySkillEffect, drawNewSkills, EnemyMeta, firestoreAutoId, IHasChanceToSpawn, randomIntFromInterval, RollForRandomItem, shuffle } from "./general2";
 import { Party } from "./party";
 import { BUFF, Combatskill } from "./skills";
-import { LOC, LocationMeta, LocationMetaConverter, POI } from "./worldMap";
+import { LOC, LocationMeta, LocationMetaConverter, POI, POI_TYPE } from "./worldMap";
 
 const admin = require('firebase-admin');
 
@@ -18,7 +18,6 @@ export const TURN_DURATION_SECONDS = 45;
 
 export enum ENCOUNTER_CONTEXT {
   PERSONAL = "PERSONAL",
-  GROUP = "GROUP",
   DUNGEON = "DUNGEON",
   WORLD_BOSS = "WORLD_BOSS",
 }
@@ -107,7 +106,7 @@ export class CombatEnemy extends CombatEntity {
   constructor(
     public uid: string,
     public enemyId: string,
-   //public displayName: string,
+    //public displayName: string,
     public stats: CombatStats,
     //  public healthMax: number,
     // public health: number,
@@ -122,7 +121,7 @@ export class CombatEnemy extends CombatEntity {
     public threatMetter: SimpleTally[],
     public buffs: CombatBuff[],
 
-  ) { super(uid, enemyId,buffs, stats, level) }
+  ) { super(uid, enemyId, buffs, stats, level) }
 
   public lowerTurnsLeftOnMyBuffs(_encounter: EncounterDocument) {
 
@@ -325,7 +324,7 @@ export class CombatMember extends CombatEntity {
     public buffs: CombatBuff[],
     public characterPortrait: string
 
-  ) { super(uid,displayName, buffs, stats, level) }
+  ) { super(uid, displayName, buffs, stats, level) }
 
   public lowerTurnsLeftOnMyBuffs(_encounter: EncounterDocument) {
     super.lowerTurnsLeftOnMyBuffs(_encounter);
@@ -353,6 +352,7 @@ export class CombatMember extends CombatEntity {
 
   regenMana(): number {
     let restoreAmount = this.stats.spirit;
+    restoreAmount = Math.round(restoreAmount);
     this.stats.mana += restoreAmount;
 
     if (this.stats.mana > this.stats.manaMax) {
@@ -366,7 +366,9 @@ export class CombatMember extends CombatEntity {
 
   regenHealth(): number {
     let restoreAmount = this.stats.spirit / 10;
+    restoreAmount = Math.round(restoreAmount);
     this.stats.health += restoreAmount;
+
     if (this.stats.health > this.stats.healthMax) {
       restoreAmount -= this.stats.health - this.stats.healthMax;
       this.stats.health = this.stats.healthMax;
@@ -480,8 +482,8 @@ export class EncounterDocument {
     public watchersList: string[],
     public isFull: boolean,
     public foundByName: string,
-   // public chatLog: string,
-    public encounterContext: ENCOUNTER_CONTEXT,
+    // public chatLog: string,
+    public encounterContext: string,
     public position: WorldPosition,
     // public restsPerTurn: number,
     //  public restsLeftUntilEndOfTurn: number,
@@ -641,6 +643,8 @@ export class EncounterDocument {
     // _target.stats.health += _amount;
     // _amount = Math.round(_amount);
 
+    _amount = Math.round(_amount);
+
     _target.giveHealth(_amount);
 
     const entry = "<b>" + _target.displayName + "</b>" + " was healed for <color=\"green\">" + _amount + "</color>"; //health by " + _caster.displayName + " (" + _sourceId + ")";
@@ -680,6 +684,7 @@ export class EncounterDocument {
     let reductionAmount = Math.round(_amount * (0.001 * _target.stats.strength));
     console.log("reductionAmount: " + reductionAmount);
     _amount -= reductionAmount;
+    _amount = Math.round(_amount);
 
     if (reductionAmount > 0)
       dmgReductionAmount = "<color=#808080>(" + reductionAmount.toString() + " damage mitigated)</color>";
@@ -798,7 +803,9 @@ export const encounterDocumentConverter = {
       turnNumber: _encounter.turnNumber,
       combatLog: _encounter.combatLog,
       foundByCharacterUid: _encounter.foundByCharacterUid,
-      expireDateTurn: _encounter.expireDateTurn
+      expireDateTurn: _encounter.expireDateTurn,
+      encounterContext: _encounter.encounterContext
+
     };
   },
   fromFirestore: (snapshot: any, options: any) => {
@@ -1075,7 +1082,7 @@ async function joinCharacterToEncounter(_transaction: any, _encounterData: Encou
 
 
   // if (_callerCharacterData.isJoinedInEncounter)
-  if (await QuerryIsCharacterIsInAnyEncounter(_transaction, _callerCharacterData.uid))
+  if (await QuerryIfCharacterIsInAnyEncounter(_transaction, _callerCharacterData.uid))
     throw "You are already in combat! Cant join new one!";
 
   if (await QuerryHasCharacterAnyUnclaimedEncounterResult(_transaction, _callerCharacterData.uid))
@@ -1204,6 +1211,9 @@ exports.addSelfAsWatcher = functions.https.onCall(async (data, context) => {
 
 });
 
+//exports.searchDungeonPointOfInterest = functions.https.onCall(async (data, context) => {
+
+
 exports.explorePointOfInterest = functions.https.onCall(async (data, context) => {
 
   const MAX_ENEMIES = 6;
@@ -1218,15 +1228,72 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
   try {
     const result = await admin.firestore().runTransaction(async (t: any) => {
 
+
+
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
-      //  if (characterData.isJoinedInEncounter)
-      if (await QuerryIsCharacterIsInAnyEncounter(t, characterData.uid))
-        throw ("You cannot explore while in combat!");
-
       const allCallerPersonalEncounterOnHisPosition = admin.firestore().collection('encounters').where("position.zoneId", "==", characterData.position.zoneId).where("position.locationId", "==", characterData.position.locationId).where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL);
-      const zonesDb = await admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).withConverter(LocationMetaConverter);
+      const zonesDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).withConverter(LocationMetaConverter);
+
+      //nactu si data o PoI
+      var locationMetaDoc = await t.get(zonesDb);
+      var locationsMetaData: LocationMeta = locationMetaDoc.data();
+      const pointOfInterest = locationsMetaData.getPointOfInterestById(pointOfInterestId);
+
+      // let myPartyData: Party = new Party("", "", 0, [], [], null);
+
+      if (pointOfInterest.pointOfInterestType == POI_TYPE.DUNGEON)
+        throw ("Dungeon points of interest cant be explored....");
+
+      //nemuzes prozkoumavat dalsi dungeon encountery kdyz uz mame dungeon enemy a nemusis byt ani joinly do boje (chceme forcnout pruchod dungeonem postupne enemy po enemy)
+      ///  if (await QuerryIfCharacterIsWatcherInAnyDungeonEncounter(t, characterData.uid))
+      // throw ("There are enemies nearby your party. Cant explore!");
+
+
+      //   //pridam pripadne vsechny party membery do encounteru
+      //   await t.get(myPartyDb).then(querry => {
+      //     if (querry.size > 1)
+      //       throw ("You are in more than 1 party! Database error!");
+      //     querry.docs.forEach(doc => {
+      //       myPartyData = doc.data();
+      //     });
+      //   });
+
+      //   if (myPartyData.dungeonProgress == null)
+      //     throw ("You need to wait before Party Leader enter dungeon to start exploring!");
+
+      //   //Zaplatim explore time
+      //   characterData.subCurrency(CURRENCY_ID.TIME, pointOfInterest.exploreTimePrice);
+
+      //   //vytvorime enemy groupu (v dungeonu se nebere nahodny ale vsechny a gnorujem uplne nejaky chanceToSpawn)
+      //   let spawnedEnemies: CombatEnemy[] = [];
+      //   pointOfInterest.enemies.forEach(enemy => {
+      //     spawnedEnemies.push(new CombatEnemy(firestoreAutoId(), enemy.enemyId, new CombatStats(0, 0, enemy.health, enemy.health, 0, 0, 0, 0, 0, 0), enemy.damageMin, enemy.damageMax, enemy.level, enemy.mLevel, enemy.isRare, enemy.dropTable, "", [], []))
+      //   });
+
+      //   var combatants: CombatMember[] = [];//combatants.push(new CombatMember(characterData.characterName, characterData.uid, characterData.characterClass, [], characterData.converSkillsToCombatSkills(), [], characterData.converStatsToCombatStats(), 0, 0, characterData.stats.level));
+      //   var combatantList: string[] = []; //combatantList.push(callerCharacterUid);
+      //   var watchersList: string[] = []; watchersList.push(callerCharacterUid);
+      //   const expireDate = getCurrentDateTime(2);
+      //   var maxCombatants: number = 5;
+      //   var isFull: boolean = false;
+
+      //   let dungeonEncounter: EncounterDocument = new EncounterDocument(encounterDb.doc().id, spawnedEnemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.DUNGEON, characterData.position, 1, "Combat started!\n", "0");
+
+      //   //pridam pripadne vsechny party membery do encounteru
+      //   myPartyData.partyMembersUidList.forEach(partyMemberUid => {
+      //     if (!dungeonEncounter!.watchersList.includes(partyMemberUid))
+      //       dungeonEncounter!.watchersList.push(partyMemberUid);
+      //   });
+
+
+      //   t.set(encounterDb.doc(dungeonEncounter.uid), JSON.parse(JSON.stringify(dungeonEncounter)), { merge: true });
+      // }
+      // else {
+
+      if (await QuerryIfCharacterIsInAnyEncounter(t, characterData.uid))
+        throw ("You cannot explore while in combat!");
 
       //zkontroluje jestli uz mas personal encounter vytvoreny
       let personalEncounter: EncounterDocument | undefined;
@@ -1235,18 +1302,12 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
         if (querry.size > 1) {
           throw "How can you have more than 1 personal encounter! Database error!";
         }
-
-
         querry.docs.forEach(doc => {
           personalEncounter = doc.data();
         });
       });
 
-      var locationMetaDoc = await t.get(zonesDb);
-      var locationsMetaData: LocationMeta = locationMetaDoc.data();
-
       //vyberu nahodneho enemy z point of interest ... hodi error kdyz ho nenajdu, tedy dost spis pripad kdy hrac cheatuje a chce prozkoumat point of interest ktery neni v jeho lokaci
-      const pointOfInterest = locationsMetaData.getPointOfInterestById(pointOfInterestId);
       const choosenEnemy = RollForRandomItem(pointOfInterest.enemies, false) as EnemyMeta;
       //Zaplatim explore time
       characterData.subCurrency(CURRENCY_ID.TIME, pointOfInterest.exploreTimePrice);
@@ -1270,20 +1331,22 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
         personalEncounter = new EncounterDocument(encounterDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.PERSONAL, characterData.position, 1, "Combat started!\n", "0");
 
 
-        //pridam pripadne vsechny party membery do encounteru
+        //ziskam svoju partu
+        let myPartyData: Party = new Party("", "", 0, [], [], null);
         await t.get(myPartyDb).then(querry => {
           if (querry.size > 1)
             throw ("You are in more than 1 party! Database error!");
-
           querry.docs.forEach(doc => {
-
-            let party: Party = doc.data();
-            party.partyMembersUidList.forEach(partyMemberUid => {
-              if (!personalEncounter!.watchersList.includes(partyMemberUid))
-                personalEncounter!.watchersList.push(partyMemberUid);
-            });
+            myPartyData = doc.data();
           });
         });
+
+        //pridam pripadne vsechny party membery do encounteru
+        myPartyData.partyMembersUidList.forEach(partyMemberUid => {
+          if (!personalEncounter!.watchersList.includes(partyMemberUid))
+            personalEncounter!.watchersList.push(partyMemberUid);
+        });
+
       }
       //pokud uz mam personal encounter, pridam do nej jen dalsiho enemy
       else {
@@ -1297,10 +1360,13 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
           throw "Cant have more than " + MAX_ENEMIES + " enemies in encounter";
       }
 
+      t.set(encounterDb.doc(personalEncounter.uid), JSON.parse(JSON.stringify(personalEncounter)), { merge: true });
+
+      // }
+
       //Jen kvuli tomu ze explore bere explore time musim udelat dalsi save do db....
       t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
 
-      t.set(encounterDb.doc(personalEncounter.uid), JSON.parse(JSON.stringify(personalEncounter)), { merge: true });
 
       return "OK";
     });

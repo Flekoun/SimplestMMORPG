@@ -75,12 +75,11 @@ public class UIEncounterDetailPanel : MonoBehaviour
 
     public void OnEnable()
     {
-        AccountDataSO.OnCharacterDataChanged += Refresh;
+     
     }
 
     public void OnDisable()
     {
-        AccountDataSO.OnCharacterDataChanged -= Refresh;
     }
 
     public void Awake()
@@ -101,19 +100,18 @@ public class UIEncounterDetailPanel : MonoBehaviour
     private void OnCombatEntityClicked(UICombatEntity _entry)
     {
         SelectedCombatEntity = _entry;
-
     }
 
 
 
     public void Show(EncounterData _data)
     {
-
         UILocationEncounters.Hide();
 
         string oldChatText = "";
         Data = _data;
 
+        AccountDataSO.OnCharacterDataChanged += Refresh;
         AccountDataSO.OnEncounterDataChanged += Refresh;
 
         Model.SetActive(true);
@@ -125,6 +123,7 @@ public class UIEncounterDetailPanel : MonoBehaviour
     {
         CancelInvoke();
 
+        AccountDataSO.OnCharacterDataChanged -= Refresh;
         AccountDataSO.OnEncounterDataChanged -= Refresh;
         Model.SetActive(false);
 
@@ -152,14 +151,10 @@ public class UIEncounterDetailPanel : MonoBehaviour
             MyCombatMemberData = Data.GetMyCombatMemberData(AccountDataSO.CharacterData.uid);
             DeckCardsCountText.SetText(MyCombatMemberData.skillsDrawDeck.Length + "/" + MyCombatMemberData.skillsDiscardDeck.Length);
             CombatText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(Data.combatLog));
-     //       ChatText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(Data.chatLog));
 
             UISkillsSpawner.Show(MyCombatMemberData, this);
 
-            //if (string.Compare(Data.chatLog, oldChatText) != 0) //pokud je novy zaznam v chatu scrolnem dolu
-            //{
-            //    StartCoroutine(PushToBottom());
-            //}
+       
 
             RestButton.interactable = !MyCombatMemberData.hasRested;
             if (!MyCombatMemberData.hasRested)
@@ -170,30 +165,15 @@ public class UIEncounterDetailPanel : MonoBehaviour
             UISkillsSpawner.gameObject.SetActive(Data.GetMyCombatMemberData(AccountDataSO.CharacterData.uid).stats.health > 0);
             RestButton.gameObject.SetActive(Data.GetMyCombatMemberData(AccountDataSO.CharacterData.uid).stats.health > 0);
 
+
+            UIEncounterEntry.SelectRandomEnemy();
+          
             CancelInvoke();
             InvokeRepeating("RefreshTurnTimeLeft", 0f, 1f);
-            //   if (Data.AlreadyRestedThisTurn(MyCombatMemberData))
-            //    RestButtonText.SetText("Onslaught (<color=\"red\">5% Fatigue</color>)");
+
+
+
         }
-
-        //  string descText = "";
-
-        //if (Data.enemies.Length == 1)
-        //    descText += "You see a single monster not far from you.";
-        //else if (Data.enemies.Length == 2)
-        //    descText += "You see a couple of monsters ahead";
-        //else 
-        //    descText += "You see a group of monsters neraby";
-
-
-        //if (Data.enemies[0].level <= AccountDataSO.CharacterData.stats.level)
-        //    descText += " It looks like if you stay focused you should be able to kill all by yourself.";
-        //else 
-        //    descText += " It looks like it could be a tought fight.";
-
-
-
-
 
         if (Data.enemies.Length == 1)
         {

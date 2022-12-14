@@ -37,7 +37,7 @@ public class UIQuestgiverEntry : MonoBehaviour
         }
 
         EnemiesToKillText.SetText(killsNeeded_Title + killsNeeded);
-        DisplayNameText.SetText(Data.displayName);
+        DisplayNameText.SetText(  Utils.GetMetadataForQuest(Data.id).title.GetText());
 
        QuestCompletedGO.SetActive(AccountDataSO.CharacterData.IsQuestCompleted(Data));
     }

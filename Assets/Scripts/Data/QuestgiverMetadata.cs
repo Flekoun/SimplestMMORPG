@@ -16,11 +16,11 @@ namespace simplestmmorpg.data
     {
         [field: SerializeField]
         [FirestoreProperty]
-        public string uid { get; set; }
+        public string id { get; set; }
 
-        [field: SerializeField]
-        [FirestoreProperty]
-        public string displayName { get; set; }
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public string displayName { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]

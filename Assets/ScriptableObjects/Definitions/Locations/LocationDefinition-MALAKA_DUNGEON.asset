@@ -13,10 +13,9 @@ MonoBehaviour:
   m_Name: LocationDefinition-MALAKA_DUNGEON
   m_EditorClassIdentifier: 
   Id: MALAKA_DUNGEON
-  DisplayName: Malaka Dungeon
-  Image: {fileID: 21300000, guid: 1e313081d78d34e74b1b71b3b5cece9c, type: 3}
   BaseDefinitionSOSet: {fileID: 11400000, guid: 3aee09f3476124c24a297c856026d67d, type: 2}
   Position: {x: -800, y: -505}
   BackgroudImage: {fileID: 0}
   IsTownLocation: 0
   IsEncounterLocation: 1
+  IsDungeonLocation: 0

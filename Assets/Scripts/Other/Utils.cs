@@ -18,6 +18,13 @@ public static class Utils
     //    private static OtherMetadata OtherMetadata;
     public static string ActiveLanguage = "EN";
 
+    public struct LOCATION_TYPE
+    {
+        public const string ENCOUNTERS = "ENCOUNTERS";
+        public const string DUNGEON = "DUNGEON";
+        public const string TOWN = "TOWN";
+    }
+
     public struct RARITY
     {
         public const string POOR = "POOR";
@@ -291,7 +298,11 @@ public static class Utils
         return "<color=#" + ColorUtility.ToHtmlStringRGBA(_color) + ">" + _text + "</color>";
     }
 
+    public static int RoundToInt(float _float)
+    {
+        return (int)System.Math.Round(_float, MidpointRounding.AwayFromZero);
+    }
 
 
-
+   
 }

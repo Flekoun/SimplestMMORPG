@@ -21,6 +21,8 @@ public class UILocationEncounters : MonoBehaviour
     public GameObject EncountersPanel;
     public GameObject EncounterRewardsPanel;
 
+   // public UIEnterDungeon UIEnterDungeon;
+
     public Image BackgroundImage;
     public DijkstraMapMaker DijkstraMapMaker;
 
@@ -33,7 +35,6 @@ public class UILocationEncounters : MonoBehaviour
         AccountDataSO.OnWorldLocationChanged += OnWorldLocationChanged;
         UIPointsOfInterestSpawner.OnUIEntryClicked += OnPointOfInterestClicked;
         DijkstraMapMaker.OnVertexReachable += OnVertexReachable;
-
 
     }
 
@@ -55,6 +56,8 @@ public class UILocationEncounters : MonoBehaviour
         if (!AccountDataSO.MapsData.HasLocationAnyPointsOfInterest(AccountDataSO.CharacterData.position.locationId))
             return;
 
+       
+
         selectedUIPointOfInterestButton = null;
 
         UIPointsOfInterestSpawner.Refresh();
@@ -69,11 +72,11 @@ public class UILocationEncounters : MonoBehaviour
     // Start is called before the first frame update
     public void Show()
     {
-        if(AccountDataSO.MapsData.GetLocationById(AccountDataSO.CharacterData.position.locationId) == null)
+        if (AccountDataSO.MapsData.GetLocationById(AccountDataSO.CharacterData.position.locationId) == null)
         {
             Debug.LogWarning("Tahle lokace nema mapu neni co ukazovat");
             return;
-        }    
+        }
         ListenOnEncounterData.StartListening(AccountDataSO.CharacterData.position.locationId, AccountDataSO.CharacterData.position.zoneId);
 
         AccountDataSO.OnEncounterDataChanged += Refresh;
@@ -162,7 +165,7 @@ public class UILocationEncounters : MonoBehaviour
 
     IEnumerator Wait()
     {
-       yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
         ContentFitterRefresh.RefreshContentFitters();
     }
 

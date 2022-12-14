@@ -57,6 +57,19 @@ public class DijkstraMapMaker : MonoBehaviour
                     OnVertexReachable.Invoke(targetDefinition);
 
                 }
+                else if (AccountDataSO.IsInDungeon())
+                {
+                    if (AccountDataSO.PartyData.dungeonProgress.IsPositionExplored(startDefinition.Id))
+                    {
+                        Vector2 start = (startDefinition as IHasScreenPosition).GetScreenPosition();
+                        Vector2 target = (targetDefinition as IHasScreenPosition).GetScreenPosition();
+
+                        AllPathsUILineMaker.MakeLineFromPrefab(start.x, start.y, target.x, target.y, node.weight);
+
+                        OnVertexReachable.Invoke(startDefinition);
+                        OnVertexReachable.Invoke(targetDefinition);
+                    }
+                }
             }
 
         }

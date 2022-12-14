@@ -31,6 +31,7 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
     public void Awake()
     {
         UIQuestgiverSpawner.OnEntryClicked += OnQuestgiverEntryClicked;
+     
     }
 
     private void OnQuestgiverEntryClicked(UIQuestgiverEntry _entry)
@@ -85,8 +86,8 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
         }
 
         KillListText.SetText(killsNeeded);
-        DescriptionText.SetText(String.Format(Utils.GetMetadataForQuest(Data.uid).description.GetText(), "<b>" + AccountDataSO.CharacterData.characterName + "</b>"));
-        DisplayNameText.SetText(Data.displayName);
+        DescriptionText.SetText(String.Format(Utils.GetMetadataForQuest(Data.id).description.GetText(), "<b>" + AccountDataSO.CharacterData.characterName + "</b>"));
+        DisplayNameText.SetText(Utils.GetMetadataForQuest(Data.id).title.GetText());
 
         UIContentContainerDetail.Hide();
 
@@ -137,7 +138,7 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
     // Start is called before the first frame update
     public void ClaimQuestgiverReward()
     {
-        FirebaseCloudFunctionSO.ClaimQuestgiverReward(Data.uid);
+        FirebaseCloudFunctionSO.ClaimQuestgiverReward(Data.id);
         Hide();
     }
 

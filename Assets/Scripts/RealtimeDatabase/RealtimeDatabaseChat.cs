@@ -171,7 +171,7 @@ public class RealtimeDatabaseChat : MonoBehaviour
     private Query lastQuerryZone = null;
     private void OnCharacterWorldLocationChanged()
     {
-        Debug.Log("-------------LOKACE ZMENENA START!");
+//        Debug.Log("-------------LOKACE ZMENENA START!");
         //pokud charakter zmenil lokaci, zmenime chat channel
         DatabaseReference newLocationMessageChannelReference = GetMessageChannelOnCurrentLocation();
 
@@ -181,12 +181,12 @@ public class RealtimeDatabaseChat : MonoBehaviour
             newLocationMessageChannelReference = GetMessageChannelOnCurrentLocation();
         }
 
-        Debug.Log("LocationChatChannelRefrence: " + LocationChatChannelRefrence.Reference);
-        Debug.Log("newLocationMessageChannelReference: " + newLocationMessageChannelReference.Reference);
+      //  Debug.Log("LocationChatChannelRefrence: " + LocationChatChannelRefrence.Reference);
+     //   Debug.Log("newLocationMessageChannelReference: " + newLocationMessageChannelReference.Reference);
 
         if (newLocationMessageChannelReference.Reference != LocationChatChannelRefrence.Reference)
         {
-            Debug.Log("-------------LOKACE ZMENENA OPRaVDU SEM SEM JINAM MMENIM CHAT!");
+      //      Debug.Log("-------------LOKACE ZMENENA OPRaVDU SEM SEM JINAM MMENIM CHAT!");
             if (OnLocationChatChannelChanged != null)
                 OnLocationChatChannelChanged.Invoke();
 

@@ -66,6 +66,18 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         CloudFunctionFinished(result);
     }
 
+    public async void EnterDungeon(string _dungeonLocationId)
+    {
+
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["callerCharacterUid"] = AccountDataSO.CharacterData.uid;
+        data["dungeonLocationId"] = _dungeonLocationId;
+
+        Debug.Log("entering dungeon ... ");
+        await CallCloudFunction("party-enterDungeon", data);
+    }
+
     public async void PutContentOnAuctionHouse(string _contentType, string _contentToSellUid, int _contentSilverAmount, int _buyoutPrice, int _bidPrice)
     {
         CloudFunctionCalled();
@@ -843,7 +855,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
 
     private string OnCloudFuntionResult(Task<HttpsCallableResult> _task)
     {
-        Debug.Log("sem tu");
+//        Debug.Log("sem tu");
         if (_task.IsFaulted)
         {
             string resultError = "ERROR " + _task.Exception.InnerException.Message;

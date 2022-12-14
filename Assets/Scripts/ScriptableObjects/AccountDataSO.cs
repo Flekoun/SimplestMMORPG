@@ -34,7 +34,9 @@ public class AccountDataSO : ScriptableObject
     public int PlayersOnline;
     public OtherMetadata OtherMetadataData;
 
-//    public List<PartyFinderData> PartyFinderData;
+
+
+    //    public List<PartyFinderData> PartyFinderData;
 
     public UnityAction OnMapsChanged;
     public UnityAction OnDescriptionsMetadataChanged;
@@ -98,6 +100,11 @@ public class AccountDataSO : ScriptableObject
             OnSkillsMetadataLoadedFirstTime.Invoke();
 
         DescriptionsMetadataChangedFirstTime = false;
+
+       
+     
+
+       
     }
 
 
@@ -119,6 +126,7 @@ public class AccountDataSO : ScriptableObject
 
     public void SetMaps(DocumentSnapshot _snapshot)
     {
+
 
         MapsData = _snapshot.ConvertTo<Maps>();
 
@@ -212,6 +220,8 @@ public class AccountDataSO : ScriptableObject
 
         PlayerData = _snapshot.ConvertTo<PlayerData>();
 
+        Debug.Log("PlayerData :" + PlayerData.gems);
+
         if (OnPlayerDataChanged_OldData != null)
             OnPlayerDataChanged_OldData.Invoke(oldDataPlayer);
 
@@ -259,8 +269,18 @@ public class AccountDataSO : ScriptableObject
         if (PartyData == null) return false;
         else if (PartyData.partyMembers == null) return false;
         else return true;
-        
+
     }
+
+    public bool IsInDungeon()
+    {
+        if (PartyData == null) return false;
+        else if (PartyData.partyMembers == null) return false;
+        else if (PartyData.dungeonProgress == null) return false;
+
+        return true;
+    }
+
 
 
     //public void SetPartyFinderData(QuerySnapshot _snapshot)
@@ -412,7 +432,7 @@ public class AccountDataSO : ScriptableObject
             bool itemFound = false;
             foreach (var origEntry in VendorsData) //projdu stare data v listu a pokud ma fresh data prekopiruju je tam
             {
-                if (origEntry.uid == freshEntry.uid)
+                if (origEntry.id == freshEntry.id)
                 {
                     Utils.CopyPropertiesTo(freshEntry, origEntry);
                     itemFound = true;
@@ -430,7 +450,7 @@ public class AccountDataSO : ScriptableObject
             bool itemFound = false;
             foreach (var newItem in FreshVendorDataFromDB)
             {
-                if (newItem.uid == VendorsData[i].uid)
+                if (newItem.id == VendorsData[i].id)
                     itemFound = true;
             }
             if (!itemFound)

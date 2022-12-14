@@ -66,7 +66,7 @@ public class UIInventory : UISelectableSpawner
 
     private void SpawnInventory()
     {
-        Debug.Log("refreshing inventory!!");
+       // Debug.Log("refreshing inventory!!");
         Utils.DestroyAllChildren(InventoryItemsLootParent);
 
         switch (Filter)

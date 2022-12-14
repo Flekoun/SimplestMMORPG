@@ -10,7 +10,7 @@ const admin = require('firebase-admin');
 
 export class Vendor {
   constructor(
-    public uid: string,
+    public id: string,
     public displayName: string,
     public position: WorldPosition,
     public goods: VendorGood[]
@@ -36,7 +36,7 @@ exports.buyVendorItems = functions.https.onCall(async (data, context) => {
   const vendorItemsToBuyUids: string[] = data.vendorItemsToBuyUids;
 
   const characterDb = await admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
-  const vendorDb = await admin.firestore().collection('vendors').doc(vendorUid);
+  const vendorDb = await admin.firestore().collection('_metadata_vendors').doc(vendorUid);
 
   try {
     const result = await admin.firestore().runTransaction(async (t: any) => {
