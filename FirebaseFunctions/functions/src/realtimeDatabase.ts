@@ -43,7 +43,7 @@ exports.onUserPresenceStatusDeleted = functions.database.ref('/presenceStatus/{u
         //najdeme jeste pokud sem v nejake parte tak nastavime onlineStatus i tam aby to ostatni videli hned
         const myPartyDb = admin.firestore().collection('parties').where("partyMembersUidList", "array-contains", presenceStatusData.characterUid);
         //ziskam svoji partu
-        let myPartyData: Party = new Party("", "", 0, [], []);
+        let myPartyData: Party = new Party("", "", 0, [], [],null);
         let partyDocId = "";
         await t.get(myPartyDb).then(querry => {
           if (querry.size == 1) {
@@ -106,7 +106,7 @@ exports.onUserPresenceStatusCreated = functions.database.ref('/presenceStatus/{u
         //najdeme jeste pokud sem v nejake parte tak nastavime onlineStatus i tam aby to ostatni videli hned
         const myPartyDb = admin.firestore().collection('parties').where("partyMembersUidList", "array-contains", presenceStatusData.characterUid);
         //ziskam svoji partu
-        let myPartyData: Party = new Party("", "", 0, [], []);
+        let myPartyData: Party = new Party("", "", 0, [], [],null);
         let partyDocId = "";
         await t.get(myPartyDb).then(querry => {
           if (querry.size == 1) {

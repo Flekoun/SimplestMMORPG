@@ -18,6 +18,20 @@ public static class Utils
     //    private static OtherMetadata OtherMetadata;
     public static string ActiveLanguage = "EN";
 
+
+    public struct POI_SPECIALS
+    {
+        public const string AUCTION_HOUSE = "AUCTION_HOUSE";
+        public const string MAILBOX = "MAILBOX";
+    }
+
+    public struct POI_TYPE
+    {
+        public const string ENCOUNTER = "ENCOUNTER";
+        public const string DUNGEON = "DUNGEON";
+        public const string TOWN = "TOWN";
+    }
+
     public struct LOCATION_TYPE
     {
         public const string ENCOUNTERS = "ENCOUNTERS";
@@ -202,9 +216,24 @@ public static class Utils
         return DescriptionsMetadata.GetItemsMetadata(_id);
     }
 
+    public static BaseDescriptionMetadata GetMetadataForGatherable(string _id)
+    {
+        return DescriptionsMetadata.GetGatherablesMetadata(_id);
+    }
+
     public static BaseDescriptionMetadata GetMetadataForQuest(string _id)
     {
         return DescriptionsMetadata.GetQuestMetadata(_id);
+    }
+
+    public static BaseDescriptionMetadata GetMetadataForVendors(string _id)
+    {
+        return DescriptionsMetadata.GetVendorsMetadata(_id);
+    }
+
+    public static BaseDescriptionMetadata GetMetadataForTrainers(string _id)
+    {
+        return DescriptionsMetadata.GetTrainersMetadata(_id);
     }
 
 
@@ -225,6 +254,12 @@ public static class Utils
             stringToModify = stringToModify.Replace(item.id, item.title.GetText());
 
         foreach (var item in DescriptionsMetadata.pointsOfInterest)
+            stringToModify = stringToModify.Replace(item.id, item.title.GetText());
+
+        foreach (var item in DescriptionsMetadata.gatherables)
+            stringToModify = stringToModify.Replace(item.id, item.title.GetText());
+
+        foreach (var item in DescriptionsMetadata.professions)
             stringToModify = stringToModify.Replace(item.id, item.title.GetText());
 
         return stringToModify;
@@ -304,5 +339,5 @@ public static class Utils
     }
 
 
-   
+
 }

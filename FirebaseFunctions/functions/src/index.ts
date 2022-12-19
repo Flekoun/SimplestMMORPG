@@ -28,7 +28,10 @@ export const MAX_FATIGUE = 90;
 export const MAX_TRAVEL_TIME = 48;
 
 //Instantni zabiti nepratel v encounterech
-export const INSTAKILL = false;
+export const INSTAKILL = true;
+
+//Kontroluje se proti tomu co posle klient ( mel bych pridat jeste jeden secret do DB mozna kdybych jen menil data v DB ale tyhle cloud scripty zustaly stejne?)
+export const SERVER_SECRET = "XXX13";
 
 //exports.general = require('./general');
 exports.general2 = require('./general2');
@@ -44,6 +47,9 @@ exports.scheduler = require('./scheduler');
 exports.skills = require('./skills');
 exports.party = require('./party');
 exports.realtimeDatabase = require('./realtimeDatabase');
+exports.gatherables = require('./gatherables');
+exports.utils = require('./utils');
+exports.trainer = require('./trainer');
 
 
 
@@ -126,6 +132,10 @@ async function createCharacter(_transaction: any, _characterUid: string, _userUi
   const startingHead = new Equip(firestoreAutoId(), "EQUIP", "Apprentice Cap", "HEAD_1", 1, EQUIP_SLOT_ID.HEAD, RARITY.COMMON, 1, 1, new EquipAttributes(0, 0, 0, 0, 0, 1, 10), startingSkill);
   const startingLegs = new Equip(firestoreAutoId(), "EQUIP", "Apprentice Pants", "LEGS_1", 1, EQUIP_SLOT_ID.LEGS, RARITY.COMMON, 1, 1, new EquipAttributes(0, 0, 0, 0, 0, 1, 10), startingSkill);
 
+  const proffesions: SimpleTallyWithMax[] = [];
+  //proffesions.push(new SimpleTally(PROFESSION.HERBALISM, 0));
+  //proffesions.push(new SimpleTally(PROFESSION.MINING, 0));
+
   let characterPortrait = "CHARACTER_PORTRAIT_0";
   if (_characterClass == CHARACTER_CLASS.WARLOCK) {
     characterPortrait = "CHARACTER_PORTRAIT_WARLOCK";
@@ -141,7 +151,7 @@ async function createCharacter(_transaction: any, _characterUid: string, _userUi
   }
 
   let characteEquip: Equip[] = [];
-  // const startingCharacterEquip = new CharacterEquip(EQUIP_SLOT_ID.BODY, startingEquip);
+
   characteEquip.push(startingBody);
   characteEquip.push(startingHead);
   characteEquip.push(startingLegs);
@@ -150,7 +160,7 @@ async function createCharacter(_transaction: any, _characterUid: string, _userUi
   exploredPosition.locations.push(LOC.VALLEY_OF_TRIALS);
   exploredPosition.pointsOfInterest.push(POI.VALLEY_OF_TRIALS_PLAINS);
 
-  return new CharacterDocument(_characterUid, _userUid, characterName, _characterClass, inventory, characteEquip, currency, stats, worldPosition, [], [], timestamps, characterPortrait, exploredPosition);
+  return new CharacterDocument(_characterUid, _userUid, characterName, _characterClass, inventory, characteEquip, currency, stats, worldPosition, [], [], timestamps, characterPortrait, exploredPosition, proffesions);
 
   //return new CharacterDocument("",[],new CharacterStats(0,0,0,0,0,0,0,0,0,0),"","",new Currency(0,0,0),"",new Inventory([],0,0,[],[]));
 }
@@ -187,6 +197,14 @@ export function validateCallerBulletProof(_characterData: CharacterDocument, _co
   console.log("player s uid :" + _context.auth?.uid + " vola metodu a tvrdi ze je : " + userUid);
   if (userUid != _context.auth?.uid)
     throw "User caller mismatach!";
+}
+
+export function checkForServerVersion(_data: any) {
+
+  const serverSecret = _data.serverSecret;
+
+  if (serverSecret != SERVER_SECRET)
+    throw ("Old client version detected! Please update game from appstore!");
 }
 
 
@@ -297,6 +315,15 @@ export class SimpleTally {
     public count: number,
   ) { }
 }
+
+export class SimpleTallyWithMax {
+  constructor(
+    public id: string,
+    public count: number,
+    public countMax: number,
+  ) { }
+}
+
 //[Monster Kill]
 
 
@@ -331,6 +358,7 @@ export class ExploredPositions {
 
 
 
+
 // [Character]
 export class CharacterDocument {
   constructor(
@@ -347,9 +375,40 @@ export class CharacterDocument {
     public questgiversClaimed: string[],
     public timestamps: Timestamps,
     public characterPortrait: string,
-    public exploredPositions: ExploredPositions
+    public exploredPositions: ExploredPositions,
+    public professions: SimpleTallyWithMax[],
+
     // public isJoinedInEncounter: boolean,
   ) { }
+
+  addProfession(_professionId: string, _maxProfession: number) {
+    if (this.getProfessionById(_professionId) == null)
+      this.professions.push(new SimpleTallyWithMax(_professionId, 0, _maxProfession));
+  }
+
+  getProfessionById(_professionId: string): SimpleTallyWithMax | null {
+
+    for (const profession of this.professions) {
+      if (profession.id == _professionId) {
+        return profession;
+      }
+    }
+
+    return null;
+  }
+
+  increaseProfessionSkill(_professionId: string, _amount: number) {
+
+    let prof = this.getProfessionById(_professionId);
+    if (prof != null) {
+      if (prof.countMax <= prof.count + _amount)
+        prof.count = prof.countMax;
+      else
+        prof.count += _amount;
+    }
+  }
+
+
 
   grantStatsForLevelUp() {
 
@@ -555,7 +614,7 @@ export class CharacterDocument {
       return;
     }
 
-    
+
     let itemAddedToExistingStack: boolean = false;
 
     for (const content of this.inventory.content) {
@@ -857,7 +916,8 @@ export const characterDocumentConverter = {
       position: character.position,
       timestamps: character.timestamps,
       characterPortrait: character.characterPortrait,
-      exploredPositions: character.exploredPositions
+      exploredPositions: character.exploredPositions,
+      professions: character.professions
       // isJoinedInEncounter: character.isJoinedInEncounter
 
     };
@@ -880,7 +940,7 @@ export const characterDocumentConverter = {
     let inventoryRemade = new Inventory(bagsRemade, data.inventory.capacityMax, data.inventory.capacityLeft, contentRemade);
 
 
-    return new CharacterDocument(data.uid, data.userUid, data.characterName, data.characterClass, inventoryRemade, data.equipment, data.currency, data.stats, data.position, data.monsterKills, data.questgiversClaimed, data.timestamps, data.characterPortrait, data.exploredPositions);//, data.isJoinedInEncounter);
+    return new CharacterDocument(data.uid, data.userUid, data.characterName, data.characterClass, inventoryRemade, data.equipment, data.currency, data.stats, data.position, data.monsterKills, data.questgiversClaimed, data.timestamps, data.characterPortrait, data.exploredPositions, data.professions);//, data.isJoinedInEncounter);
     // return new CharacterDocument(data.uid, data.userUid, data.characterName, data.characterClass, data.inventory, data.equipment, data.currency, data.stats, data.position, data.monsterKills, data.questgiversClaimed);
   }
 }
@@ -937,7 +997,7 @@ export async function QuerryIfCharacterIsInAnyEncounter(_transaction: any, _char
 
 
 export async function QuerryIfCharacterIsWatcherInAnyDungeonEncounter(_transaction: any, _characterUid: string): Promise<boolean> {
-  const encounterDb = admin.firestore().collection("encounters").where("watchersList", "array-contains", _characterUid).where("encounterContext","==",ENCOUNTER_CONTEXT.DUNGEON);
+  const encounterDb = admin.firestore().collection("encounters").where("watchersList", "array-contains", _characterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.DUNGEON);
 
   //najdu jestli si v nejakem encounteru clenem
   let participatingInEncounter = false;
@@ -946,6 +1006,18 @@ export async function QuerryIfCharacterIsWatcherInAnyDungeonEncounter(_transacti
   });
 
   return participatingInEncounter
+}
+
+
+export async function HasPartyAnyDungeonEncounter(_transaction: any, _partyUid: string): Promise<boolean> {
+  const encounterDb = admin.firestore().collection("encounters").where("foundByPartyUid", "==", _partyUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.DUNGEON);
+
+  let exists = false;
+  await _transaction.get(encounterDb).then(querry => {
+    exists = querry.size > 0
+  });
+
+  return exists
 }
 
 
@@ -1153,6 +1225,57 @@ exports.deleteCharacter = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("aborted", "Error : " + e);
   }
 });
+
+
+exports.checkForIntegrityOfCharacterData = functions.https.onCall(async (data, context) => {
+
+  const characterToCheckUid = data.characterToCheckUid;
+  const characterDb = admin.firestore().collection("characters").doc(characterToCheckUid);
+
+  try {
+    const result = await admin.firestore().runTransaction(async (t: any) => {
+      const characterDoc = await t.get(characterDb);
+      let characterData: CharacterDocument = characterDoc.data();
+
+      // const playerDb = admin.firestore().collection("players").doc(characterData.userUid);
+      // const playerDoc = await t.get(playerDb);
+      // let playerData: PlayerData = playerDoc.data();
+
+      // for (const character of playerData.characters) {
+      //   if (character.uid == characterToDeleteUid) {
+      //     playerData.characters.splice(playerData.characters.indexOf(character), 1);
+      //     break;
+      //   }
+      // }
+      let issueFound = false;
+
+      if (characterData.professions == undefined) {
+        issueFound = true;
+        console.log("Repairing Character....");
+        characterData.professions = [];
+        //  characterData.professions.push(new SimpleTally(PROFESSION.HERBALISM, 0));
+        //characterData.professions.push(new SimpleTally(PROFESSION.MINING, 0));
+
+      }
+
+      if (issueFound)
+        t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
+
+
+      return "OK";
+    });
+
+
+
+
+    console.log('Transaction success', result);
+    return result;
+  } catch (e) {
+    console.log('Transaction failure:', e);
+    throw new functions.https.HttpsError("aborted", "Error : " + e);
+  }
+});
+
 
 
   // [END allAdd]

@@ -18,6 +18,10 @@ public class ListenOnDescriptionsMetadata : MonoBehaviour
 
     public AccountDataSO AccountDataSO;
 
+    public void Awake()
+    {
+        AccountDataSO.OnClientVersionMatch += OnClientVersionMatch;
+    }
 
 
     public string skillsMetadataDataPath
@@ -28,10 +32,16 @@ public class ListenOnDescriptionsMetadata : MonoBehaviour
         }
     }
 
+    private void OnClientVersionMatch(bool _match)
+    {
+        if (_match)
+            StartListening();
+    }
+
     private List<ListenerRegistration> listenerRegistrations = new List<ListenerRegistration>();
 
 
-    public void StartListening()
+    private void StartListening()
     {
 
         FirebaseFirestore db = FirebaseFirestore.DefaultInstance;

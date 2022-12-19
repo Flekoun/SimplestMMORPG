@@ -4,7 +4,7 @@ import * as functions from "firebase-functions";
 import { CharacterDocument, characterDocumentConverter, getCurrentDateTime, QuerryIfCharacterIsInAnyEncounter, WorldPosition } from ".";
 import { CombatEnemy, CombatMember, CombatStats, EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT } from "./encounter";
 import { firestoreAutoId } from "./general2";
-import { getStartingPointOfInterestForLocation, LocationMeta, LocationMetaConverter, LOC_TYPE, PointOfInterest } from "./worldMap";
+import { getStartingPointOfInterestForLocation, MapLocation, LocationConverter, LOC_TYPE } from "./worldMap";
 
 const admin = require('firebase-admin');
 // // [END import]
@@ -21,7 +21,46 @@ export class Party {
     public dungeonProgress: DungeonProgress | null
 
   ) { }
+
+  getPartyMemberByUid(_uid: string): PartyMember | null {
+
+    let result: PartyMember | null = null;
+    this.partyMembers.forEach(element => {
+      if (element.uid == _uid)
+        result = element;
+    });
+    return result;
+  }
 }
+
+
+export const PartyConverter = {
+  toFirestore: (_party: Party) => {
+
+    return {
+      uid: _party.uid,
+      partyLeaderUid: _party.partyLeaderUid,
+      partySizeMax: _party.partySizeMax,
+      partyMembers: _party.partyMembers,
+      partyMembersUidList: _party.partyMembersUidList,
+      dungeonProgress: _party.dungeonProgress
+
+    };
+  },
+  fromFirestore: (snapshot: any, options: any) => {
+    const data = snapshot.data(options);
+
+    // let pointsOnInterest: PointOfInterest[] = [];
+
+    // data.pointsOfInterest.forEach(element => {
+    //   pointsOnInterest.push(new PointOfInterest(element.id, element.enemies, element.exploreTimePrice, element.pointOfInterestType, element.questgivers, element.vendors));
+    // });
+
+    return new Party(data.uid, data.partyLeaderUid, data.partySizeMax, data.partyMembers, data.partyMembersUidList, data.dungeonProgress);
+  }
+};
+
+
 
 // [Party]
 export class PartyMember {
@@ -95,10 +134,10 @@ exports.enterDungeon = functions.https.onCall(async (data, context) => {
           throw "All party members must be at dungeon location to enter!";
       });
 
-      const dungeonLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc(myPartyData.partyMembers[0].position.zoneId).collection("locations").doc(myPartyData.partyMembers[0].position.locationId).withConverter(LocationMetaConverter);
+      const dungeonLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc(myPartyData.partyMembers[0].position.zoneId).collection("locations").doc(myPartyData.partyMembers[0].position.locationId).withConverter(LocationConverter);
 
       const dungeonLocationMetadataDoc = await t.get(dungeonLocationMetadataDb);
-      let dungeonLocationMetadataData: LocationMeta = dungeonLocationMetadataDoc.data();
+      let dungeonLocationMetadataData: MapLocation = dungeonLocationMetadataDoc.data();
 
       if (dungeonLocationMetadataData.locationType != LOC_TYPE.DUNGEON)
         throw "This location is not a Dungeon! Cant enter!";
@@ -112,7 +151,7 @@ exports.enterDungeon = functions.https.onCall(async (data, context) => {
 
 
       //vytvorime rovnou enemy groupu (v dungeonu se nebere nahodny ale vsechny a gnorujem uplne nejaky chanceToSpawn)
-      const startingPointOfInterest =  dungeonLocationMetadataData.getPointOfInterestById(getStartingPointOfInterestForLocation(dungeonLocationId));
+      const startingPointOfInterest = dungeonLocationMetadataData.getPointOfInterestById(getStartingPointOfInterestForLocation(dungeonLocationId));
       let spawnedEnemies: CombatEnemy[] = [];
       startingPointOfInterest.enemies.forEach(enemy => {
         spawnedEnemies.push(new CombatEnemy(firestoreAutoId(), enemy.enemyId, new CombatStats(0, 0, enemy.health, enemy.health, 0, 0, 0, 0, 0, 0), enemy.damageMin, enemy.damageMax, enemy.level, enemy.mLevel, enemy.isRare, enemy.dropTable, "", [], []))
@@ -125,7 +164,7 @@ exports.enterDungeon = functions.https.onCall(async (data, context) => {
       var maxCombatants: number = 5;
       var isFull: boolean = false;
 
-      let dungeonEncounter: EncounterDocument = new EncounterDocument(encounterDb.doc().id, spawnedEnemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, "Ambushed", ENCOUNTER_CONTEXT.DUNGEON, myPartyData.partyMembers[0].position, 1, "Combat started!\n", "0");
+      let dungeonEncounter: EncounterDocument = new EncounterDocument(encounterDb.doc().id, spawnedEnemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, "Ambushed", ENCOUNTER_CONTEXT.DUNGEON, myPartyData.partyMembers[0].position, 1, "Combat started!\n", "0", myPartyData.uid);
 
       //pridam pripadne vsechny party membery do encounteru
       myPartyData.partyMembersUidList.forEach(partyMemberUid => {
@@ -282,6 +321,7 @@ exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1
       });
 
 
+      let dungeonEncounterData: EncounterDocument | undefined;
 
       //Parta jeste nebyla vytvorena, budeme prvni dvojka...teoreticky bych mohl i checkovat na "partyUid ==""  "
       if (partyData == undefined) {
@@ -320,8 +360,19 @@ exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1
         partyData.partyMembers.push(new PartyMember(callerCharacterUid, callerCharacterData.characterName, callerCharacterData.characterClass, callerCharacterData.stats.level, callerCharacterData.position, false, true, callerCharacterData.characterPortrait));
         partyData.partyMembersUidList.push(callerCharacterUid);
 
+        //pokud existuje dungeon encounter party do ktere se pridavam, dam sebe jako watchera abych ho videl
+        const dungeonEncounterDb = admin.firestore().collection('encounters').where("foundByPartyUid", "==", partyData.uid).where("encounterContext", "==", ENCOUNTER_CONTEXT.DUNGEON).withConverter(encounterDocumentConverter);
+        await t.get(dungeonEncounterDb).then(querry => {
+          querry.docs.forEach(doc => {
+            dungeonEncounterData = doc.data();
+            if (dungeonEncounterData != undefined) {
+              dungeonEncounterData.watchersList.push(callerCharacterUid);
+            }
+          });
+        });
 
       }
+
 
 
       //ziskam  personal encounter invitovaneho hace pokud existuje....
@@ -368,8 +419,11 @@ exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1
       if (leaderPersonalEncounter != undefined)
         t.set(encountersDb.doc(leaderPersonalEncounter.uid), JSON.parse(JSON.stringify(leaderPersonalEncounter)), { merge: true });
 
+      if (dungeonEncounterData != undefined)
+        t.set(encountersDb.doc(dungeonEncounterData.uid), JSON.parse(JSON.stringify(dungeonEncounterData)), { merge: true });
 
       t.set(PartiesDb.doc(partyData.uid), JSON.parse(JSON.stringify(partyData)), { merge: true });
+
 
 
       //smazeme party invite
@@ -488,7 +542,7 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
 
       let partyData: Party = new Party("", "", 0, [], [], null);
       //najdu partu ktere jsi clenem
-      await t.get(partiesDb.where("partyMembersUidList", "array-contains", callerCharacterUid)).then(querry => {
+      await t.get(partiesDb.where("partyMembersUidList", "array-contains", callerCharacterUid).withConverter(PartyConverter)).then(querry => {
         if (querry.size == 0) {
           throw "You are not in any party!";
         }
@@ -503,6 +557,8 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
         );
       });
 
+      //dungeon encounter party
+      const dungeonEncounterDb = admin.firestore().collection('encounters').where("foundByPartyUid", "==", partyData.uid).where("encounterContext", "==", ENCOUNTER_CONTEXT.DUNGEON);
 
       //Smazu ostatni party membery jako watchery ze sveho personal encounteru
 
@@ -540,26 +596,64 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
         });
       });
 
+      let dungeonEncounterData: EncounterDocument | undefined;
 
 
-      //jsem posledni clen co odchazi z party....smazu ji i vsechny partyInvite  
+      //pokud parta byla v dungeonu
+      if (partyData.dungeonProgress != null) {
+        //nastavim si startovni PoI na vychozi PoI dungeonu. Aby mi nezustala PoI nekde uvnitr dungeonu kdyz sem leavnul pro priste.... pokud jsem teda na lokaci dungeonu...ufffff
+        if (callerCharacterData.position.locationId == partyData.dungeonProgress.dungeonLocationId) {
+          callerCharacterData.position.pointOfInterestId = getStartingPointOfInterestForLocation(partyData.dungeonProgress.dungeonLocationId);
+
+        }
+      }
+
+      //jsem posledni clen co odchazi z party....smazu ji i vsechny partyInvite  .....i vsechny dungeon encountery kterych sem watcher(je to totiz lingering dungeon encounter ktery bez party neexistuje)
       if (partyData.partyMembers.length == 2) {
+
+        //TODO: TADY JE ERROR, ten druhy party member keremu sem znicil partu a vyhodil z dungu ma v charakteru stale posledni PoI lokaci kterou mel kdyz byl v dungeonu ! Takze pokud hned se prida do jina paty 
+        //a pujde znovu dungeonu tak bude mit spatny PoI ne nazacatku ale nekde kde byl predtim....!!!!
         const partyInviteDb = admin.firestore().collection('partyInvites').where("partyLeaderUid", "==", partyData.partyLeaderUid);
-        console.log("Jsem 2 posledni v parte, smazu ji");
+
         //smazu vsechny PartyInvite
         await t.get(partyInviteDb).then(querry => {
           querry.docs.forEach(doc => {
-            t.delete(doc);
+            // let data : PartyInvite  = doc.data();
+            t.delete(admin.firestore().collection('partyInvites').doc(doc.id));
+          });
+
+        });
+        console.log("A: ");
+        //smazu ten dungeon encounter
+        await t.get(dungeonEncounterDb).then(querry => {
+          console.log("A1: ");
+          querry.docs.forEach(doc => {
+            console.log("docId: " + doc.id);
+            // let data : EncounterDocument  = doc.data();
+            t.delete(encountersDb.doc(doc.id));
           });
 
         });
 
-
+        console.log("B");
         //smazu partu
         t.delete(partiesDb.doc(partyData.uid));
-        console.log("B");
       }
       else {
+
+        //smazu sebe jako watchera  z dungeon encounteru, pokud teda parta  v dungeonu nejaky vytvorila..
+        await t.get(dungeonEncounterDb).then(querry => {
+          querry.docs.forEach(doc => {
+
+            dungeonEncounterData = doc.data();
+            if (dungeonEncounterData != undefined) {
+              if (dungeonEncounterData.watchersList.includes(callerCharacterUid))
+                dungeonEncounterData.watchersList.splice(dungeonEncounterData.watchersList.indexOf(callerCharacterUid), 1);
+            }
+          });
+        });
+
+
 
         //smazu svoje zaznamy z party
 
@@ -609,6 +703,10 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
       if (leaverPersonalEncounter != undefined) {
         console.log("ukladam leaverPersonalEncounter : " + leaverPersonalEncounter.uid)
         t.set(encountersDb.doc(leaverPersonalEncounter.uid), JSON.parse(JSON.stringify(leaverPersonalEncounter)), { merge: true });
+      }
+
+      if (dungeonEncounterData != undefined) {
+        t.set(encountersDb.doc(dungeonEncounterData.uid), JSON.parse(JSON.stringify(dungeonEncounterData)), { merge: true });
       }
 
 

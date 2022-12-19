@@ -27,20 +27,22 @@ public class AccountDataSO : ScriptableObject
     public EncounterData RareEncounterData;
     public List<EncounterData> EncountersData;
     public List<EncounterResult> EncounterResultsData;
-    public List<Vendor> VendorsData;
+    // public List<Vendor> VendorsData;
     public List<InboxItem> InboxData;
     public PartyInvite PartyInviteData;
-    public Maps MapsData;
+    public Zone ZoneData;
+    public Location LocationData;
     public int PlayersOnline;
     public OtherMetadata OtherMetadataData;
-
+    public GlobalMetadata GlobalMetadata;
 
 
     //    public List<PartyFinderData> PartyFinderData;
 
-    public UnityAction OnMapsChanged;
+    // public UnityAction OnMapsChanged;
     public UnityAction OnDescriptionsMetadataChanged;
     public UnityAction OnOtherMetadataChanged;
+    public UnityAction<bool> OnClientVersionMatch;
     public UnityAction OnCharacterDataChanged;
     public UnityAction<CharacterData> OnCharacterDataChanged_OldData;
     public UnityAction OnPlayerDataChanged;
@@ -52,14 +54,18 @@ public class AccountDataSO : ScriptableObject
     public UnityAction OnEncounterResultsDataChanged;
     public UnityAction OnInboxDataChanged;
     public UnityAction OnPartyInviteDataChanged;
-    public UnityAction OnVendorsDataChanged;
+    // public UnityAction OnVendorsDataChanged;
     public UnityAction OnEncounterLoadedFirstTime;
     public UnityAction OnCharacterLoadedFirstTime;
     public UnityAction OnPlayerDataLoadedFirstTime;
     public UnityAction OnSkillsMetadataLoadedFirstTime;
 
-    public UnityAction OnWorldPositionChanged;
+    public UnityAction OnWorldPointOfInterestChanged;
     public UnityAction OnWorldLocationChanged;
+    public UnityAction OnWorldZoneChanged;
+
+    public UnityAction OnZoneDataChanged;
+    public UnityAction OnLocationDataChanged;
 
 
 
@@ -101,10 +107,10 @@ public class AccountDataSO : ScriptableObject
 
         DescriptionsMetadataChangedFirstTime = false;
 
-       
-     
 
-       
+
+
+
     }
 
 
@@ -116,27 +122,38 @@ public class AccountDataSO : ScriptableObject
             OnOtherMetadataChanged.Invoke();
     }
 
+    public void SetGlobalMetadata(DocumentSnapshot _snapshot)
+    {
+        GlobalMetadata = _snapshot.ConvertTo<GlobalMetadata>();
+        Debug.Log("B:" + GlobalMetadata.serverVersion);
+        Debug.Log("C:" + Application.version);
+        if (OnClientVersionMatch != null)
+            OnClientVersionMatch.Invoke(GlobalMetadata.serverVersion == Application.version);
+    }
+
     public void SetOnlinePlayersCount(long _amount)
     {
         PlayersOnline = (int)_amount;
         OnlinePlayersCount.SetValue((int)PlayersOnline);
     }
 
-
-
-    public void SetMaps(DocumentSnapshot _snapshot)
+    public void SetLocation(DocumentSnapshot _snapshot)
     {
 
+        LocationData = _snapshot.ConvertTo<Location>();
 
-        MapsData = _snapshot.ConvertTo<Maps>();
+        if (OnLocationDataChanged != null)
+            OnLocationDataChanged.Invoke();
 
-        if (OnMapsChanged != null)
-            OnMapsChanged.Invoke();
+    }
 
-        //if (SkillsMetadataChangedFirstTime)
-        //    OnSkillsMetadataLoadedFirstTime.Invoke();
+    public void SetZone(DocumentSnapshot _snapshot)
+    {
+        ZoneData = _snapshot.ConvertTo<Zone>();
 
-        //SkillsMetadataChangedFirstTime = false;
+        if (OnZoneDataChanged != null)
+            OnZoneDataChanged.Invoke();
+
     }
 
     CharacterData oldDataCharacter = null;
@@ -190,19 +207,29 @@ public class AccountDataSO : ScriptableObject
             //LastWorldPosition.zoneId = CharacterData.position.zoneId;
             //LastWorldPosition.pointOfInterestId = CharacterData.position.pointOfInterestId;
 
-            OnWorldPositionChanged.Invoke();
+            //  OnWorldPositionChanged.Invoke();
         }
 
         if (LastWorldPosition != null)
         {
-            if (LastWorldPosition.locationId != CharacterData.position.locationId || LastWorldPosition.zoneId != CharacterData.position.zoneId || LastWorldPosition.pointOfInterestId != CharacterData.position.pointOfInterestId)
-                OnWorldPositionChanged.Invoke();
+            // if (LastWorldPosition.locationId != CharacterData.position.locationId || LastWorldPosition.zoneId != CharacterData.position.zoneId || LastWorldPosition.pointOfInterestId != CharacterData.position.pointOfInterestId)
+            if (LastWorldPosition.pointOfInterestId != CharacterData.position.pointOfInterestId)
+                OnWorldPointOfInterestChanged.Invoke();
         }
+
+
+
 
         if (LastWorldPosition != null)
         {
             if (LastWorldPosition.locationId != CharacterData.position.locationId)
                 OnWorldLocationChanged.Invoke();
+        }
+
+        if (LastWorldPosition != null)
+        {
+            if (LastWorldPosition.zoneId != CharacterData.position.zoneId)
+                OnWorldZoneChanged.Invoke();
         }
 
         LastWorldPosition = new WorldPosition();
@@ -417,50 +444,50 @@ public class AccountDataSO : ScriptableObject
             OnEncounterResultsDataChanged.Invoke();
     }
 
-    public void SetVendorsData(QuerySnapshot _snapshot)
-    {
-        List<Vendor> FreshVendorDataFromDB = new List<Vendor>();
+    //public void SetVendorsData(QuerySnapshot _snapshot)
+    //{
+    //    List<Vendor> FreshVendorDataFromDB = new List<Vendor>();
 
 
-        //tady delam woodoo abych zaznamy co jsou uz v listu jen updatnul a tim zachvoval refernce na tyto zanznamy a ne ze je vsechny smazu a na hradim novyma....
-        foreach (var newItem in _snapshot)
-        {
-            var freshEntry = newItem.ConvertTo<Vendor>();
+    //    //tady delam woodoo abych zaznamy co jsou uz v listu jen updatnul a tim zachvoval refernce na tyto zanznamy a ne ze je vsechny smazu a na hradim novyma....
+    //    foreach (var newItem in _snapshot)
+    //    {
+    //        var freshEntry = newItem.ConvertTo<Vendor>();
 
-            FreshVendorDataFromDB.Add(freshEntry);
+    //        FreshVendorDataFromDB.Add(freshEntry);
 
-            bool itemFound = false;
-            foreach (var origEntry in VendorsData) //projdu stare data v listu a pokud ma fresh data prekopiruju je tam
-            {
-                if (origEntry.id == freshEntry.id)
-                {
-                    Utils.CopyPropertiesTo(freshEntry, origEntry);
-                    itemFound = true;
-                }
+    //        bool itemFound = false;
+    //        foreach (var origEntry in VendorsData) //projdu stare data v listu a pokud ma fresh data prekopiruju je tam
+    //        {
+    //            if (origEntry.id == freshEntry.id)
+    //            {
+    //                Utils.CopyPropertiesTo(freshEntry, origEntry);
+    //                itemFound = true;
+    //            }
 
-            }
+    //        }
 
-            if (!itemFound)   //pokud sem zazanm nenasel musi to byt novy encounter, pridam si ho
-                VendorsData.Add(freshEntry);
+    //        if (!itemFound)   //pokud sem zazanm nenasel musi to byt novy encounter, pridam si ho
+    //            VendorsData.Add(freshEntry);
 
-        }
+    //    }
 
-        for (int i = VendorsData.Count - 1; i >= 0; i--)  //a apk jeste projud ty co nejsou ve fresh, musi byt teda smazane, smazu je
-        {
-            bool itemFound = false;
-            foreach (var newItem in FreshVendorDataFromDB)
-            {
-                if (newItem.id == VendorsData[i].id)
-                    itemFound = true;
-            }
-            if (!itemFound)
-                VendorsData.RemoveAt(i);
+    //    for (int i = VendorsData.Count - 1; i >= 0; i--)  //a apk jeste projud ty co nejsou ve fresh, musi byt teda smazane, smazu je
+    //    {
+    //        bool itemFound = false;
+    //        foreach (var newItem in FreshVendorDataFromDB)
+    //        {
+    //            if (newItem.id == VendorsData[i].id)
+    //                itemFound = true;
+    //        }
+    //        if (!itemFound)
+    //            VendorsData.RemoveAt(i);
 
-        }
+    //    }
 
-        if (OnVendorsDataChanged != null)
-            OnVendorsDataChanged.Invoke();
-    }
+    //    if (OnVendorsDataChanged != null)
+    //        OnVendorsDataChanged.Invoke();
+    //}
 
 
 
@@ -520,6 +547,26 @@ public class AccountDataSO : ScriptableObject
     }
 
 
+    public PointOfInterest GetCurrentPointOfInterest()
+    {
+        return LocationData.GetPointOfInterestById(CharacterData.position.pointOfInterestId);
+    }
 
+    //only works for POI inside MY LOCATION or Locations on world map....
+    public bool IsPositionExplored(string _position)
+    {
+        //pokud sme v dungu divame se na prozkoumane pozice party i charakteru
+        if (IsInDungeon())
+        {
+            return (PartyData.dungeonProgress.IsPositionExplored(_position) || CharacterData.IsPositionExplored(_position));
+
+
+        }
+        //jinak prozkoumane pozice charakteru
+        else
+        {
+            return CharacterData.IsPositionExplored(_position);
+        }
+    }
 
 }

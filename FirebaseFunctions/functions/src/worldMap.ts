@@ -2,11 +2,13 @@
 // [START import]
 import * as functions from "firebase-functions";
 import { _databaseWithOptions } from "firebase-functions/v1/firestore";
-import { CharacterDocument, characterDocumentConverter, CURRENCY_ID, getCurrentDateTime, QuerryIfCharacterIsInAnyEncounter, QuerryIfCharacterIsWatcherInAnyDungeonEncounter } from ".";
+import { CharacterDocument, characterDocumentConverter, checkForServerVersion, CURRENCY_ID, getCurrentDateTime, HasPartyAnyDungeonEncounter, QuerryIfCharacterIsInAnyEncounter } from ".";
 import { CombatEnemy, CombatMember, CombatStats, EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT } from "./encounter";
-import { EnemyMeta, firestoreAutoId, MineralMeta } from "./general2";
+import { EnemyMeta, firestoreAutoId } from "./general2";
 import { Party } from "./party";
 import { Questgiver } from "./questgiver";
+import { Trainer } from "./trainer";
+import { Vendor } from "./vendor";
 //import { CharacterDocument, characterDocumentConverter } from ".";
 
 const admin = require('firebase-admin');
@@ -26,7 +28,6 @@ export enum ZONE {
   DUNOTAR = "DUNOTAR",
 }
 
-//should I use?
 export enum POI {
   NONE = "NONE",
   //VALLEY OF TRIALS
@@ -37,14 +38,26 @@ export enum POI {
   //DEEP_RAVINE
   DEEP_RAVINE_ROCKY_PATH = "ROCKY_PATH",
   //MALAKA_DUNGEON
-  MALAKA_DUNGEON_ENTRANCE = "MALAKA_DUNGEON_ENTRANCE",
-  MALAKA_DUNGEON_STAIRWAY = "MALAKA_DUNGEON_STAIRWAY",
+  MALAKA_DUNGEON_0 = "MALAKA_DUNGEON_0",
+  MALAKA_DUNGEON_1 = "MALAKA_DUNGEON_1",
+  MALAKA_DUNGEON_2 = "MALAKA_DUNGEON_2",
+  MALAKA_DUNGEON_3 = "MALAKA_DUNGEON_3",
+  MALAKA_DUNGEON_4 = "MALAKA_DUNGEON_4",
+  MALAKA_DUNGEON_5 = "MALAKA_DUNGEON_5",
+  MALAKA_DUNGEON_6 = "MALAKA_DUNGEON_6",
+  MALAKA_DUNGEON_7 = "MALAKA_DUNGEON_7",
+  //VILLAGE_OF_MALAKA
+  VILLAGE_OF_MALAKA_MARKET = "VILLAGE_OF_MALAKA_MARKET",
+  VILLAGE_OF_TOWNSQUARE = "VILLAGE_OF_MALAKA_TOWNSQUARE",
+  //NEZAPOMEN PRIDAT I DO : getPoIForLocationId!! KDYZ PRIDAVAS NOVE
+
 }
 
 
 export enum POI_TYPE {
   ENCOUNTER = "ENCOUNTER",
-  DUNGEON = "DUNGEON"
+  DUNGEON = "DUNGEON",
+  TOWN = "TOWN"
 }
 
 export enum LOC_TYPE {
@@ -54,11 +67,79 @@ export enum LOC_TYPE {
 }
 
 
-export class LocationMeta {
+
+export async function QuerryForPointOfInterestCharacterIsAt(_transaction: any, _character: CharacterDocument): Promise<PointOfInterest> {
+
+  const locationDb = admin.firestore().collection('_metadata_zones').doc(_character.position.zoneId).collection("locations").doc(_character.position.locationId).withConverter(LocationConverter);//.doc(questgiverUid);
+  const locationDoc = await _transaction.get(locationDb);
+  let locationData: MapLocation = locationDoc.data();
+
+  return locationData.getPointOfInterestById(_character.position.pointOfInterestId);//.getQuestgiverById(questgiverUid);// questgiverDoc.data();
+
+
+}
+
+
+
+
+export function getLocationsForZoneId(_zoneId: string): string[] {
+
+  let locList: string[] = [];
+
+  switch (_zoneId) {
+    case ZONE.DUNOTAR:
+      locList.push(LOC.VALLEY_OF_TRIALS);
+      locList.push(LOC.VILLAGE_OF_MALAKA);
+      locList.push(LOC.DEEP_RAVINE);
+      locList.push(LOC.MALAKA_DUNGEON);
+      break;
+
+    default:
+      throw ("There is no location with ID : " + _zoneId);
+  }
+  return locList;
+
+}
+
+export function getPoIsForLocationId(_locId: string): string[] {
+
+  let poiList: string[] = [];
+
+  switch (_locId) {
+    case LOC.VALLEY_OF_TRIALS:
+      poiList.push(POI.VALLEY_OF_TRIALS_PLAINS);
+      poiList.push(POI.VALLEY_OF_TRIALS_SCORPID_LAIR);
+      poiList.push(POI.VALLEY_OF_TRIALS_VILE_DEN);
+      poiList.push(POI.VALLEY_OF_TRIALS_MUDDY_PLAINS);
+      break;
+    case LOC.VILLAGE_OF_MALAKA:
+      poiList.push(POI.VILLAGE_OF_MALAKA_MARKET);
+      poiList.push(POI.VILLAGE_OF_TOWNSQUARE);
+      break;
+    case LOC.MALAKA_DUNGEON:
+      poiList.push(POI.MALAKA_DUNGEON_0);
+      poiList.push(POI.MALAKA_DUNGEON_1);
+      break;
+    case LOC.DEEP_RAVINE:
+      poiList.push(POI.DEEP_RAVINE_ROCKY_PATH);
+      break;
+
+
+    default:
+      throw ("There is no location with ID : " + _locId);
+      break;
+
+  }
+  return poiList;
+
+}
+
+
+export class MapLocation { //Chtel bych aby se to menovalo Location ale to uz je zabrane nejakou kktskou firebase clasou
   constructor(
     public locationType: string,
     public pointsOfInterest: PointOfInterest[],
-    public questgivers: Questgiver[],
+    public dijkstraMap: Vertex[]
 
   ) { }
 
@@ -73,6 +154,41 @@ export class LocationMeta {
 
   }
 
+  // getQuestgiverById(_id: string): Questgiver {
+
+  //   for (const element of this.questgivers) {
+  //     if (element.id == _id)
+  //       return element;
+  //   }
+
+  //   throw "Could not find Questgiver with ID : " + _id;
+
+  // }
+}
+
+
+export class ScreenPosition {
+  constructor(
+    public x: number,
+    public y: number
+
+  ) { }
+}
+
+export class PointOfInterest {
+  constructor(
+    public id: string,
+    public enemies: EnemyMeta[],
+    public exploreTimePrice: number,
+    public pointOfInterestType: string,
+    public questgivers: Questgiver[],
+    public vendors: Vendor[],
+    public trainers: Trainer[],
+    public screenPosition: ScreenPosition[]
+
+
+  ) { }
+
   getQuestgiverById(_id: string): Questgiver {
 
     for (const element of this.questgivers) {
@@ -83,32 +199,53 @@ export class LocationMeta {
     throw "Could not find Questgiver with ID : " + _id;
 
   }
+
+
+  getVendorById(_id: string): Vendor {
+
+    for (const element of this.vendors) {
+      if (element.id == _id)
+        return element;
+    }
+
+    throw "Could not find Vendor with ID : " + _id;
+
+  }
+
+
+  getTrainerById(_id: string): Trainer {
+
+    for (const element of this.trainers) {
+      if (element.id == _id)
+        return element;
+    }
+
+    throw "Could not find Trainer with ID : " + _id;
+
+  }
 }
 
-export class PointOfInterest {
-  constructor(
-    public id: string,
-    public enemies: EnemyMeta[],
-    //  public minerals: MineralMeta[],
-    public exploreTimePrice: number,
-    public pointOfInterestType: string
-  ) { }
-
-}
-
-export const LocationMetaConverter = {
-  toFirestore: (_location: LocationMeta) => {
-
+export const LocationConverter = {
+  toFirestore: (_location: MapLocation) => {
 
     return {
       // displayName: _location.displayName,
+      locationType: _location.locationType,
       pointsOfInterest: _location.pointsOfInterest,
+      dijkstraMap: _location.dijkstraMap
 
     };
   },
   fromFirestore: (snapshot: any, options: any) => {
     const data = snapshot.data(options);
-    return new LocationMeta(data.locationType, data.pointsOfInterest, data.questgivers);
+
+    let pointsOnInterest: PointOfInterest[] = [];
+
+    data.pointsOfInterest.forEach(element => {
+      pointsOnInterest.push(new PointOfInterest(element.id, element.enemies, element.exploreTimePrice, element.pointOfInterestType, element.questgivers, element.vendors, element.trainers, element.screenPosition));
+    });
+
+    return new MapLocation(data.locationType, pointsOnInterest, data.dijkstraMap);
   }
 };
 
@@ -248,9 +385,9 @@ class Dijkstra {
 export function getStartingPointOfInterestForLocation(_locationId: string): string {
   switch (_locationId) {
     case LOC.VALLEY_OF_TRIALS: return POI.VALLEY_OF_TRIALS_PLAINS;
-    case LOC.VILLAGE_OF_MALAKA: return POI.NONE;
+    case LOC.VILLAGE_OF_MALAKA: return POI.VILLAGE_OF_MALAKA_MARKET;
     case LOC.DEEP_RAVINE: return POI.DEEP_RAVINE_ROCKY_PATH;
-    case LOC.MALAKA_DUNGEON: return POI.MALAKA_DUNGEON_ENTRANCE;
+    case LOC.MALAKA_DUNGEON: return POI.MALAKA_DUNGEON_0;
     default:
       {
         throw console.log("Could not find starting point of interest for location : " + _locationId);
@@ -308,14 +445,57 @@ function getLocationMap(_locationId: string): Dijkstra {
         ]));
       break;
     case LOC.MALAKA_DUNGEON:
-      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_ENTRANCE,
+      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_0,
         [
-          new NodeVertex(POI.MALAKA_DUNGEON_STAIRWAY, 1)
+          new NodeVertex(POI.MALAKA_DUNGEON_1, 1)
         ]));
 
-      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_STAIRWAY,
+      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_1,
         [
-          new NodeVertex(POI.MALAKA_DUNGEON_ENTRANCE, 1)
+          new NodeVertex(POI.MALAKA_DUNGEON_0, 1),
+          new NodeVertex(POI.MALAKA_DUNGEON_2, 1)
+        ]));
+
+      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_2,
+        [
+          new NodeVertex(POI.MALAKA_DUNGEON_1, 1),
+          new NodeVertex(POI.MALAKA_DUNGEON_3, 1)
+        ]));
+      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_3,
+        [
+          new NodeVertex(POI.MALAKA_DUNGEON_4, 1),
+          new NodeVertex(POI.MALAKA_DUNGEON_2, 1)
+        ]));
+      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_4,
+        [
+          new NodeVertex(POI.MALAKA_DUNGEON_5, 1),
+          new NodeVertex(POI.MALAKA_DUNGEON_3, 1)
+        ]));
+      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_5,
+        [
+          new NodeVertex(POI.MALAKA_DUNGEON_6, 1),
+          new NodeVertex(POI.MALAKA_DUNGEON_4, 1)
+        ]));
+      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_6,
+        [
+          new NodeVertex(POI.MALAKA_DUNGEON_7, 1),
+          new NodeVertex(POI.MALAKA_DUNGEON_5, 1)
+        ]));
+      dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_7,
+        [
+          new NodeVertex(POI.MALAKA_DUNGEON_6, 1)
+        ]));
+      break;
+
+    case LOC.VILLAGE_OF_MALAKA:
+      dijkstra.addVertex(new Vertex(POI.VILLAGE_OF_MALAKA_MARKET,
+        [
+          new NodeVertex(POI.VILLAGE_OF_TOWNSQUARE, 1)
+        ]));
+
+      dijkstra.addVertex(new Vertex(POI.VILLAGE_OF_TOWNSQUARE,
+        [
+          new NodeVertex(POI.VILLAGE_OF_MALAKA_MARKET, 1)
         ]));
       break;
 
@@ -363,7 +543,6 @@ function printLocationMap(_map: Dijkstra) {
 exports.travelToPoI = functions.https.onCall(async (data, context) => {
 
   //TODO:  asi checky jestli vubec si v lokaci kde chces cestovat mezi POI? at nejsou nejake corrupted data o lokaci hrace v DB
-
   const callerCharacterUid = data.characterUid;
   const destinationPointOfInterestId = data.destinationPointOfInterestId;
 
@@ -382,13 +561,15 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
   try {
     const result = await admin.firestore().runTransaction(async (t: any) => {
 
+      checkForServerVersion(data);
+
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
-      const destinationLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).withConverter(LocationMetaConverter);
+      const destinationLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).withConverter(LocationConverter);
 
       const destinationLocationMetadataDoc = await t.get(destinationLocationMetadataDb);
-      let destinationLocationMetadataData: LocationMeta = destinationLocationMetadataDoc.data();
+      let destinationLocationMetadataData: MapLocation = destinationLocationMetadataDoc.data();
       let destinationPointOfInterestMetadataData: PointOfInterest = destinationLocationMetadataData.getPointOfInterestById(destinationPointOfInterestId);
 
 
@@ -440,7 +621,7 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
       //pokud jsi tedy v parte, chces cestovat ale uz je vytvoreny Dungeon encounter ktereho si tim padem watcherem, nemuzes cestovat ( je to kvuli tomu aby lidi prozkoumavali dungeon hezky postupne)
       //bohuzel toto pridat 1 read KDYKOLIV kdyz v parte prozkoumavas PoI....
       if (myPartyData != undefined) {
-        if (await QuerryIfCharacterIsWatcherInAnyDungeonEncounter(t, callerCharacterUid))
+        if (await HasPartyAnyDungeonEncounter(t, myPartyData.uid))
           throw ("There are enemies nearby your party!");
 
         //Ulozime ze si prozkoumal tuto lokaci do party pokud nebyla neprozkoumana
@@ -467,7 +648,7 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
             var maxCombatants: number = 5;
             var isFull: boolean = false;
 
-            let dungeonEncounter: EncounterDocument = new EncounterDocument(encounterDb.doc().id, spawnedEnemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.DUNGEON, characterData.position, 1, "Combat started!\n", "0");
+            let dungeonEncounter: EncounterDocument = new EncounterDocument(encounterDb.doc().id, spawnedEnemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, destinationPointOfInterestMetadataData.id, ENCOUNTER_CONTEXT.DUNGEON, characterData.position, 1, "Combat started!\n", "0", myPartyData.uid);
 
             //pridam pripadne vsechny party membery do encounteru
             myPartyData.partyMembersUidList.forEach(partyMemberUid => {
@@ -520,15 +701,18 @@ exports.travel = functions.https.onCall(async (data, context) => {
   const callerPersonalEncounterWithoutCombatants = encountersDb.where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).where("combatantList", "==", []).withConverter(encounterDocumentConverter);
 
   try {
+
     const result = await admin.firestore().runTransaction(async (t: any) => {
+
+      checkForServerVersion(data);
 
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
-      const destinationLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc("DUNOTAR").collection("locations").doc(destinationLocationId);
+      const destinationLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(destinationLocationId);
 
       const destinationLocationMetadataDoc = await t.get(destinationLocationMetadataDb);
-      let destinationLocationMetadataData: LocationMeta = destinationLocationMetadataDoc.data();
+      let destinationLocationMetadataData: MapLocation = destinationLocationMetadataDoc.data();
 
 
       //TODO:  nemel by byt problem moc profiltrovat world map dijkstru podle toho c characetdocument ma explored a nema
@@ -558,7 +742,10 @@ exports.travel = functions.https.onCall(async (data, context) => {
         characterData.exploredPositions.locations.push(destinationLocationId);
 
         if (destinationLocationMetadataData.locationType != LOC_TYPE.DUNGEON)//..pokud  to neni dungeon tam se startovni pozice prozkovama v parte pri enter dungeonu
+        {
+          //  console.log("pushuju: " + destinationLocationMetadataData.locationType);
           characterData.exploredPositions.pointsOfInterest.push(getStartingPointOfInterestForLocation(destinationLocationId));
+        }
       }
 
       //smazu tvuj personal encounter pokud v lokaci mas nejaky
@@ -578,8 +765,10 @@ exports.travel = functions.https.onCall(async (data, context) => {
             //najdu svuj zaznam a updatnu lokaci
             if (myPartyData != undefined) {
               myPartyData.partyMembers.forEach(element => {
-                if (element.uid == callerCharacterUid)
+                if (element.uid == callerCharacterUid) {
                   element.position.locationId = destinationLocationId;
+                  element.position.pointOfInterestId = characterData.position.pointOfInterestId; //point of interest taky protoze po ceste do nove lokace si na startovnim poi
+                }
               });
             }
           });

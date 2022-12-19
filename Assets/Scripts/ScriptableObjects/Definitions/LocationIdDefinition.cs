@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 [CreateAssetMenu(menuName = "SimplestMMORPG/LocationIdDefinition")]
-public class LocationIdDefinition : BaseIdDefinition, IHasScreenPosition
+public class LocationIdDefinition : BaseIdDefinition
 {
  
     //public string Id;

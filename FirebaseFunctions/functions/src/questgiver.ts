@@ -3,6 +3,7 @@
 import * as functions from "firebase-functions";
 import { ContentContainer, CharacterDocument, characterDocumentConverter, SimpleTally, WorldPosition, CONTENT_TYPE, CHARACTER_CLASS } from ".";
 import { generateEquip } from "./equip";
+import { LocationConverter, MapLocation } from "./worldMap";
 const admin = require('firebase-admin');
 // // [END import]
 
@@ -49,7 +50,6 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
   const questgiverUid = data.questgiverUid;
 
   const callerCharacterDb = admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
-  const questgiverDb = admin.firestore().collection('_metadata_questgivers').doc(questgiverUid);
 
   try {
     const result = await admin.firestore().runTransaction(async (t: any) => {
@@ -57,8 +57,15 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
       const callerCharacterDoc = await t.get(callerCharacterDb);
       let callerCharacterData: CharacterDocument = callerCharacterDoc.data();
 
-      const questgiverDoc = await t.get(questgiverDb);
-      let questgiverData: Questgiver = questgiverDoc.data();
+      const locationDb = admin.firestore().collection('_metadata_zones').doc(callerCharacterData.position.zoneId).collection("locations").doc(callerCharacterData.position.locationId).withConverter(LocationConverter);//.doc(questgiverUid);
+
+      const locationDoc = await t.get(locationDb);
+      let locationData: MapLocation = locationDoc.data();
+
+      
+   //   const questgiverDoc = await t.get(questgiverDb);
+      const questgiverData = locationData.getPointOfInterestById(callerCharacterData.position.pointOfInterestId).getQuestgiverById(questgiverUid);// questgiverDoc.data();
+
 
       //zkontroluju jestli jste ve stejne lokaci
       if (!callerCharacterData.isOnSameWorldPosition(questgiverData.position))
@@ -97,11 +104,11 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
 
       //dam reward hraci
       for (const reward of questgiverData.rewards) {
-       // console.log("reward_A : " + reward.content.getItem().itemId);
-        if (reward.characterClassIds.includes(callerCharacterData.characterClass) || reward.characterClassIds.includes(CHARACTER_CLASS.ANY) ) {
-        //  console.log("reward_B : " + reward.content.getItem().itemId);
+        // console.log("reward_A : " + reward.content.getItem().itemId);
+        if (reward.characterClassIds.includes(callerCharacterData.characterClass) || reward.characterClassIds.includes(CHARACTER_CLASS.ANY)) {
+          //  console.log("reward_B : " + reward.content.getItem().itemId);
           callerCharacterData.addContentToInventory(reward.content, true, false);
-         // break;
+          // break;
         }
       }
       //...a jeste rando equip reward dam jestli nejaky je

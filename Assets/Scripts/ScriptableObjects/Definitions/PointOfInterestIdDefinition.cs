@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "SimplestMMORPG/PointOfInterestIdDefinition")]
-public class PointOfInterestIdDefinition : BaseIdDefinition,IHasScreenPosition
+public class PointOfInterestIdDefinition : BaseIdDefinition
 {
 
     //public string Id;

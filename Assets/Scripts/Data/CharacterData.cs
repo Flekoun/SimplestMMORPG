@@ -75,6 +75,49 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public ExploredPositions exploredPositions { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<SimpleTallyWithMax> professions { get; set; }
+
+
+        public SimpleTallyWithMax GetProfessionById(string _professionId)
+        {
+            foreach (var item in professions)
+            {
+                if (item.id == _professionId)
+
+                    return item;
+
+            }
+            return null;
+        }
+
+        public bool HasEnoughProfessionSkillToBeTrained(int _minSkillAmoutNeded, string _professionId)
+        {
+            if (_minSkillAmoutNeded == 0) return true;
+
+            if (GetProfessionById(_professionId)?.count >= _minSkillAmoutNeded)
+                return true;
+
+            return false;
+            //foreach (var item in professions)
+            //{
+            //    if (item.id == _professionId)
+            //        if (item.count >= _minSkillAmoutNeded)
+            //            return true;
+
+            //}
+            //return false;
+        }
+
+        public bool HasAlreadyThisOrMoreOfProfessionSkillToBeTrained(int _skillAmounToTrain, string _professionId)
+        {
+            if (GetProfessionById(_professionId)?.countMax >= _skillAmounToTrain)
+                return true;
+
+            return false;
+        }
+
         public int GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES _attribute)
         {
             int totalAmount = 0;
@@ -104,7 +147,7 @@ namespace simplestmmorpg.data
             {
                 if (GetKillsForEnemyId(item.id) < item.count)
                 {
-               //     Debug.Log("nedokncil jsi! : mas " + (GetKillsForEnemyId(item.id)));
+                    //     Debug.Log("nedokncil jsi! : mas " + (GetKillsForEnemyId(item.id)));
 
                     areKillsFulfiled = false;
                 }
@@ -116,7 +159,7 @@ namespace simplestmmorpg.data
             {
                 if (inventory.GetAmountOfItemsInInventory(item.id) < item.count)
                 {
-                //    Debug.Log("nedokncil jsi! : mas " + (inventory.GetAmountOfItemsInInventory(item.id)));
+                    //    Debug.Log("nedokncil jsi! : mas " + (inventory.GetAmountOfItemsInInventory(item.id)));
 
                     areItemsFulfiled = false;
                 }

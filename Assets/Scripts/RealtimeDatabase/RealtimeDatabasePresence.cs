@@ -148,14 +148,14 @@ public class RealtimeDatabasePresence : MonoBehaviour
                 Dictionary<string, object> users = usersData.Value as Dictionary<string, object>;
                 if (users == null)
                 { // firstTime
-                    Debug.Log("FIST TIME");
+//                    Debug.Log("FIST TIME");
                     users = new Dictionary<string, object>();
                     users.Add("count", 1);
                     users.Add("playersList", new Dictionary<string, object>() { { AccountDataSO.CharacterData.uid, 1 } });
                 }
                 else
                 {
-                    Debug.Log("MORE TIME");
+              //      Debug.Log("MORE TIME");
                     // INCREMENT COUNT
                     users["count"] = int.Parse(users["count"].ToString()) + 1;
 

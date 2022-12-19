@@ -114,6 +114,25 @@ namespace simplestmmorpg.data
 
     }
 
+    [Serializable]
+    [FirestoreData]
+    public class SimpleTallyWithMax
+    {
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int count { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int countMax { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string id { get; set; }
+
+    }
+
+
 
 
 }

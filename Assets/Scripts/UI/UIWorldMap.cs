@@ -7,7 +7,7 @@ using static UnityEngine.EventSystems.EventTrigger;
 
 public class UIWorldMap : MonoBehaviour
 {
-    public BaseDefinitionSOSet LocationsSOSet;
+    // public BaseDefinitionSOSet LocationsSOSet;
     public AccountDataSO AccountDataSO;
     public UIWorldMapLocationSpawner UIWorldMapLocationSpawner;
     public GameObject Model;
@@ -20,20 +20,21 @@ public class UIWorldMap : MonoBehaviour
     public void Awake()
     {
         UIWorldMapLocationSpawner.OnUIEntryClicked += OnWorldPositionButtonClicked;
-        AccountDataSO.OnWorldPositionChanged += OnWorldPositionChanged;
-        AccountDataSO.OnMapsChanged += OnMapsChanged;
+        //       AccountDataSO.OnWorldPositionChanged += OnWorldPositionChanged;
+        AccountDataSO.OnLocationDataChanged += OnWorldPositionChanged;
+        AccountDataSO.OnZoneDataChanged += OnZoneChanged;
         DijkstraMapMaker.OnVertexReachable += OnVertexReachable;
     }
 
-    private void OnVertexReachable(BaseIdDefinition _vertexDef)
+    private void OnVertexReachable(ScreenPoisitionWihtId _pos)
     {
-        UIWorldMapLocationSpawner.ShowMapLocationButton(_vertexDef);
+        UIWorldMapLocationSpawner.ShowMapLocationButton(_pos);
     }
 
-    private void OnMapsChanged()
+    private void OnZoneChanged()
     {
         UIWorldMapLocationSpawner.SpawnWorldMap();
-        DijkstraMapMaker.Setup(AccountDataSO.MapsData.worldMap, LocationsSOSet);
+        DijkstraMapMaker.Setup(AccountDataSO.ZoneData.dijkstraMap, AccountDataSO.ZoneData.locationScreenPositions);
         RefreshButtons();
     }
 
@@ -41,31 +42,22 @@ public class UIWorldMap : MonoBehaviour
     {
 
         //pokud lokace na kterou klikam uz je vybrana (tedy klikam po 2.) a neni to moje lokace, jdeme cestovat
-        if (_entry == selectedWorldLocationButton && _entry.LocationDef.Id != AccountDataSO.CharacterData.position.locationId)
+        if (_entry == selectedWorldLocationButton && _entry.Data != AccountDataSO.CharacterData.position.locationId)
         {
             _entry.TravelToThisLocation();
         }
 
         // pokud je to lokace na ktere jsem, tak do ni jednoduce vlezem
-        if (_entry.LocationDef.Id == AccountDataSO.CharacterData.position.locationId)
+        if (_entry.Data == AccountDataSO.CharacterData.position.locationId)
         {
             DijkstraMapMaker.ClearPlannedTravelPath();
 
-            LocationMap locationMap = AccountDataSO.MapsData.GetLocationById(_entry.LocationDef.Id);
+            OnOpenEncounterLocation.Invoke();
 
-            Debug.Log("POZICE NA KTEROU CESTUJU  AKLIKAM :  " + locationMap.locationType);
-            if (locationMap.locationType == Utils.LOCATION_TYPE.TOWN)
-            {
-                OnOpenTownLocation.Invoke();
-            }
-            else if (locationMap.locationType == Utils.LOCATION_TYPE.ENCOUNTERS || locationMap.locationType == Utils.LOCATION_TYPE.DUNGEON)
-                OnOpenEncounterLocation.Invoke();
-            //else if (locationMap.locationType == Utils.LOCATION_TYPE.DUNGEON)
-            //    OnOpenDungeonLocation.Invoke();
         }
         else //jinak ti ukazu kolik by te stala cesta tam
         {
-            DijkstraMapMaker.ShowPlannedTravelPath(AccountDataSO.CharacterData.position.locationId, _entry.Data, LocationsSOSet);
+            DijkstraMapMaker.ShowPlannedTravelPath(AccountDataSO.CharacterData.position.locationId, _entry.Data, AccountDataSO.ZoneData.locationScreenPositions);
 
         }
 
@@ -80,7 +72,7 @@ public class UIWorldMap : MonoBehaviour
         selectedWorldLocationButton = null;
 
         UIWorldMapLocationSpawner.SpawnWorldMap();
-        DijkstraMapMaker.Setup(AccountDataSO.MapsData.worldMap, LocationsSOSet);
+        DijkstraMapMaker.Setup(AccountDataSO.ZoneData.dijkstraMap, AccountDataSO.ZoneData.locationScreenPositions);
 
         DijkstraMapMaker.ClearPlannedTravelPath();
         RefreshButtons();

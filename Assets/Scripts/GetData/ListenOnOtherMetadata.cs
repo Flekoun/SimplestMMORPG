@@ -25,10 +25,24 @@ public class ListenOnOtherMetadata : MonoBehaviour
         }
     }
 
+    public void Awake()
+    {
+        AccountDataSO.OnClientVersionMatch += OnClientVersionMatch;
+    }
+
+    private void OnClientVersionMatch(bool _match)
+    {
+        if (_match)
+            StartListening();
+        else
+            Debug.Log("VERSION_MISMATCH");
+    }
+
+
     private List<ListenerRegistration> listenerRegistrations = new List<ListenerRegistration>();
 
 
-    public void StartListening()
+    private void StartListening()
     {
         FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
 

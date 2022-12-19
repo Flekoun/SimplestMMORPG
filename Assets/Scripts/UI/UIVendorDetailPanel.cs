@@ -32,7 +32,7 @@ public class UIVendorDetailPanel : MonoBehaviour
 
     public void Show(Vendor _data)
     {
-        AccountDataSO.OnVendorsDataChanged += Refresh;
+//        AccountDataSO.OnVendorsDataChanged += Refresh;
         AccountDataSO.OnCharacterDataChanged += Refresh;
 
 
@@ -51,7 +51,7 @@ public class UIVendorDetailPanel : MonoBehaviour
     {
         Model.SetActive(false);
 
-        AccountDataSO.OnVendorsDataChanged -= Refresh;
+       // AccountDataSO.OnVendorsDataChanged -= Refresh;
         AccountDataSO.OnCharacterDataChanged -= Refresh;
 
     }
@@ -61,7 +61,7 @@ public class UIVendorDetailPanel : MonoBehaviour
     {
         UIInventoryPlayer.Refresh(AccountDataSO.CharacterData.inventory.content);
         UIVendorGoodsSpawner.Refresh(Data);
-        TitleText.SetText(Data.displayName);
+        TitleText.SetText(Utils.GetMetadataForVendors(Data.id).title.GetText());
         //        UIInventoryVendor.Refresh(Data);
     }
 

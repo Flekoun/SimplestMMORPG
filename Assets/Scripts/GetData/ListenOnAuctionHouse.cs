@@ -51,7 +51,7 @@ public class ListenOnAuctionHouse : MonoBehaviour
            if (OnAllAuctionsChanged != null)
                OnAllAuctionsChanged.Invoke(Offers);
 
-           Debug.Log("New data on AUCTION OFFERS recieved : " + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
+           Debug.Log("New data on AUCTION OFFERS recieved ");//+ JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
            OnListenerStarted.Invoke();
 
        });
@@ -79,7 +79,7 @@ public class ListenOnAuctionHouse : MonoBehaviour
            if (OnAllOffersIPutOnAuctionChanged != null)
                OnAllOffersIPutOnAuctionChanged.Invoke(Offers);
 
-           Debug.Log("New data on AUCTION OFFERS recieved : " + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
+           Debug.Log("New data on AUCTION OFFERS recieved : ");// + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
            OnListenerStarted.Invoke();
 
        });
@@ -108,7 +108,7 @@ public class ListenOnAuctionHouse : MonoBehaviour
             if (OnnAllOffersIBiddedOnChanged != null)
                 OnnAllOffersIBiddedOnChanged.Invoke(Offers);
 
-            Debug.Log("New data on AUCTION BIDDED ON recieved : " + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
+            Debug.Log("New data on AUCTION BIDDED ON recieved : ");//+ JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
             OnListenerStarted.Invoke();
 
         });

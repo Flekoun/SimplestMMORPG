@@ -17,7 +17,7 @@ public class UIVendorEntry : MonoBehaviour
     public void SetData(Vendor _vendorData)
     {
         Data = _vendorData;
-        VendorNameText.SetText(Data.displayName);
+        VendorNameText.SetText(Utils.GetMetadataForVendors(Data.id).title.GetText());
     }
 
     public void Clicked()

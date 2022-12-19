@@ -12,22 +12,24 @@ public class UIPointOfInterestButton : MonoBehaviour
     public AccountDataSO AccountDataSO;
     public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
     public PrefabFactory PrefabFactory;
-    public PointOfInterestIdDefinitionSOSet AllPointOfInterestIdDefinitionSOSet;
+    //public PointOfInterestIdDefinitionSOSet AllPointOfInterestIdDefinitionSOSet;
     public Image PortraitImage;
     public TextMeshProUGUI NameText;
     public UIPortrait PlayerPortrait;
     public Transform PartyMembersParent;
     public GameObject PortraitPrefab;
     //public UILineRenderer UILineRenderer;
-    public string Data;
-    public PointOfInterestIdDefinition pointOfInterestDefinition;
+    public PointOfInterest Data;
+    // public PointOfInterestIdDefinition pointOfInterestDefinition;
     public Sprite UnexploredSprite;
-
+    public Sprite ExploredSpriteDefault;
+    public Button ExploreButton;
     public GameObject Model;
     public UnityAction<UIPointOfInterestButton> OnClicked;
+    public HoldButton HoldButton;
     // Start is called before the first frame update
     private bool IsPlayerOnThisPoI = false;
-
+    private BaseDescriptionMetadata metadata = null;
     //public void Awake()
     //{
     //    AccountDataSO.OnCharacterDataChanged += Refresh;
@@ -48,12 +50,14 @@ public class UIPointOfInterestButton : MonoBehaviour
     }
 
 
-    public void SetData(string _id)
+    public void SetData(PointOfInterest _data)
     {
-        Data = _id;
+        Data = _data;
         Refresh();
 
     }
+
+
 
     public void Show(bool _show)
     {
@@ -68,48 +72,57 @@ public class UIPointOfInterestButton : MonoBehaviour
             return;
         }
 
-        if (AllPointOfInterestIdDefinitionSOSet.GetDefinitionById(Data) != null)
+        metadata = Utils.GetMetadataForPointOfInterest(Data.id);
+
+
+        //if (AllPointOfInterestIdDefinitionSOSet.GetDefinitionById(Data.id) != null)
+        //{
+
+        //   pointOfInterestDefinition = AllPointOfInterestIdDefinitionSOSet.GetDefinitionById(Data.id) as PointOfInterestIdDefinition;
+
+        if (AccountDataSO.IsPositionExplored(Data.id))//AccountDataSO.CharacterData.IsPositionExplored(Data.id))
         {
-            //    Model.SetActive(AccountDataSO.CharacterData.IsPositionExplored(Data));
-
-            pointOfInterestDefinition = AllPointOfInterestIdDefinitionSOSet.GetDefinitionById(Data) as PointOfInterestIdDefinition;
-      
-            if (AccountDataSO.CharacterData.IsPositionExplored(Data))
-                PortraitImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.GetMetadataForPointOfInterest(pointOfInterestDefinition.Id).imageId).Image;
+            if (metadata != null)
+                PortraitImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(metadata.imageId).Image;
             else
-                PortraitImage.sprite = UnexploredSprite;
-            // NameText.SetText(pointOfInterestDefinition.DisplayName);
-            this.gameObject.transform.localPosition = pointOfInterestDefinition.position;
+                PortraitImage.sprite = ExploredSpriteDefault;
 
-            if (AccountDataSO.CharacterData.position.pointOfInterestId == pointOfInterestDefinition.Id)
+        }
+        else
+            PortraitImage.sprite = UnexploredSprite;
+
+
+        this.gameObject.transform.localPosition = Data.screenPosition.ToVector2();// pointOfInterestDefinition.position;
+
+        if (AccountDataSO.CharacterData.position.pointOfInterestId == Data.id)
+        {
+            PlayerPortrait.SetPortrait(AccountDataSO.CharacterData.characterPortrait);
+            PlayerPortrait.gameObject.SetActive(true);
+        }
+        else
+            PlayerPortrait.gameObject.SetActive(false);
+
+
+        IsPlayerOnThisPoI = AccountDataSO.CharacterData.position.pointOfInterestId == Data.id;//&& AccountDataSO.CharacterData.position.zoneId == ZoneDef.Id;
+
+
+        //Spawn party members portraits
+        Utils.DestroyAllChildren(PartyMembersParent);
+        if (AccountDataSO.IsInParty())
+        {
+            foreach (var member in AccountDataSO.PartyData.partyMembers)
             {
-                PlayerPortrait.SetPortrait(AccountDataSO.CharacterData.characterPortrait);
-                PlayerPortrait.gameObject.SetActive(true);
-            }
-            else
-                PlayerPortrait.gameObject.SetActive(false);
-
-
-            IsPlayerOnThisPoI = AccountDataSO.CharacterData.position.pointOfInterestId == pointOfInterestDefinition.Id;//&& AccountDataSO.CharacterData.position.zoneId == ZoneDef.Id;
-
-
-            //Spawn party members portraits
-            Utils.DestroyAllChildren(PartyMembersParent);
-            if (AccountDataSO.IsInParty())
-            {
-                foreach (var member in AccountDataSO.PartyData.partyMembers)
+                if (member.position.pointOfInterestId == Data.id)//&& member.position.zoneId == ZoneDef.Id)
                 {
-                    if (member.position.pointOfInterestId == pointOfInterestDefinition.Id)//&& member.position.zoneId == ZoneDef.Id)
+                    if (member.uid != AccountDataSO.CharacterData.uid)
                     {
-                        if (member.uid != AccountDataSO.CharacterData.uid)
-                        {
-                            PrefabFactory.CreateGameObject<UIPortrait>(PortraitPrefab, PartyMembersParent).SetPortrait(member.characterPortrait);
-                        }
+                        PrefabFactory.CreateGameObject<UIPortrait>(PortraitPrefab, PartyMembersParent).SetPortrait(member.characterPortrait);
                     }
                 }
             }
-
         }
+
+        //   }
 
 
     }
@@ -119,16 +132,21 @@ public class UIPointOfInterestButton : MonoBehaviour
 
     }
 
+    public void HoldFinished()
+    {
+        OnClicked?.Invoke(this);
+    }
+
     public void Clicked()
     {
-        if (OnClicked != null)
-            OnClicked.Invoke(this);
+        if (!HoldButton.IsFunctional())
+            OnClicked?.Invoke(this);
     }
 
 
     public void TravelToThisPoI()
     {
-        FirebaseCloudFunctionSO.PointOfInterestTravel(pointOfInterestDefinition.Id);
+        FirebaseCloudFunctionSO.PointOfInterestTravel(Data.id);
     }
 
     public void RefreshButtonDisplay(UIPointOfInterestButton _selectedButton, int _totalTravelTime)
@@ -137,13 +155,14 @@ public class UIPointOfInterestButton : MonoBehaviour
 
         if (this == _selectedButton)
         {
-            if (_selectedButton.pointOfInterestDefinition.Id != AccountDataSO.CharacterData.position.pointOfInterestId) //jen pokud to neni lokace na ktere jsem ukazu a buttonu travel time posledni
+            if (_selectedButton.Data.id != AccountDataSO.CharacterData.position.pointOfInterestId) //jen pokud to neni lokace na ktere jsem ukazu a buttonu travel time posledni
                 DisplayButtonAsTravelTimeToThisPoI(_totalTravelTime);
         }
     }
 
     private void DisplayButtonAsTravelTimeToThisPoI(int _travelTime)
     {
+        HoldButton.SetFunctional(true);
         NameText.color = Color.yellow;
         NameText.SetText("Travel Here (" + _travelTime.ToString() + ")");
     }
@@ -153,18 +172,34 @@ public class UIPointOfInterestButton : MonoBehaviour
 
         if (IsPlayerOnThisPoI)
         {
-            NameText.color = Color.green;
-            NameText.SetText("Explore " + Utils.GetMetadataForPointOfInterest(pointOfInterestDefinition.Id).title.GetText());
-        }
-        else
-        {
-            if (AccountDataSO.CharacterData.IsPositionExplored(Data))
+            if (Data.pointOfInterestType == Utils.POI_TYPE.ENCOUNTER)
             {
-                NameText.color = Color.white;
-                NameText.SetText(Utils.GetMetadataForPointOfInterest(pointOfInterestDefinition.Id).title.GetText());
+                HoldButton.SetFunctional(true);
+                ExploreButton.interactable = true;
+                NameText.color = Color.green;
+                if (metadata != null)
+                    NameText.SetText("Explore " + metadata.title.GetText() + "(" + Data.exploreTimePrice + ")");
             }
             else
             {
+                ExploreButton.interactable = false;
+                NameText.color = Color.white;
+                if (metadata != null)
+                    NameText.SetText(metadata.title.GetText());
+            }
+        }
+        else
+        {
+            if (AccountDataSO.IsPositionExplored(Data.id))
+            {
+                HoldButton.SetFunctional(false);
+                NameText.color = Color.white;
+                if (metadata != null)
+                    NameText.SetText(metadata.title.GetText());
+            }
+            else
+            {
+                HoldButton.SetFunctional(false);
                 NameText.color = Color.gray;
                 NameText.SetText("Unexplored");
             }

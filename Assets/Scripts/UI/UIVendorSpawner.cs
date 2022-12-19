@@ -13,35 +13,49 @@ public class UIVendorSpawner : MonoBehaviour
     public UIVendorDetailPanel UIVendorDetailPanel;
 
     public List<UIVendorEntry> UIEntriesList = new List<UIVendorEntry>();
-
+    public UnityAction OnRefreshed;
     public void Awake()
     {
-      
+        //AccountDataSO.OnCharacterLoadedFirstTime += Refresh;
+     //   AccountDataSO.OnWorldPositionChanged += Refresh;
     }
 
     public void OnDisable()
     {
-        AccountDataSO.OnVendorsDataChanged -= Refresh;
+     //   AccountDataSO.OnVendorsDataChanged -= Refresh;
+       AccountDataSO.OnWorldPointOfInterestChanged -= Refresh;
+
     }
 
     public void OnEnable()
     {
-        AccountDataSO.OnVendorsDataChanged += Refresh;
+        //  AccountDataSO.OnVendorsDataChanged += Refresh;
+        //  AccountDataSO.OnWorldPositionChanged += Refresh;
+        AccountDataSO.OnWorldPointOfInterestChanged += Refresh;
         Refresh();
+    }
+
+    public bool HasSpawnedAnyVendors()
+    {
+       return UIEntriesList.Count > 0;
     }
 
     void Refresh()
     {
-        Utils.DestroyAllChildren(Parent);
-
-        foreach (var vendor in AccountDataSO.VendorsData)
+        Debug.Log("kdo to zavolal??");
+        Utils.DestroyAllChildren(Parent,1);
+        UIEntriesList.Clear();
+        foreach (var vendor in AccountDataSO.GetCurrentPointOfInterest().vendors)
         {
             var vendorUI = PrefabFactory.CreateGameObject<UIVendorEntry>(UIVendorPrefab, Parent);
             vendorUI.SetData(vendor);
+            UIEntriesList.Add(vendorUI);
             vendorUI.OnClicked += VendorEntryClicked;
            // UIEntriesList.Add(vendorUI);
         }
 
+        if (OnRefreshed != null)
+            OnRefreshed.Invoke();
 
         ////schova encounterUI kterych je vic nez je encounterDat 
         //for (int i = 0; i < UIEntriesList.Count; i++)

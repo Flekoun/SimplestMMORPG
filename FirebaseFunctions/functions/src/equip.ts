@@ -22,6 +22,10 @@ export const enum ITEMS {
   RIBEYE = "RIBEYE",
   BERRY = "BERRY",
   APPLE = "APPLE",
+  //crafting mats
+  MARIGOLD = "MARIGOLD",
+  KINGSLEAF = "KINGSLEAF",
+  COPPER_ORE = "COPPER_ORE",
 }
 
 
@@ -230,7 +234,8 @@ export function generateContentItemSimple(_itemId: string, _amount: number): Con
   if (_itemId == ITEMS.BOAR_TUSK) { sellPrice = 5; stackSize = 20 }
   else if (_itemId == ITEMS.OLD_BOOT) { sellPrice = 10; stackSize = 1 }
   else if (_itemId == ITEMS.DEATH_MEDAILON) { sellPrice = 50; stackSize = 1 }
-
+  else if (_itemId == ITEMS.MARIGOLD) { sellPrice = 5; stackSize = 20 }
+  else if (_itemId == ITEMS.COPPER_ORE) { sellPrice = 7; stackSize = 20 }
 
   return new ContentItem(firestoreAutoId(), _itemId, sellPrice, stackSize, _amount, rarity, level);
 

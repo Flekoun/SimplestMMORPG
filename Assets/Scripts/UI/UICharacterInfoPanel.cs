@@ -30,6 +30,7 @@ public class UICharacterInfoPanel : MonoBehaviour
     public TextMeshProUGUI FatigueText;
     public TextMeshProUGUI TravelTimeText;
 
+    public TextMeshProUGUI ProfessionsText;
 
 
     public GameObject Model;
@@ -84,17 +85,25 @@ public class UICharacterInfoPanel : MonoBehaviour
         Attribute_SpiritText.SetText("Spirit: " + (Data.stats.spirit + Data.GetTotalGearAttribute(Utils.EQUIP_ATTRIBUTES.SPIRIT)).ToString());
 
         int totalHealthMax = Utils.RoundToInt(totalStamina * Data.stats.healthMultiplier);
-        int totalHealthTakenByFatigue = Utils.RoundToInt(((totalStamina * Data.stats.healthMultiplier) /100f)* Data.currency.fatigue) ;
+        int totalHealthTakenByFatigue = Utils.RoundToInt(((totalStamina * Data.stats.healthMultiplier) / 100f) * Data.currency.fatigue);
 
         int totalManaMax = Utils.RoundToInt(totalIntelect * Data.stats.manaMultiplier);
         int totalManaTakenByFatigue = Utils.RoundToInt(((totalIntelect * Data.stats.manaMultiplier) / 100f) * Data.currency.fatigue);
 
 
-        HealthText.SetText("Health: "+totalHealthMax.ToString() + "( <color=\"red\">-" + totalHealthTakenByFatigue + "</color>)");
-        ManaText.SetText("Mana: "+totalManaMax.ToString() + "( <color=\"red\">-" + totalManaTakenByFatigue + "</color>)");
+        HealthText.SetText("Health: " + totalHealthMax.ToString() + "( <color=\"red\">-" + totalHealthTakenByFatigue + "</color>)");
+        ManaText.SetText("Mana: " + totalManaMax.ToString() + "( <color=\"red\">-" + totalManaTakenByFatigue + "</color>)");
 
         FatigueText.SetText("Fatigue: " + " <color=\"red\">" + Data.currency.fatigue.ToString() + "%</color>");
-        TravelTimeText.SetText("Travel Time:" +Data.currency.time.ToString() +"/48 hours" );
+        TravelTimeText.SetText("Travel Time:" + Data.currency.time.ToString() + "/48 hours");
+
+        ProfessionsText.transform.parent.gameObject.SetActive(AccountDataSO.CharacterData.professions.Count > 0);
+        ProfessionsText.SetText("");
+        foreach (var profession in AccountDataSO.CharacterData.professions)
+        {
+            ProfessionsText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(ProfessionsText.text + "\n" + profession.id + " : " + profession.count+"/"+profession.countMax));
+        }
+
     }
 
 

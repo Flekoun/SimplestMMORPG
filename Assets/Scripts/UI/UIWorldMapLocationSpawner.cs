@@ -31,11 +31,11 @@ public class UIWorldMapLocationSpawner : MonoBehaviour
 
     }
 
-    public void ShowMapLocationButton(BaseIdDefinition _locationDef)
+    public void ShowMapLocationButton(ScreenPoisitionWihtId _locationDef)
     {
         foreach (var item in EntryList)
         {
-            if (item.Data == _locationDef.Id)
+            if (item.Data == _locationDef.id)
                 item.Show(true);
         }
     }
@@ -45,7 +45,7 @@ public class UIWorldMapLocationSpawner : MonoBehaviour
         EntryList.Clear();
         Utils.DestroyAllChildren(Parent);
 
-        foreach (var vertex in AccountDataSO.MapsData.worldMap)
+        foreach (var vertex in AccountDataSO.ZoneData.dijkstraMap)
         {
             var entry = PrefabFactory.CreateGameObject<UIWorldMapLocationButton>(UIEntryPrefab, Parent);
             entry.SetData(vertex.id);

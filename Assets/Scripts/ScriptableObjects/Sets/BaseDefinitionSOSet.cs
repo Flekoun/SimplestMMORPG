@@ -43,7 +43,3 @@ public class BaseDefinitionSOSet : ScriptableObject
 }
 
 
-public interface IHasScreenPosition
-{
-    public Vector2 GetScreenPosition();
-}

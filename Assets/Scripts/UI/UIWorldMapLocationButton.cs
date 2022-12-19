@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using static UnityEditor.Progress;
 
 public class UIWorldMapLocationButton : MonoBehaviour
 {
@@ -11,11 +12,11 @@ public class UIWorldMapLocationButton : MonoBehaviour
     public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
     public AccountDataSO AccountDataSO;
 
-    public BaseDefinitionSOSet AllLocationsDefinitionSOSet;
-    public BaseDefinitionSOSet AllZonesDefinitionSOSet;
+    //public BaseDefinitionSOSet AllLocationsDefinitionSOSet;
+    //public BaseDefinitionSOSet AllZonesDefinitionSOSet;
 
     public PrefabFactory PrefabFactory;
-    public LocationIdDefinition LocationDef;
+   // public LocationIdDefinition LocationDef;
     //   public ZoneIdDefinition ZoneDef;
     public TextMeshProUGUI LocationNameText;
     public Image LocationPotrait;
@@ -36,7 +37,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
 
     public bool IsPlayerOnThisLocation()
     {
-        return AccountDataSO.CharacterData.position.locationId == LocationDef.Id;
+        return AccountDataSO.CharacterData.position.locationId == Data;
     }
     public void Awake()
     {
@@ -54,14 +55,14 @@ public class UIWorldMapLocationButton : MonoBehaviour
     {
         Data = _locationId;
 
-        LocationDef = AllLocationsDefinitionSOSet.GetDefinitionById(_locationId) as LocationIdDefinition;
+       // LocationDef = AllLocationsDefinitionSOSet.GetDefinitionById(_locationId) as LocationIdDefinition;
         //ZoneDef = AllZonesDefinitionSOSet.GetDefinitionById(_zoneId) as ZoneIdDefinition;
 
 
 
         if (AccountDataSO.CharacterData.IsPositionExplored(Data))
         {
-            LocationPotrait.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.GetMetadataForLocation(LocationDef.Id).imageId).Image;
+            LocationPotrait.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.GetMetadataForLocation(Data).imageId).Image;
             //    LocationNameText.SetText(Utils.GetMetadataForLocation(LocationDef.Id).title.GetText());
         }
         else
@@ -86,7 +87,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
         {
             foreach (var member in AccountDataSO.PartyData.partyMembers)
             {
-                if (member.position.locationId == LocationDef.Id)//&& member.position.zoneId == ZoneDef.Id)
+                if (member.position.locationId == Data)//&& member.position.zoneId == ZoneDef.Id)
                 {
                     if (member.uid != AccountDataSO.CharacterData.uid)
                     {
@@ -102,7 +103,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
     {
 
         RefreshPartyMemberPortraits();
-        this.transform.localPosition = LocationDef.Position;
+        this.transform.localPosition = AccountDataSO.ZoneData.GetScreenPositionForLocationId(Data).ToVector2(); //LocationDef.Position;
 
         // IsPlayerOnThisLocation = AccountDataSO.CharacterData.position.locationId == LocationDef.Id;//&& AccountDataSO.CharacterData.position.zoneId == ZoneDef.Id;
 
@@ -118,7 +119,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
 
     public void TravelToThisLocation()
     {
-        FirebaseCloudFunctionSO.WorldMapTravel(LocationDef.Id);
+        FirebaseCloudFunctionSO.WorldMapTravel(Data);
     }
 
     public void RefreshButtonDisplay(UIWorldMapLocationButton _selectedButton, int _totalTravelTime)
@@ -127,7 +128,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
 
         if (this == _selectedButton)
         {
-            if (_selectedButton.LocationDef.Id != AccountDataSO.CharacterData.position.locationId) //jen pokud to neni lokace na ktere jsem ukazu a buttonu travel time posledni
+            if (_selectedButton.Data != AccountDataSO.CharacterData.position.locationId) //jen pokud to neni lokace na ktere jsem ukazu a buttonu travel time posledni
                 DisplayButtonAsTravelTimeToThisLocation(_totalTravelTime);
         }
     }
@@ -144,14 +145,14 @@ public class UIWorldMapLocationButton : MonoBehaviour
         if (IsPlayerOnThisLocation())
         {
             LocationNameText.color = Color.green;
-            LocationNameText.SetText("Enter " + Utils.GetMetadataForLocation(LocationDef.Id).title.GetText());
+            LocationNameText.SetText("Enter " + Utils.GetMetadataForLocation(Data).title.GetText());
         }
         else
         {
             if (AccountDataSO.CharacterData.IsPositionExplored(Data))
             {
                 LocationNameText.color = Color.white;
-                LocationNameText.SetText(Utils.GetMetadataForLocation(LocationDef.Id).title.GetText());
+                LocationNameText.SetText(Utils.GetMetadataForLocation(Data).title.GetText());
             }
             else
             {

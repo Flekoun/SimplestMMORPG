@@ -6,6 +6,7 @@ using Firebase.Extensions;
 using Firebase.Firestore;
 using Firebase.Functions;
 using Newtonsoft.Json;
+using RoboRyanTron.Unite2017.Variables;
 using simplestmmorpg.data;
 using simplestmmorpg.playerData;
 using TMPro;
@@ -17,7 +18,7 @@ using UnityEngine.Events;
 public class FirebaseCloudFunctionSO : ScriptableObject
 {
     public AccountDataSO AccountDataSO;
-
+    public StringVariable ServerSecret;
     FirebaseFunctions functions;
 
     public UnityAction OnCloudFunctionInProgress;
@@ -65,6 +66,65 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         string result = await FirebaseFunctions.DefaultInstance.GetHttpsCallable(_cloudFunctionName).CallAsync(_data).ContinueWith(OnCloudFuntionResult);
         CloudFunctionFinished(result);
     }
+
+    
+
+
+    public async void Test()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+
+        Debug.Log("gatherables  ... ");
+        await CallCloudFunction("gatherables-test", data);
+    }
+
+    public async void CheckForIntegrityOfCharacterData(string _characterUid)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterToCheckUid"] = _characterUid;
+
+        Debug.Log("checking integrity of character  ... ");
+        await CallCloudFunction("checkForIntegrityOfCharacterData", data);
+    }
+
+    public async void TrainAtTrainer(string _trainerUid)
+    {
+
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["trainerUid"] = _trainerUid;
+
+        Debug.Log("claiming gatherable ... ");
+        await CallCloudFunction("trainer-trainAtTrainer", data);
+    }
+
+    public async void ClaimGatherable(string _gatherableUid)
+    {
+
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["gatherableUid"] = _gatherableUid;
+
+        Debug.Log("claiming gatherable ... ");
+        await CallCloudFunction("gatherables-claimGatherable", data);
+    }
+
+    public Task ClaimGatherableAsync(string _gatherableUid)
+    {
+
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["gatherableUid"] = _gatherableUid;
+
+        Debug.Log("claiming gatherable ... ");
+        return CallCloudFunction("gatherables-claimGatherable", data);
+    }
+
 
     public async void EnterDungeon(string _dungeonLocationId)
     {
@@ -131,7 +191,8 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
         data["locationId"] = _locationId;
-
+        data["serverSecret"] = ServerSecret.Value;
+        
 
         Debug.Log("traveling to location on world map  ... ");
         await CallCloudFunction("worldMap-travel", data);
@@ -145,7 +206,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
         data["destinationPointOfInterestId"] = _destinationPointOfInterestId;
-
+        data["serverSecret"] = ServerSecret.Value;
 
         Debug.Log("traveling to point of interest in location ... ");
         await CallCloudFunction("worldMap-travelToPoI", data);
@@ -402,7 +463,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     //    });
     //}
 
-    public async void ExplorePointOfInterest(PointOfInterestIdDefinition _pointOfInterest)
+    public async void ExplorePointOfInterest(string _pointOfInterestId)
     {
 
         CloudFunctionCalled();
@@ -411,7 +472,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         data["characterUid"] = AccountDataSO.CharacterData.uid;
         //    data["zoneId"] = AccountDataSO.CharacterData.position.zoneId;//_position.zoneId;
         //  data["locationId"] = AccountDataSO.CharacterData.position.locationId;//_position.locationId;
-        data["pointOfInterestId"] = _pointOfInterest.Id;//_position.locationId;
+        data["pointOfInterestId"] = _pointOfInterestId;//_position.locationId;
 
         Debug.Log("CreateEncounter started ");
         await CallCloudFunction("encounter-explorePointOfInterest", data);

@@ -85,6 +85,7 @@ public class UICharactersListPanel : MonoBehaviour
 
     public void EnterWorldClicked()
     {
+        FirebaseCloudFunctionSO.CheckForIntegrityOfCharacterData(UICharacterPreviewSpawner.GetSelectedEntry().GetUid());
         ListenOnAccountData.StartListeningOnCharacter(UICharacterPreviewSpawner.GetSelectedEntry().GetUid());
     }
 

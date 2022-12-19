@@ -33,7 +33,7 @@ public class ListenOnInbox : MonoBehaviour
 
      {
          AccountDataSO.SetInboxData(snapshot);
-         Debug.Log("New data on INBOX recieved : " + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
+         Debug.Log("New data on INBOX recieved");// + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
          OnListenerStarted.Invoke();
 
      });

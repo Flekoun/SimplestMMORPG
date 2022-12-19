@@ -12,6 +12,7 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
     public PrefabFactory PrefabFactory;
     public Transform Parent;
     public GameObject UIEntryPrefab;
+    public GameObject UIEntryPrefab_NoDescriptionData;
     public UILineMaker AllPathsUILineMaker;
 
     public UnityAction<UIPointOfInterestButton> OnUIEntryClicked;
@@ -20,23 +21,23 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
 
     public void Awake()
     {
-        AccountDataSO.OnMapsChanged += Refresh;
+        AccountDataSO.OnLocationDataChanged += Refresh;
         //  AccountDataSO.OnEncounterDataChanged += CheckForAvailability;
         //  AccountDataSO.OnEncounterResultsDataChanged += CheckForAvailability;
     }
 
     public void OnDestroy()
     {
-        AccountDataSO.OnMapsChanged -= Refresh;
+        AccountDataSO.OnLocationDataChanged -= Refresh;
         //  AccountDataSO.OnEncounterDataChanged -= CheckForAvailability;
         //   AccountDataSO.OnEncounterResultsDataChanged -= CheckForAvailability;
     }
 
-    public void ShowPointOfInterestButton(BaseIdDefinition _locationDef)
+    public void ShowPointOfInterestButton(ScreenPoisitionWihtId _locationDef)
     {
         foreach (var item in EntryList)
         {
-            if (item.Data == _locationDef.Id)
+            if (item.Data.id == _locationDef.id)
                 item.Show(true);
         }
     }
@@ -46,21 +47,23 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
         EntryList.Clear();
         Utils.DestroyAllChildren(Parent);
 
-        //pouze pokud ma lokace nejake PoI (tedy je to encounter lokace a ne mesto atd)....tak vygeneruju PoI
-        if (AccountDataSO.MapsData.HasLocationAnyPointsOfInterest(AccountDataSO.CharacterData.position.locationId))
+
+        foreach (var poi in AccountDataSO.LocationData.pointsOfInterest)//AccountDataSO.LocationData.dijkstraMap)
         {
+            UIPointOfInterestButton entry = null;
 
-            foreach (var vertex in AccountDataSO.MapsData.GetLocationById(AccountDataSO.CharacterData.position.locationId).dijkstraMap)
-            {
-                var entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab, Parent);
-                entry.SetData(vertex.id);
-                entry.OnClicked += UIEncounterEntryClicked;
-                EntryList.Add(entry);
-                entry.Show(false);
-            }
+            if (Utils.GetMetadataForPointOfInterest(poi.id) == null)
+                entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab_NoDescriptionData, Parent);
+            else
+                entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab, Parent);
 
-
+            entry.SetData(poi);
+            entry.OnClicked += UIEncounterEntryClicked;
+            EntryList.Add(entry);
+            entry.Show(false);
         }
+
+
     }
 
 
@@ -69,5 +72,16 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
         if (OnUIEntryClicked != null)
             OnUIEntryClicked.Invoke(_data);
 
+    }
+
+    public UIPointOfInterestButton GetPoIPlayerIsCurrentlyOn()
+    {
+        foreach (var item in EntryList)
+        {
+            if (item.Data.id == AccountDataSO.CharacterData.position.pointOfInterestId)
+                return item;
+        }
+
+        return null;
     }
 }

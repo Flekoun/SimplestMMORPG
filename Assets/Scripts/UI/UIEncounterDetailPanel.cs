@@ -13,7 +13,7 @@ public class UIEncounterDetailPanel : MonoBehaviour
     public GameObject Model;
     public EncounterData Data;
     public UICombatMemberSkillsSpawner UISkillsSpawner;
-    public UILocationEncounters UILocationEncounters;
+    public UILocation UILocationEncounters;
     public UIEncounterEntry UIEncounterEntry;
     public UIEncountersSpawner UIEncountersSpawner;
     public TextMeshProUGUI DeckCardsCountText;

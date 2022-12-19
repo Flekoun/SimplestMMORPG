@@ -1,7 +1,8 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { ContentContainer, CharacterDocument, characterDocumentConverter, WorldPosition } from ".";
+import { ContentContainer, CharacterDocument, characterDocumentConverter } from ".";
+import {  QuerryForPointOfInterestCharacterIsAt } from "./worldMap";
 
 const admin = require('firebase-admin');
 // // [END import]
@@ -12,7 +13,7 @@ export class Vendor {
   constructor(
     public id: string,
     public displayName: string,
-    public position: WorldPosition,
+  //  public position: WorldPosition,
     public goods: VendorGood[]
     //  public itemsSimple: InventoryItemSimple[],
     //   public itemsEquip: Equip[]
@@ -36,7 +37,7 @@ exports.buyVendorItems = functions.https.onCall(async (data, context) => {
   const vendorItemsToBuyUids: string[] = data.vendorItemsToBuyUids;
 
   const characterDb = await admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
-  const vendorDb = await admin.firestore().collection('_metadata_vendors').doc(vendorUid);
+  // const vendorDb = await admin.firestore().collection('_metadata_vendors').doc(vendorUid);
 
   try {
     const result = await admin.firestore().runTransaction(async (t: any) => {
@@ -44,22 +45,23 @@ exports.buyVendorItems = functions.https.onCall(async (data, context) => {
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
-      const vendorDoc = await t.get(vendorDb);
-      let vendorData: Vendor = vendorDoc.data();
 
+      const pointOfInterestData = await QuerryForPointOfInterestCharacterIsAt(t, characterData);
+
+      let vendorData = pointOfInterestData.getVendorById(vendorUid);
 
       // if(!characterData.isOnSameWorldPosition(vendorData.position))
       // throw("You cant trade with vendor at diffrent world position!")
 
       let totalPurchasePrice: number = 0;
 
-       
+
       //Najdu vsechny itemy co chci koupit u vendora a pridam si je do inventare a spocitam celkovou cenu
       for (let index = 0; index < vendorItemsToBuyUids.length; index++) {
         for (var i = vendorData.goods.length - 1; i >= 0; i--) {
           if (vendorData.goods[i].uid == vendorItemsToBuyUids[index]) {
             totalPurchasePrice += vendorData.goods[i].sellPrice;
-            characterData.addContentToInventory(vendorData.goods[i].content,true,false);
+            characterData.addContentToInventory(vendorData.goods[i].content, true, false);
             break;
           }
 

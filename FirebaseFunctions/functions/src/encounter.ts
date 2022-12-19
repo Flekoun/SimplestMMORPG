@@ -2,13 +2,13 @@
 // [START import]
 
 import * as functions from "firebase-functions";
-import { CharacterDocument, characterDocumentConverter, CHARACTER_CLASS, ContentContainer, CONTENT_TYPE, CURRENCY_ID, getCurrentDateTime, getCurrentDateTimeVersionSecondsAdd, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, INSTAKILL, millisToSeconds, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInAnyEncounter, QuerryIfCharacterIsWatcherInAnyDungeonEncounter, SimpleTally, WorldPosition } from ".";
+import { CharacterDocument, characterDocumentConverter, CHARACTER_CLASS, ContentContainer, CONTENT_TYPE, CURRENCY_ID, getCurrentDateTime, getCurrentDateTimeVersionSecondsAdd, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, INSTAKILL, millisToSeconds, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInAnyEncounter, SimpleTally, WorldPosition } from ".";
 import { EncounterResult, EncounterResultContentLoot, EncounterResultEnemy, EncounterResultCombatant, RESULT_ITEM_WANT_DURATION_SECONDS } from "./encounterResult";
 import { EQUIP_SLOT_ID, generateContentItemSimple, generateEquip, generateFood, RARITY } from "./equip";
 import { applySkillEffect, drawNewSkills, EnemyMeta, firestoreAutoId, IHasChanceToSpawn, randomIntFromInterval, RollForRandomItem, shuffle } from "./general2";
 import { Party } from "./party";
 import { BUFF, Combatskill } from "./skills";
-import { LOC, LocationMeta, LocationMetaConverter, POI, POI_TYPE } from "./worldMap";
+import { LOC, MapLocation, LocationConverter, POI, POI_TYPE } from "./worldMap";
 
 const admin = require('firebase-admin');
 
@@ -489,7 +489,8 @@ export class EncounterDocument {
     //  public restsLeftUntilEndOfTurn: number,
     public turnNumber: number,
     public combatLog: string,
-    public expireDateTurn: string
+    public expireDateTurn: string,
+    public foundByPartyUid: string
 
   ) { }
 
@@ -804,8 +805,8 @@ export const encounterDocumentConverter = {
       combatLog: _encounter.combatLog,
       foundByCharacterUid: _encounter.foundByCharacterUid,
       expireDateTurn: _encounter.expireDateTurn,
-      encounterContext: _encounter.encounterContext
-
+      encounterContext: _encounter.encounterContext,
+      foundByPartyUid : _encounter.foundByPartyUid
     };
   },
   fromFirestore: (snapshot: any, options: any) => {
@@ -840,7 +841,7 @@ export const encounterDocumentConverter = {
     //let combatMembers :CombatMember[]=[];
     // Object.assign(combatMembers, data.combatants)
 
-    return new EncounterDocument(data.uid, enemies, combatants, data.combatantList, data.randomIndex, data.expireDate, data.foundByCharacterUid, data.maxCombatants, data.watchersList, data.isFull, data.foundByName, data.encounterContext, data.position, data.turnNumber, data.combatLog, data.expireDateTurn);
+    return new EncounterDocument(data.uid, enemies, combatants, data.combatantList, data.randomIndex, data.expireDate, data.foundByCharacterUid, data.maxCombatants, data.watchersList, data.isFull, data.foundByName, data.encounterContext, data.position, data.turnNumber, data.combatLog, data.expireDateTurn, data.foundByPartyUid);
   }
 };
 
@@ -1216,6 +1217,7 @@ exports.addSelfAsWatcher = functions.https.onCall(async (data, context) => {
 
 exports.explorePointOfInterest = functions.https.onCall(async (data, context) => {
 
+//tady teda vybrat co bude explornuto...enemy nebo gathering resource pro ted nebo nic?
   const MAX_ENEMIES = 6;
 
   const callerCharacterUid = data.characterUid;
@@ -1228,17 +1230,15 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
   try {
     const result = await admin.firestore().runTransaction(async (t: any) => {
 
-
-
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
       const allCallerPersonalEncounterOnHisPosition = admin.firestore().collection('encounters').where("position.zoneId", "==", characterData.position.zoneId).where("position.locationId", "==", characterData.position.locationId).where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL);
-      const zonesDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).withConverter(LocationMetaConverter);
+      const zonesDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).withConverter(LocationConverter);
 
       //nactu si data o PoI
       var locationMetaDoc = await t.get(zonesDb);
-      var locationsMetaData: LocationMeta = locationMetaDoc.data();
+      var locationsMetaData: MapLocation = locationMetaDoc.data();
       const pointOfInterest = locationsMetaData.getPointOfInterestById(pointOfInterestId);
 
       // let myPartyData: Party = new Party("", "", 0, [], [], null);
@@ -1246,51 +1246,6 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
       if (pointOfInterest.pointOfInterestType == POI_TYPE.DUNGEON)
         throw ("Dungeon points of interest cant be explored....");
 
-      //nemuzes prozkoumavat dalsi dungeon encountery kdyz uz mame dungeon enemy a nemusis byt ani joinly do boje (chceme forcnout pruchod dungeonem postupne enemy po enemy)
-      ///  if (await QuerryIfCharacterIsWatcherInAnyDungeonEncounter(t, characterData.uid))
-      // throw ("There are enemies nearby your party. Cant explore!");
-
-
-      //   //pridam pripadne vsechny party membery do encounteru
-      //   await t.get(myPartyDb).then(querry => {
-      //     if (querry.size > 1)
-      //       throw ("You are in more than 1 party! Database error!");
-      //     querry.docs.forEach(doc => {
-      //       myPartyData = doc.data();
-      //     });
-      //   });
-
-      //   if (myPartyData.dungeonProgress == null)
-      //     throw ("You need to wait before Party Leader enter dungeon to start exploring!");
-
-      //   //Zaplatim explore time
-      //   characterData.subCurrency(CURRENCY_ID.TIME, pointOfInterest.exploreTimePrice);
-
-      //   //vytvorime enemy groupu (v dungeonu se nebere nahodny ale vsechny a gnorujem uplne nejaky chanceToSpawn)
-      //   let spawnedEnemies: CombatEnemy[] = [];
-      //   pointOfInterest.enemies.forEach(enemy => {
-      //     spawnedEnemies.push(new CombatEnemy(firestoreAutoId(), enemy.enemyId, new CombatStats(0, 0, enemy.health, enemy.health, 0, 0, 0, 0, 0, 0), enemy.damageMin, enemy.damageMax, enemy.level, enemy.mLevel, enemy.isRare, enemy.dropTable, "", [], []))
-      //   });
-
-      //   var combatants: CombatMember[] = [];//combatants.push(new CombatMember(characterData.characterName, characterData.uid, characterData.characterClass, [], characterData.converSkillsToCombatSkills(), [], characterData.converStatsToCombatStats(), 0, 0, characterData.stats.level));
-      //   var combatantList: string[] = []; //combatantList.push(callerCharacterUid);
-      //   var watchersList: string[] = []; watchersList.push(callerCharacterUid);
-      //   const expireDate = getCurrentDateTime(2);
-      //   var maxCombatants: number = 5;
-      //   var isFull: boolean = false;
-
-      //   let dungeonEncounter: EncounterDocument = new EncounterDocument(encounterDb.doc().id, spawnedEnemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.DUNGEON, characterData.position, 1, "Combat started!\n", "0");
-
-      //   //pridam pripadne vsechny party membery do encounteru
-      //   myPartyData.partyMembersUidList.forEach(partyMemberUid => {
-      //     if (!dungeonEncounter!.watchersList.includes(partyMemberUid))
-      //       dungeonEncounter!.watchersList.push(partyMemberUid);
-      //   });
-
-
-      //   t.set(encounterDb.doc(dungeonEncounter.uid), JSON.parse(JSON.stringify(dungeonEncounter)), { merge: true });
-      // }
-      // else {
 
       if (await QuerryIfCharacterIsInAnyEncounter(t, characterData.uid))
         throw ("You cannot explore while in combat!");
@@ -1328,7 +1283,7 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
         var isFull: boolean = false;//maxCombatants <= 0;
         //const position = new WorldPosition(zoneId, locationId);
 
-        personalEncounter = new EncounterDocument(encounterDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.PERSONAL, characterData.position, 1, "Combat started!\n", "0");
+        personalEncounter = new EncounterDocument(encounterDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.PERSONAL, characterData.position, 1, "Combat started!\n", "0","");
 
 
         //ziskam svoju partu
@@ -1485,7 +1440,7 @@ export async function CreateWorldBossEncounter(_position: WorldPosition) {
 
   if (!worldBoosEncounterFound) {
     var locationMetaDoc = await admin.firestore().collection('_metadata_zones').doc(zoneId).collection("locations").doc(locationId).get();
-    var locationsMetaData: LocationMeta = locationMetaDoc.data();
+    var locationsMetaData: MapLocation = locationMetaDoc.data();
     var pointOfInterestId = "MAIN";
     //ziskam nahodny encounter
     //TODO....
@@ -1506,7 +1461,7 @@ export async function CreateWorldBossEncounter(_position: WorldPosition) {
     var isFull: boolean = false;//maxCombatants <= 0;
     const position = new WorldPosition(zoneId, LOC.NONE, POI.NONE);
 
-    var worldEncounter: EncounterDocument = new EncounterDocument(encounterDoc.id, enemies, combatants, combatantList, Math.random(), expireDate, "", maxCombatants, watchersList, isFull, "World Boss", ENCOUNTER_CONTEXT.WORLD_BOSS, position, 1, "Combat started!\n", "0");
+    var worldEncounter: EncounterDocument = new EncounterDocument(encounterDoc.id, enemies, combatants, combatantList, Math.random(), expireDate, "", maxCombatants, watchersList, isFull, "World Boss", ENCOUNTER_CONTEXT.WORLD_BOSS, position, 1, "Combat started!\n", "0","");
 
     await encounterDoc.set(JSON.parse(JSON.stringify(worldEncounter)));
 

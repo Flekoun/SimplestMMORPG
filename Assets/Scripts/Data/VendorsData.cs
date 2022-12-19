@@ -31,13 +31,13 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public string id { get; set; }
 
-        [field: SerializeField]
-        [FirestoreProperty]
-        public string displayName { get; set; }
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public string displayName { get; set; }
 
-        [field: SerializeField]
-        [FirestoreProperty]
-        public WorldPosition position { get; set; }
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public WorldPosition position { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]

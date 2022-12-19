@@ -36,7 +36,21 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public BaseDescriptionMetadata[] items { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public BaseDescriptionMetadata[] gatherables { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public BaseDescriptionMetadata[] vendors { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public BaseDescriptionMetadata[] trainers { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public BaseDescriptionMetadata[] professions { get; set; }
 
         public BaseDescriptionMetadata GetPointsOfInterestMetadata(string _id)
         {
@@ -105,6 +119,54 @@ namespace simplestmmorpg.data
             }
 
             Debug.LogWarning("No item with id : " + _id + " was found");
+            return null;
+        }
+
+        public BaseDescriptionMetadata GetGatherablesMetadata(string _id)
+        {
+            foreach (var item in gatherables)
+            {
+                if (item.id == _id)
+                    return item;
+            }
+
+            Debug.LogWarning("No gatherable with id : " + _id + " was found");
+            return null;
+        }
+
+        public BaseDescriptionMetadata GetVendorsMetadata(string _id)
+        {
+            foreach (var item in vendors)
+            {
+                if (item.id == _id)
+                    return item;
+            }
+
+            Debug.LogWarning("No vendor with id : " + _id + " was found");
+            return null;
+        }
+
+        public BaseDescriptionMetadata GetTrainersMetadata(string _id)
+        {
+            foreach (var item in trainers)
+            {
+                if (item.id == _id)
+                    return item;
+            }
+
+            Debug.LogWarning("No trainer with id : " + _id + " was found");
+            return null;
+        }
+
+        public BaseDescriptionMetadata GetProfessionMetadata(string _id)
+        {
+            foreach (var item in professions)
+            {
+                if (item.id == _id)
+                    return item;
+            }
+
+            Debug.LogWarning("No profession with id : " + _id + " was found");
             return null;
         }
     }
