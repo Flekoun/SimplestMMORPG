@@ -89,7 +89,7 @@ public class UIGatherablesSpawner : MonoBehaviour
     private void SpawnAtRandomPositions()
     {
 
-        Debug.Log("EGGG??" + Data.Count);
+//        Debug.Log("EGGG??" + Data.Count);
         //// Generate a random distance from the reference object
         //float distance = Random.Range(minDistance, maxDistance);
 
@@ -110,7 +110,7 @@ public class UIGatherablesSpawner : MonoBehaviour
         for (int i = 0; i < Data.Count; i++)
         {
 
-            Debug.Log("EGGG??YYY" + i);
+         //   Debug.Log("EGGG??YYY" + i);
             float stepVariance = Random.Range(-(angleStep / 2f), (angleStep / 2f));  //50% variance in angle to make it look mor random
 
             // Generate a random distance from the reference object

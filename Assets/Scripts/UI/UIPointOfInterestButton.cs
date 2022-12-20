@@ -179,6 +179,8 @@ public class UIPointOfInterestButton : MonoBehaviour
                 NameText.color = Color.green;
                 if (metadata != null)
                     NameText.SetText("Explore " + metadata.title.GetText() + "(" + Data.exploreTimePrice + ")");
+                else
+                    NameText.SetText("Explore (" + Data.exploreTimePrice + ")");
             }
             else
             {
@@ -186,6 +188,8 @@ public class UIPointOfInterestButton : MonoBehaviour
                 NameText.color = Color.white;
                 if (metadata != null)
                     NameText.SetText(metadata.title.GetText());
+                else
+                    NameText.SetText("Explored");
             }
         }
         else
@@ -196,6 +200,8 @@ public class UIPointOfInterestButton : MonoBehaviour
                 NameText.color = Color.white;
                 if (metadata != null)
                     NameText.SetText(metadata.title.GetText());
+                else
+                    NameText.SetText("Explored");
             }
             else
             {

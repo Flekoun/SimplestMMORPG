@@ -28,10 +28,10 @@ export const MAX_FATIGUE = 90;
 export const MAX_TRAVEL_TIME = 48;
 
 //Instantni zabiti nepratel v encounterech
-export const INSTAKILL = true;
+export const INSTAKILL = false;
 
 //Kontroluje se proti tomu co posle klient ( mel bych pridat jeste jeden secret do DB mozna kdybych jen menil data v DB ale tyhle cloud scripty zustaly stejne?)
-export const SERVER_SECRET = "XXX13";
+export const SERVER_SECRET = "XXX14";
 
 //exports.general = require('./general');
 exports.general2 = require('./general2');
@@ -971,19 +971,17 @@ export class CharacterPreview {
     ) { }
 }
 
-export async function QuerryHasCharacterAnyUnclaimedEncounterResult(_transaction: any, _characterUid: string): Promise<boolean> {
-  const encounterDb = admin.firestore().collection("encounterResults").where("combatantsWithUnclaimedRewardsList", "array-contains", _characterUid);
-
+export async function QuerryHasCharacterAnyUnclaimedEncounterResult(_transaction: any, _character: CharacterDocument): Promise<boolean> {
+  const encounterDb = admin.firestore().collection("encounterResults").where("combatantsWithUnclaimedRewardsList", "array-contains", _character.uid).where("position.zoneId", "==", _character.position.zoneId).where("position.locationId", "==", _character.position.locationId).where("position.pointOfInterestId", "==", _character.position.pointOfInterestId);
   //najdu jestli mas nejaky unclaimnuty encounter Result
   let hasUnclaimedEncounterResult = false;
   await _transaction.get(encounterDb).then(querry => {
     hasUnclaimedEncounterResult = querry.size > 0
   });
-
   return hasUnclaimedEncounterResult
 }
 
-export async function QuerryIfCharacterIsInAnyEncounter(_transaction: any, _characterUid: string): Promise<boolean> {
+export async function QuerryIfCharacterIsInCombatAtAnyEncounter(_transaction: any, _characterUid: string): Promise<boolean> {
   const encounterDb = admin.firestore().collection("encounters").where("combatantList", "array-contains", _characterUid);
 
   //najdu jestli si v nejakem encounteru clenem
@@ -995,6 +993,31 @@ export async function QuerryIfCharacterIsInAnyEncounter(_transaction: any, _char
   return participatingInEncounter
 }
 
+
+// export async function QuerryIfCharacterIsWatcherInAnyEncounter(_transaction: any, _characterUid: string): Promise<boolean> {
+//   const encounterDb = admin.firestore().collection("encounters").where("watchersList", "array-contains");
+
+//   //najdu jestli si v nejakem encounteru clenem
+//   let participatingInEncounter = false;
+//   await _transaction.get(encounterDb).then(querry => {
+//     participatingInEncounter = querry.size > 0
+//   });
+
+//   return participatingInEncounter
+// }
+
+export async function QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition(_transaction: any, _character: CharacterDocument): Promise<boolean> {
+
+  const allCallerPersonalEncountersOnHisPosition = admin.firestore().collection('encounters').where("watchersList", "array-contains", _character.uid).where("position.zoneId", "==", _character.position.zoneId).where("position.locationId", "==", _character.position.locationId).where("position.pointOfInterestId", "==", _character.position.pointOfInterestId);//.where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL);
+
+  //najdu jestli si v nejakem encounteru clenem
+  let participatingInEncounter = false;
+  await _transaction.get(allCallerPersonalEncountersOnHisPosition).then(querry => {
+    participatingInEncounter = querry.size > 0
+  });
+
+  return participatingInEncounter
+}
 
 export async function QuerryIfCharacterIsWatcherInAnyDungeonEncounter(_transaction: any, _characterUid: string): Promise<boolean> {
   const encounterDb = admin.firestore().collection("encounters").where("watchersList", "array-contains", _characterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.DUNGEON);

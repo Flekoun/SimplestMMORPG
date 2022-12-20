@@ -1,7 +1,7 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { CharacterDocument, characterDocumentConverter, ContentContainer, CURRENCY_ID, getMillisPassedSinceTimestamp, millisToSeconds, PlayerData } from ".";
+import { CharacterDocument, characterDocumentConverter, ContentContainer, CURRENCY_ID, getMillisPassedSinceTimestamp, millisToSeconds, PlayerData, WorldPosition } from ".";
 
 import { randomIntFromInterval } from "./general2";
 
@@ -25,7 +25,8 @@ export class EncounterResult {
     public silver: number,
     public wantItemPhaseFinished: boolean,
     public turnsNumber: number,
-    public expireDateWantItemPhase: string
+    public expireDateWantItemPhase: string,
+    public position: WorldPosition
 
   ) { }
 }

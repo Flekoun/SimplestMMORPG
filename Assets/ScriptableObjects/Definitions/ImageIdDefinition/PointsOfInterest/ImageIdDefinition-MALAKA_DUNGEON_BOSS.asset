@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 885a4a50026f14016a6311f924dd6d27, type: 3}
-  m_Name: ImageIdDefinition-MALAKA_DUNGEON_STAIRWAY
+  m_Name: ImageIdDefinition-MALAKA_DUNGEON_BOSS
   m_EditorClassIdentifier: 
   IdPrefix: POI
-  ImageId: MALAKA_DUNGEON_STAIRWAY
-  Image: {fileID: 21300000, guid: 3c4e67a949bbfa84aa08079d29938923, type: 3}
+  ImageId: MALAKA_DUNGEON_BOSS
+  Image: {fileID: 21300000, guid: 5e3d3fdfd0d6da4428618bcea7479661, type: 3}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

@@ -18,19 +18,22 @@ public class ListenOnEncounterResults : MonoBehaviour
 
     public AccountDataSO AccountDataSO;
     private ListenerRegistration listenerRegistration;
-
+    //  public Action<List<Gatherable>> OnNewData;
 
     public void Awake()
     {
+        AccountDataSO.OnWorldPointOfInterestChanged += StartListening;
         AccountDataSO.OnCharacterLoadedFirstTime += StartListening;
     }
 
     public void StartListening()
     {
+        StopListening();
 
+        AccountDataSO.EncounterResultsData.Clear();
         FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
 
-        ListenerRegistration listenerRegistration = db.Collection("encounterResults").WhereArrayContains("combatantsWithUnclaimedRewardsList", AccountDataSO.CharacterData.uid).Listen(snapshot =>
+        ListenerRegistration listenerRegistration = db.Collection("encounterResults").WhereArrayContains("combatantsWithUnclaimedRewardsList", AccountDataSO.CharacterData.uid).WhereEqualTo("position.locationId", AccountDataSO.CharacterData.position.locationId).WhereEqualTo("position.zoneId", AccountDataSO.CharacterData.position.zoneId).WhereEqualTo("position.pointOfInterestId", AccountDataSO.CharacterData.position.pointOfInterestId).Listen(snapshot =>
 
      {
          AccountDataSO.SetEncounterResultsData(snapshot);
@@ -38,16 +41,21 @@ public class ListenOnEncounterResults : MonoBehaviour
          OnListenerStarted.Invoke();
 
      });
-        Debug.Log("Starting to listen on Encounter Results...");
+        Debug.Log("Starting to listen on new Encounter Results...");
 
+    }
+
+    public void StopListening()
+    {
+        listenerRegistration?.Stop();
     }
 
     public void OnDestroy()
     {
-        if (listenerRegistration != null)
-            listenerRegistration.Stop();
+        StopListening();
 
     }
+
     public UnityEvent OnListenerStarted;
 
 

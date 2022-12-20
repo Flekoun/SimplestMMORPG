@@ -61,7 +61,7 @@ public class UILocation : MonoBehaviour
     private void OnWorldLocationChanged()
     {
 
-        ListenOnEncounterData.StartListening(AccountDataSO.CharacterData.position.locationId, AccountDataSO.CharacterData.position.zoneId);
+      //  ListenOnEncounterData.StartListening();
 
     }
 
@@ -85,7 +85,7 @@ public class UILocation : MonoBehaviour
     {
 
 
-        ListenOnEncounterData.StartListening(AccountDataSO.CharacterData.position.locationId, AccountDataSO.CharacterData.position.zoneId);
+       // ListenOnEncounterData.StartListening(AccountDataSO.CharacterData.position.locationId, AccountDataSO.CharacterData.position.zoneId, AccountDataSO.CharacterData.position.pointOfInterestId);
 
         AccountDataSO.OnEncounterDataChanged += Refresh;
         AccountDataSO.OnEncounterResultsDataChanged += Refresh;

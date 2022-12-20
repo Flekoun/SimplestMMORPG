@@ -52,8 +52,8 @@ public class UIEncounterDetailPanel : MonoBehaviour
 
     private CombatMember MyCombatMemberData;
 
-    private bool CombatLogShown = true;
-    private bool ChatLogShown = true;
+//    private bool CombatLogShown = true;
+//    private bool ChatLogShown = true;
 
 
     private string oldChatText;
@@ -108,7 +108,7 @@ public class UIEncounterDetailPanel : MonoBehaviour
     {
         UILocationEncounters.Hide();
 
-        string oldChatText = "";
+//        string oldChatText = "";
         Data = _data;
 
         AccountDataSO.OnCharacterDataChanged += Refresh;

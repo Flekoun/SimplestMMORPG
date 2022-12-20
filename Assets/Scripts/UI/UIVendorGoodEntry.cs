@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-using simplestmmorpg.data;
+//using simplestmmorpg.data;
 using UnityEngine.Events;
 
 public class UIVendorGoodEntry : UISelectableEntry

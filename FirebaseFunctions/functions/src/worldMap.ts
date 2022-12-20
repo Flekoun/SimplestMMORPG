@@ -2,7 +2,7 @@
 // [START import]
 import * as functions from "firebase-functions";
 import { _databaseWithOptions } from "firebase-functions/v1/firestore";
-import { CharacterDocument, characterDocumentConverter, checkForServerVersion, CURRENCY_ID, getCurrentDateTime, HasPartyAnyDungeonEncounter, QuerryIfCharacterIsInAnyEncounter } from ".";
+import { CharacterDocument, characterDocumentConverter, checkForServerVersion, CURRENCY_ID, getCurrentDateTime, QuerryIfCharacterIsInCombatAtAnyEncounter, QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition } from ".";
 import { CombatEnemy, CombatMember, CombatStats, EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT } from "./encounter";
 import { EnemyMeta, firestoreAutoId } from "./general2";
 import { Party } from "./party";
@@ -445,6 +445,10 @@ function getLocationMap(_locationId: string): Dijkstra {
         ]));
       break;
     case LOC.MALAKA_DUNGEON:
+
+
+
+
       dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_0,
         [
           new NodeVertex(POI.MALAKA_DUNGEON_1, 1)
@@ -453,33 +457,33 @@ function getLocationMap(_locationId: string): Dijkstra {
       dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_1,
         [
           new NodeVertex(POI.MALAKA_DUNGEON_0, 1),
+          new NodeVertex(POI.MALAKA_DUNGEON_3, 1),
           new NodeVertex(POI.MALAKA_DUNGEON_2, 1)
         ]));
 
       dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_2,
         [
-          new NodeVertex(POI.MALAKA_DUNGEON_1, 1),
-          new NodeVertex(POI.MALAKA_DUNGEON_3, 1)
+          new NodeVertex(POI.MALAKA_DUNGEON_1, 2),
+          new NodeVertex(POI.MALAKA_DUNGEON_5, 1)
         ]));
       dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_3,
         [
-          new NodeVertex(POI.MALAKA_DUNGEON_4, 1),
-          new NodeVertex(POI.MALAKA_DUNGEON_2, 1)
+          new NodeVertex(POI.MALAKA_DUNGEON_4, 3),
+          new NodeVertex(POI.MALAKA_DUNGEON_1, 3)
         ]));
       dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_4,
         [
-          new NodeVertex(POI.MALAKA_DUNGEON_5, 1),
+          new NodeVertex(POI.MALAKA_DUNGEON_6, 1),
           new NodeVertex(POI.MALAKA_DUNGEON_3, 1)
         ]));
       dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_5,
         [
-          new NodeVertex(POI.MALAKA_DUNGEON_6, 1),
-          new NodeVertex(POI.MALAKA_DUNGEON_4, 1)
+          new NodeVertex(POI.MALAKA_DUNGEON_2, 1),
         ]));
       dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_6,
         [
           new NodeVertex(POI.MALAKA_DUNGEON_7, 1),
-          new NodeVertex(POI.MALAKA_DUNGEON_5, 1)
+          new NodeVertex(POI.MALAKA_DUNGEON_4, 1)
         ]));
       dijkstra.addVertex(new Vertex(POI.MALAKA_DUNGEON_7,
         [
@@ -566,6 +570,11 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
+      //TODO: treba toto pridava read pokazde kdyz hrac cestuje, melo by to resit hlavne UI at to zamezi, takze tady ten check jen OBCAS a pripadne logovat cheatery
+      //nebo ID na personal encounter davat rovnou do charakteru pokud chci stejne mit jen jeden svuj osobni....to by taky usetrilo tyhle ready a jen bych se mrkl eslu char ma nejaky personal enc...
+      if (await QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition(t, characterData))
+        throw ("Enemies are nearby, you cant travel!");
+
       const destinationLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).withConverter(LocationConverter);
 
       const destinationLocationMetadataDoc = await t.get(destinationLocationMetadataDb);
@@ -594,7 +603,7 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
 
       //Ulozime ze si prozkoumal tuto lokaci pokud nebyla neprozkoumana
       // pokud je to normalni PoI tak do charakteru
-      if (destinationPointOfInterestMetadataData.pointOfInterestType == POI_TYPE.ENCOUNTER) {
+      if (destinationPointOfInterestMetadataData.pointOfInterestType == POI_TYPE.ENCOUNTER || destinationPointOfInterestMetadataData.pointOfInterestType == POI_TYPE.TOWN) {
         if (!characterData.exploredPositions.pointsOfInterest.includes(destinationPointOfInterestId))
           characterData.exploredPositions.pointsOfInterest.push(destinationPointOfInterestId);
       }
@@ -618,11 +627,11 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
           throw "You are more than in 1 party! How could this be? DATABASE ERROR!";
       });
 
-      //pokud jsi tedy v parte, chces cestovat ale uz je vytvoreny Dungeon encounter ktereho si tim padem watcherem, nemuzes cestovat ( je to kvuli tomu aby lidi prozkoumavali dungeon hezky postupne)
-      //bohuzel toto pridat 1 read KDYKOLIV kdyz v parte prozkoumavas PoI....
+
       if (myPartyData != undefined) {
-        if (await HasPartyAnyDungeonEncounter(t, myPartyData.uid))
-          throw ("There are enemies nearby your party!");
+
+        // if (await HasPartyAnyDungeonEncounter(t, myPartyData.uid))
+        //    throw ("There are enemies nearby your party!");
 
         //Ulozime ze si prozkoumal tuto lokaci do party pokud nebyla neprozkoumana
         if (destinationPointOfInterestMetadataData.pointOfInterestType == POI_TYPE.DUNGEON) {
@@ -648,7 +657,7 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
             var maxCombatants: number = 5;
             var isFull: boolean = false;
 
-            let dungeonEncounter: EncounterDocument = new EncounterDocument(encounterDb.doc().id, spawnedEnemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, destinationPointOfInterestMetadataData.id, ENCOUNTER_CONTEXT.DUNGEON, characterData.position, 1, "Combat started!\n", "0", myPartyData.uid);
+            let dungeonEncounter: EncounterDocument = new EncounterDocument(encounterDb.doc().id, spawnedEnemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.DUNGEON, characterData.position, 1, "Combat started!\n", "0", myPartyData.uid);
 
             //pridam pripadne vsechny party membery do encounteru
             myPartyData.partyMembersUidList.forEach(partyMemberUid => {
@@ -709,6 +718,11 @@ exports.travel = functions.https.onCall(async (data, context) => {
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
+      //TODO: treba toto pridava read pokazde kdyz hrac cestuje, melo by to resit hlavne UI at to zamezi, takze tady ten check jen OBCAS a pripadne logovat cheatery
+      //nebo ID na personal encounter davat rovnou do charakteru pokud chci stejne mit jen jeden svuj osobni....to by taky usetrilo tyhle ready a jen bych se mrkl eslu char ma nejaky personal enc...
+      if (await QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition(t, characterData))
+        throw ("Enemies are nearby, you cant travel!");
+
       const destinationLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(destinationLocationId);
 
       const destinationLocationMetadataDoc = await t.get(destinationLocationMetadataDb);
@@ -734,7 +748,7 @@ exports.travel = functions.https.onCall(async (data, context) => {
 
 
       //Kdyz si v boji nemuzes cestovat
-      if (await QuerryIfCharacterIsInAnyEncounter(t, characterData.uid))
+      if (await QuerryIfCharacterIsInCombatAtAnyEncounter(t, characterData.uid))
         throw ("You cannot travel while in combat!");
 
       //Poku si v lokaci poprve a prave jsi ji prozkoumal ulozime ze si ji prozkoumal a jeji startovni pozici taky.

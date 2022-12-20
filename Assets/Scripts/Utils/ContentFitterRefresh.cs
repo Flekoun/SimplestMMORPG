@@ -41,7 +41,7 @@ public class ContentFitterRefresh : MonoBehaviour
             }
             catch (System.Exception ex)
             {
-                Debug.LogWarning("Chyba pri refreshovani content size fitteru.....");
+                Debug.LogWarning("Chyba pri refreshovani content size fitteru....."+ex.Message);
             }
           
         }

@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IdPrefix: ENEMY
   ImageId: MALAKA_DUNGEON_BOSS
-  Image: {fileID: 21300000, guid: 10fb0961bb917425e8e5e010d136615c, type: 3}
+  Image: {fileID: 21300000, guid: 5e3d3fdfd0d6da4428618bcea7479661, type: 3}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

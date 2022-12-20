@@ -4,7 +4,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using static UnityEditor.Progress;
+
 
 public class UIWorldMapLocationButton : MonoBehaviour
 {
@@ -20,7 +20,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
     //   public ZoneIdDefinition ZoneDef;
     public TextMeshProUGUI LocationNameText;
     public Image LocationPotrait;
-
+    public HoldButton HoldButton;
     //    public TextMeshProUGUI ButtonText;
 
     public GameObject PortraitPrefab;
@@ -111,10 +111,15 @@ public class UIWorldMapLocationButton : MonoBehaviour
         MarkerPortrait.SetPortrait(AccountDataSO.CharacterData.characterPortrait);
     }
 
+    public void HoldFinished()
+    {
+        OnClicked?.Invoke(this);
+    }
+
     public void Clicked()
     {
-        if (OnClicked != null)
-            OnClicked.Invoke(this);
+        if (!HoldButton.IsFunctional())
+            OnClicked?.Invoke(this);
     }
 
     public void TravelToThisLocation()
@@ -135,6 +140,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
 
     private void DisplayButtonAsTravelTimeToThisLocation(int _travelTime)
     {
+        HoldButton.SetFunctional(true);
         LocationNameText.color = Color.yellow;
         LocationNameText.SetText("Travel Here (" + _travelTime.ToString() + ")");
     }
@@ -144,6 +150,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
         //        Debug.Log("------------Refreshing button :" + IsPlayerOnThisLocation() + "--------------");
         if (IsPlayerOnThisLocation())
         {
+            HoldButton.SetFunctional(false);
             LocationNameText.color = Color.green;
             LocationNameText.SetText("Enter " + Utils.GetMetadataForLocation(Data).title.GetText());
         }
@@ -151,11 +158,13 @@ public class UIWorldMapLocationButton : MonoBehaviour
         {
             if (AccountDataSO.CharacterData.IsPositionExplored(Data))
             {
+                HoldButton.SetFunctional(false);
                 LocationNameText.color = Color.white;
                 LocationNameText.SetText(Utils.GetMetadataForLocation(Data).title.GetText());
             }
             else
             {
+                HoldButton.SetFunctional(false);
                 LocationNameText.color = Color.gray;
                 LocationNameText.SetText("Unexplored");
             }

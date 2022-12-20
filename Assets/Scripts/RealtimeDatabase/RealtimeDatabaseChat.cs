@@ -253,7 +253,7 @@ public class RealtimeDatabaseChat : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            Debug.LogError("Chyba pri parsovani toho debiliho chatu : " + e.Snapshot.Child("characterLevel").Exists);
+            Debug.LogError("Chyba pri parsovani toho debiliho chatu : " + e.Snapshot.Child("characterLevel").Exists + ex.Message);
             Debug.LogError("Body : " + e.Snapshot.Child("body").Value.ToString());
         }
         recievedChatMessage.characterName = e.Snapshot.Child("characterName").Value.ToString();

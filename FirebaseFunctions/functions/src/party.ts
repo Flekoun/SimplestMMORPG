@@ -1,7 +1,7 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { CharacterDocument, characterDocumentConverter, getCurrentDateTime, QuerryIfCharacterIsInAnyEncounter, WorldPosition } from ".";
+import { CharacterDocument, characterDocumentConverter, getCurrentDateTime, QuerryIfCharacterIsInCombatAtAnyEncounter, WorldPosition } from ".";
 import { CombatEnemy, CombatMember, CombatStats, EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT } from "./encounter";
 import { firestoreAutoId } from "./general2";
 import { getStartingPointOfInterestForLocation, MapLocation, LocationConverter, LOC_TYPE } from "./worldMap";
@@ -536,7 +536,7 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
 
 
       //   if (callerCharacterData.isJoinedInEncounter)
-      if (await QuerryIfCharacterIsInAnyEncounter(t, callerCharacterData.uid))
+      if (await QuerryIfCharacterIsInCombatAtAnyEncounter(t, callerCharacterData.uid))
         throw "Cant leave party while in combat!";
 
 

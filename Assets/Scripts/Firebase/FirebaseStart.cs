@@ -16,7 +16,7 @@ public class FirebaseStart : MonoBehaviour
     {
         Application.targetFrameRate =60 ;
 
-        FirebaseApp app;
+//        FirebaseApp app;
         Firebase.FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {
             var dependencyStatus = task.Result;

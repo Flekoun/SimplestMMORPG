@@ -304,7 +304,12 @@ public class AccountDataSO : ScriptableObject
         if (PartyData == null) return false;
         else if (PartyData.partyMembers == null) return false;
         else if (PartyData.dungeonProgress == null) return false;
+        else if (PartyData.dungeonProgress.dungeonLocationId == string.Empty) return false;
+        else if (PartyData.dungeonProgress.dungeonLocationId == "") return false;
+        else if (PartyData.dungeonProgress.dungeonLocationId == " ") return false;
+        else if (String.IsNullOrWhiteSpace(PartyData.dungeonProgress.dungeonLocationId)) return false;
 
+        Debug.Log("PartyData.dungeonProgress.dungeonLocationId: " + PartyData.dungeonProgress.dungeonLocationId);
         return true;
     }
 

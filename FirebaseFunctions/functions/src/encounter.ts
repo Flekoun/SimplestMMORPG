@@ -2,7 +2,7 @@
 // [START import]
 
 import * as functions from "firebase-functions";
-import { CharacterDocument, characterDocumentConverter, CHARACTER_CLASS, ContentContainer, CONTENT_TYPE, CURRENCY_ID, getCurrentDateTime, getCurrentDateTimeVersionSecondsAdd, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, INSTAKILL, millisToSeconds, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInAnyEncounter, SimpleTally, WorldPosition } from ".";
+import { CharacterDocument, characterDocumentConverter, CHARACTER_CLASS, ContentContainer, CONTENT_TYPE, CURRENCY_ID, getCurrentDateTime, getCurrentDateTimeVersionSecondsAdd, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, INSTAKILL, millisToSeconds, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInCombatAtAnyEncounter, SimpleTally, WorldPosition } from ".";
 import { EncounterResult, EncounterResultContentLoot, EncounterResultEnemy, EncounterResultCombatant, RESULT_ITEM_WANT_DURATION_SECONDS } from "./encounterResult";
 import { EQUIP_SLOT_ID, generateContentItemSimple, generateEquip, generateFood, RARITY } from "./equip";
 import { applySkillEffect, drawNewSkills, EnemyMeta, firestoreAutoId, IHasChanceToSpawn, randomIntFromInterval, RollForRandomItem, shuffle } from "./general2";
@@ -806,7 +806,7 @@ export const encounterDocumentConverter = {
       foundByCharacterUid: _encounter.foundByCharacterUid,
       expireDateTurn: _encounter.expireDateTurn,
       encounterContext: _encounter.encounterContext,
-      foundByPartyUid : _encounter.foundByPartyUid
+      foundByPartyUid: _encounter.foundByPartyUid
     };
   },
   fromFirestore: (snapshot: any, options: any) => {
@@ -925,8 +925,8 @@ exports.applySkillOnEncounter = functions.https.onCall(async (data, context) => 
         encounterData.combatants.forEach(combatant => { resultComatants.push(new EncounterResultCombatant(combatant.uid, combatant.displayName, combatant.characterClass, combatant.level, getExpAmountFromEncounterForGivenCharacterLevel(encounterResultEnemies, combatant.level))); });
 
         const wantItemPhaseFinished = encounterData.combatantList.length == 1; //kdyz si v boji sam, neni treba pak hlasovat o lootu
-        const encounterResult = new EncounterResult(encounterResultsDb.id, encounterResultEnemies, encounterData.combatantList, encounterData.combatantList, encounterData.combatantList, resultComatants, silverAmount, wantItemPhaseFinished, encounterData.turnNumber, expireWantItemDate);
-        t.set(encounterResultsDb, JSON.parse(JSON.stringify(encounterResult)));
+        const encounterResult = new EncounterResult(encounterResultsDb.id, encounterResultEnemies, encounterData.combatantList, encounterData.combatantList, encounterData.combatantList, resultComatants, silverAmount, wantItemPhaseFinished, encounterData.turnNumber, expireWantItemDate, encounterData.position);
+        await t.set(encounterResultsDb, JSON.parse(JSON.stringify(encounterResult)));
 
         t.delete(encounterDb);
       }
@@ -1081,14 +1081,11 @@ exports.restEncounter = functions.https.onCall(async (data, context) => {
 
 async function joinCharacterToEncounter(_transaction: any, _encounterData: EncounterDocument, _callerCharacterData: CharacterDocument) {
 
-
   // if (_callerCharacterData.isJoinedInEncounter)
-  if (await QuerryIfCharacterIsInAnyEncounter(_transaction, _callerCharacterData.uid))
+  if (await QuerryIfCharacterIsInCombatAtAnyEncounter(_transaction, _callerCharacterData.uid))
     throw "You are already in combat! Cant join new one!";
-
-  if (await QuerryHasCharacterAnyUnclaimedEncounterResult(_transaction, _callerCharacterData.uid))
+  if (await QuerryHasCharacterAnyUnclaimedEncounterResult(_transaction, _callerCharacterData))
     throw "You need to loot all corpses before joining another fight!";
-
 
 
   //Najdu jestli uz jsi joinuty do boje, pokud ne, pridam te
@@ -1154,9 +1151,9 @@ exports.joinEncounter = functions.https.onCall(async (data, context) => {
       let encounterData: EncounterDocument = encounterDoc.data();
       let callerCharacterData: CharacterDocument = callerCharacterDoc.data();
 
-
+      console.log("A");
       await joinCharacterToEncounter(t, encounterData, callerCharacterData);
-
+      console.log("B");
 
 
       t.set(encounterDb, JSON.parse(JSON.stringify(encounterData)), { merge: true });
@@ -1217,7 +1214,7 @@ exports.addSelfAsWatcher = functions.https.onCall(async (data, context) => {
 
 exports.explorePointOfInterest = functions.https.onCall(async (data, context) => {
 
-//tady teda vybrat co bude explornuto...enemy nebo gathering resource pro ted nebo nic?
+  //tady teda vybrat co bude explornuto...enemy nebo gathering resource pro ted nebo nic?
   const MAX_ENEMIES = 6;
 
   const callerCharacterUid = data.characterUid;
@@ -1233,7 +1230,7 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
-      const allCallerPersonalEncounterOnHisPosition = admin.firestore().collection('encounters').where("position.zoneId", "==", characterData.position.zoneId).where("position.locationId", "==", characterData.position.locationId).where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL);
+      const allCallerPersonalEncounterOnHisPosition = admin.firestore().collection('encounters').where("position.zoneId", "==", characterData.position.zoneId).where("position.locationId", "==", characterData.position.locationId).where("position.pointOfInterestId", "==", characterData.position.pointOfInterestId).where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL);
       const zonesDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).withConverter(LocationConverter);
 
       //nactu si data o PoI
@@ -1241,13 +1238,12 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
       var locationsMetaData: MapLocation = locationMetaDoc.data();
       const pointOfInterest = locationsMetaData.getPointOfInterestById(pointOfInterestId);
 
-      // let myPartyData: Party = new Party("", "", 0, [], [], null);
 
       if (pointOfInterest.pointOfInterestType == POI_TYPE.DUNGEON)
         throw ("Dungeon points of interest cant be explored....");
 
 
-      if (await QuerryIfCharacterIsInAnyEncounter(t, characterData.uid))
+      if (await QuerryIfCharacterIsInCombatAtAnyEncounter(t, characterData.uid))
         throw ("You cannot explore while in combat!");
 
       //zkontroluje jestli uz mas personal encounter vytvoreny
@@ -1283,7 +1279,7 @@ exports.explorePointOfInterest = functions.https.onCall(async (data, context) =>
         var isFull: boolean = false;//maxCombatants <= 0;
         //const position = new WorldPosition(zoneId, locationId);
 
-        personalEncounter = new EncounterDocument(encounterDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.PERSONAL, characterData.position, 1, "Combat started!\n", "0","");
+        personalEncounter = new EncounterDocument(encounterDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, callerCharacterUid, maxCombatants, watchersList, isFull, characterData.characterName, ENCOUNTER_CONTEXT.PERSONAL, characterData.position, 1, "Combat started!\n", "0", "");
 
 
         //ziskam svoju partu
@@ -1461,7 +1457,7 @@ export async function CreateWorldBossEncounter(_position: WorldPosition) {
     var isFull: boolean = false;//maxCombatants <= 0;
     const position = new WorldPosition(zoneId, LOC.NONE, POI.NONE);
 
-    var worldEncounter: EncounterDocument = new EncounterDocument(encounterDoc.id, enemies, combatants, combatantList, Math.random(), expireDate, "", maxCombatants, watchersList, isFull, "World Boss", ENCOUNTER_CONTEXT.WORLD_BOSS, position, 1, "Combat started!\n", "0","");
+    var worldEncounter: EncounterDocument = new EncounterDocument(encounterDoc.id, enemies, combatants, combatantList, Math.random(), expireDate, "", maxCombatants, watchersList, isFull, "World Boss", ENCOUNTER_CONTEXT.WORLD_BOSS, position, 1, "Combat started!\n", "0", "");
 
     await encounterDoc.set(JSON.parse(JSON.stringify(worldEncounter)));
 

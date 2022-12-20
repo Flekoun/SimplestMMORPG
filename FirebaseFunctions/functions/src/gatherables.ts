@@ -121,7 +121,7 @@ exports.test = functions.https.onCall(async (data, context) => {
 
 export async function SpawnGatherables() {
 
-  const CHANGE_TO_REMOVE_LINGERING_GATHERABLE = 1;  // sance na smazani starych gatherable
+  const CHANGE_TO_REMOVE_LINGERING_GATHERABLE = 0.75;  // sance na smazani starych gatherable
   const TOTAL_GATHERABLES_AMOUNT = 10; //celkovy pocet gatherables ktere maji byt ve svete po spawnu
 
   const gatherableDb = await admin.firestore().collection('gatherables');

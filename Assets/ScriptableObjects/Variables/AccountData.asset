@@ -13,24 +13,23 @@ MonoBehaviour:
   m_Name: AccountData
   m_EditorClassIdentifier: 
   CharacterData:
-    <uid>k__BackingField: 2he13ZUKZ0cX3jugtMeT
+    <uid>k__BackingField: akmTtSqmg6xxR8FizA7V
     <userUid>k__BackingField: 6FFXiYluAWTB2NqwghTAKCCwg063
-    <characterName>k__BackingField: AnonymousWAR
-    <characterClass>k__BackingField: WARRIOR
+    <characterName>k__BackingField: Fleknovia
+    <characterClass>k__BackingField: WARLOCK
     <inventory>k__BackingField:
       <bags>k__BackingField:
-      - <uid>k__BackingField: U5xz9ewowSQE0wEQRoQZ
+      - <uid>k__BackingField: StS6NhmvYTGGTQAH73Em
         <itemId>k__BackingField: STARTING_BAG
         <capacity>k__BackingField: 16
       <capacityMax>k__BackingField: 16
-      <capacityLeft>k__BackingField: 10
+      <capacityLeft>k__BackingField: 12
       <content>k__BackingField:
-      - <contentType>k__BackingField: ITEM
+      - <contentType>k__BackingField: FOOD
         <contentEquip>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
@@ -47,179 +46,48 @@ MonoBehaviour:
             <durability>k__BackingField: 0
           <skill>k__BackingField:
             <skillId>k__BackingField: 
-            <imageId>k__BackingField: 
             <characterClass>k__BackingField: 
             <manaCost>k__BackingField: 0
             <amounts>k__BackingField: []
             <rank>k__BackingField: 0
             <buff>k__BackingField:
-              <uid>k__BackingField: 
               <buffId>k__BackingField: 
-              <turnsLeft>k__BackingField: 0
+              <durationTurns>k__BackingField: 0
               <amounts>k__BackingField: []
               <rank>k__BackingField: 0
-              <imageId>k__BackingField: 
           <level>k__BackingField: 0
+          <displayName>k__BackingField: 
+          <imageId>k__BackingField: 
         <contentItem>k__BackingField:
-          <uid>k__BackingField: v2J7Gd4VOtRSuIoS7flz
-          <displayName>k__BackingField: Boar Tusk
+          <uid>k__BackingField: 
+          <sellPrice>k__BackingField: 0
+          <itemId>k__BackingField: 
+          <stackSize>k__BackingField: 0
+          <amount>k__BackingField: 0
+          <rarity>k__BackingField: 
+          <level>k__BackingField: 0
+        <contentCurrency>k__BackingField:
+          <uid>k__BackingField: 
+          <sellPrice>k__BackingField: 0
+          <itemId>k__BackingField: 
+          <stackSize>k__BackingField: 0
+          <amount>k__BackingField: 0
+          <rarity>k__BackingField: 
+          <currencyType>k__BackingField: 
+        <contentFood>k__BackingField:
+          <uid>k__BackingField: hbgEJUFb0eWB5dD9Vpr8
           <sellPrice>k__BackingField: 5
-          <imageId>k__BackingField: TUSK
+          <itemId>k__BackingField: APPLE
           <stackSize>k__BackingField: 20
-          <amount>k__BackingField: 11
+          <amount>k__BackingField: 6
           <rarity>k__BackingField: COMMON
-          <level>k__BackingField: 0
-        <contentCurrency>k__BackingField:
-          <uid>k__BackingField: 
-          <displayName>k__BackingField: 
-          <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
-          <stackSize>k__BackingField: 0
-          <amount>k__BackingField: 0
-          <rarity>k__BackingField: 
-          <currencyType>k__BackingField: 
-        <contentFood>k__BackingField:
-          <uid>k__BackingField: 
-          <displayName>k__BackingField: 
-          <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
-          <stackSize>k__BackingField: 0
-          <amount>k__BackingField: 0
-          <rarity>k__BackingField: 
-          <fatigueRecoveryBonus>k__BackingField: 0
-          <timeBonus>k__BackingField: 0
-      - <contentType>k__BackingField: FOOD
-        <contentEquip>k__BackingField:
-          <uid>k__BackingField: 
-          <displayName>k__BackingField: 
-          <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
-          <stackSize>k__BackingField: 0
-          <amount>k__BackingField: 0
-          <rarity>k__BackingField: 
-          <equipSlotId>k__BackingField: 
-          <iLevel>k__BackingField: 0
-          <equipSet>k__BackingField: 0
-          <attributes>k__BackingField:
-            <intellect>k__BackingField: 0
-            <stamina>k__BackingField: 0
-            <strength>k__BackingField: 0
-            <agility>k__BackingField: 0
-            <spirit>k__BackingField: 0
-            <armor>k__BackingField: 0
-            <durability>k__BackingField: 0
-          <skill>k__BackingField:
-            <skillId>k__BackingField: 
-            <imageId>k__BackingField: 
-            <characterClass>k__BackingField: 
-            <manaCost>k__BackingField: 0
-            <amounts>k__BackingField: []
-            <rank>k__BackingField: 0
-            <buff>k__BackingField:
-              <uid>k__BackingField: 
-              <buffId>k__BackingField: 
-              <turnsLeft>k__BackingField: 0
-              <amounts>k__BackingField: []
-              <rank>k__BackingField: 0
-              <imageId>k__BackingField: 
-          <level>k__BackingField: 0
-        <contentItem>k__BackingField:
-          <uid>k__BackingField: 
-          <displayName>k__BackingField: 
-          <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
-          <stackSize>k__BackingField: 0
-          <amount>k__BackingField: 0
-          <rarity>k__BackingField: 
-          <level>k__BackingField: 0
-        <contentCurrency>k__BackingField:
-          <uid>k__BackingField: 
-          <displayName>k__BackingField: 
-          <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
-          <stackSize>k__BackingField: 0
-          <amount>k__BackingField: 0
-          <rarity>k__BackingField: 
-          <currencyType>k__BackingField: 
-        <contentFood>k__BackingField:
-          <uid>k__BackingField: cH5Xhck4qv61R0hd9PHy
-          <displayName>k__BackingField: Berry
-          <sellPrice>k__BackingField: 20
-          <imageId>k__BackingField: BERRY
-          <stackSize>k__BackingField: 5
-          <amount>k__BackingField: 5
-          <rarity>k__BackingField: COMMON
-          <fatigueRecoveryBonus>k__BackingField: 1
-          <timeBonus>k__BackingField: 5
-      - <contentType>k__BackingField: FOOD
-        <contentEquip>k__BackingField:
-          <uid>k__BackingField: 
-          <displayName>k__BackingField: 
-          <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
-          <stackSize>k__BackingField: 0
-          <amount>k__BackingField: 0
-          <rarity>k__BackingField: 
-          <equipSlotId>k__BackingField: 
-          <iLevel>k__BackingField: 0
-          <equipSet>k__BackingField: 0
-          <attributes>k__BackingField:
-            <intellect>k__BackingField: 0
-            <stamina>k__BackingField: 0
-            <strength>k__BackingField: 0
-            <agility>k__BackingField: 0
-            <spirit>k__BackingField: 0
-            <armor>k__BackingField: 0
-            <durability>k__BackingField: 0
-          <skill>k__BackingField:
-            <skillId>k__BackingField: 
-            <imageId>k__BackingField: 
-            <characterClass>k__BackingField: 
-            <manaCost>k__BackingField: 0
-            <amounts>k__BackingField: []
-            <rank>k__BackingField: 0
-            <buff>k__BackingField:
-              <uid>k__BackingField: 
-              <buffId>k__BackingField: 
-              <turnsLeft>k__BackingField: 0
-              <amounts>k__BackingField: []
-              <rank>k__BackingField: 0
-              <imageId>k__BackingField: 
-          <level>k__BackingField: 0
-        <contentItem>k__BackingField:
-          <uid>k__BackingField: 
-          <displayName>k__BackingField: 
-          <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
-          <stackSize>k__BackingField: 0
-          <amount>k__BackingField: 0
-          <rarity>k__BackingField: 
-          <level>k__BackingField: 0
-        <contentCurrency>k__BackingField:
-          <uid>k__BackingField: 
-          <displayName>k__BackingField: 
-          <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
-          <stackSize>k__BackingField: 0
-          <amount>k__BackingField: 0
-          <rarity>k__BackingField: 
-          <currencyType>k__BackingField: 
-        <contentFood>k__BackingField:
-          <uid>k__BackingField: fXBorEPbjMwE9tyL5HV5
-          <displayName>k__BackingField: Buffalo Ribeye
-          <sellPrice>k__BackingField: 100
-          <imageId>k__BackingField: RIBEYE
-          <stackSize>k__BackingField: 50
-          <amount>k__BackingField: 49
-          <rarity>k__BackingField: COMMON
-          <fatigueRecoveryBonus>k__BackingField: 80
+          <fatigueRecoveryBonus>k__BackingField: 5
           <timeBonus>k__BackingField: 0
       - <contentType>k__BackingField: ITEM
         <contentEquip>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
@@ -236,42 +104,38 @@ MonoBehaviour:
             <durability>k__BackingField: 0
           <skill>k__BackingField:
             <skillId>k__BackingField: 
-            <imageId>k__BackingField: 
             <characterClass>k__BackingField: 
             <manaCost>k__BackingField: 0
             <amounts>k__BackingField: []
             <rank>k__BackingField: 0
             <buff>k__BackingField:
-              <uid>k__BackingField: 
               <buffId>k__BackingField: 
-              <turnsLeft>k__BackingField: 0
+              <durationTurns>k__BackingField: 0
               <amounts>k__BackingField: []
               <rank>k__BackingField: 0
-              <imageId>k__BackingField: 
           <level>k__BackingField: 0
+          <displayName>k__BackingField: 
+          <imageId>k__BackingField: 
         <contentItem>k__BackingField:
-          <uid>k__BackingField: Mo5rLrWZQRWcJzgbs6Lu
-          <displayName>k__BackingField: Old Boot
-          <sellPrice>k__BackingField: 10
-          <imageId>k__BackingField: JUNK_BOOT
-          <stackSize>k__BackingField: 1
-          <amount>k__BackingField: 1
+          <uid>k__BackingField: Nj5I4nUzqHcEVq2nMUHp
+          <sellPrice>k__BackingField: 5
+          <itemId>k__BackingField: BOAR_TUSK
+          <stackSize>k__BackingField: 20
+          <amount>k__BackingField: 2
           <rarity>k__BackingField: COMMON
           <level>k__BackingField: 0
         <contentCurrency>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
           <currencyType>k__BackingField: 
         <contentFood>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
@@ -280,9 +144,8 @@ MonoBehaviour:
       - <contentType>k__BackingField: ITEM
         <contentEquip>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
@@ -299,42 +162,38 @@ MonoBehaviour:
             <durability>k__BackingField: 0
           <skill>k__BackingField:
             <skillId>k__BackingField: 
-            <imageId>k__BackingField: 
             <characterClass>k__BackingField: 
             <manaCost>k__BackingField: 0
             <amounts>k__BackingField: []
             <rank>k__BackingField: 0
             <buff>k__BackingField:
-              <uid>k__BackingField: 
               <buffId>k__BackingField: 
-              <turnsLeft>k__BackingField: 0
+              <durationTurns>k__BackingField: 0
               <amounts>k__BackingField: []
               <rank>k__BackingField: 0
-              <imageId>k__BackingField: 
           <level>k__BackingField: 0
+          <displayName>k__BackingField: 
+          <imageId>k__BackingField: 
         <contentItem>k__BackingField:
-          <uid>k__BackingField: 0UTIIJcskiyNhtNiGYeZ
-          <displayName>k__BackingField: Old Boot
+          <uid>k__BackingField: SztLwS3Vsj1YSKsCqAfm
           <sellPrice>k__BackingField: 10
-          <imageId>k__BackingField: JUNK_BOOT
+          <itemId>k__BackingField: OLD_BOOT
           <stackSize>k__BackingField: 1
           <amount>k__BackingField: 1
           <rarity>k__BackingField: COMMON
           <level>k__BackingField: 0
         <contentCurrency>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
           <currencyType>k__BackingField: 
         <contentFood>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
@@ -342,634 +201,329 @@ MonoBehaviour:
           <timeBonus>k__BackingField: 0
       - <contentType>k__BackingField: EQUIP
         <contentEquip>k__BackingField:
-          <uid>k__BackingField: z2eoUEaAqhGAngRTABOu
-          <displayName>k__BackingField: Malady Armor
-          <sellPrice>k__BackingField: 50
-          <imageId>k__BackingField: BODY_1
+          <uid>k__BackingField: wsbGoDYkiD78lkHTCrut
+          <sellPrice>k__BackingField: 81
+          <itemId>k__BackingField: EQUIP
           <stackSize>k__BackingField: 1
-          <amount>k__BackingField: 0
+          <amount>k__BackingField: 1
           <rarity>k__BackingField: UNCOMMON
-          <equipSlotId>k__BackingField: BODY
-          <iLevel>k__BackingField: 8
+          <equipSlotId>k__BackingField: FEET
+          <iLevel>k__BackingField: 9
           <equipSet>k__BackingField: 0
           <attributes>k__BackingField:
             <intellect>k__BackingField: 0
-            <stamina>k__BackingField: 3
-            <strength>k__BackingField: 3
-            <agility>k__BackingField: 0
-            <spirit>k__BackingField: 0
+            <stamina>k__BackingField: 0
+            <strength>k__BackingField: 0
+            <agility>k__BackingField: 1
+            <spirit>k__BackingField: 1
             <armor>k__BackingField: 0
             <durability>k__BackingField: 0
           <skill>k__BackingField:
-            <skillId>k__BackingField: FIRSTAID
-            <imageId>k__BackingField: FIRSTAID
-            <characterClass>k__BackingField: WARRIOR
-            <manaCost>k__BackingField: 10
-            <amounts>k__BackingField: []
-            <rank>k__BackingField: 0
+            <skillId>k__BackingField: LIFE_TAP
+            <characterClass>k__BackingField: WARLOCK
+            <manaCost>k__BackingField: 0
+            <amounts>k__BackingField:
+            - 30
+            - 5
+            <rank>k__BackingField: 1
             <buff>k__BackingField:
-              <uid>k__BackingField: 
               <buffId>k__BackingField: 
-              <turnsLeft>k__BackingField: 0
+              <durationTurns>k__BackingField: 0
               <amounts>k__BackingField: []
               <rank>k__BackingField: 0
-              <imageId>k__BackingField: 
-          <level>k__BackingField: 5
+          <level>k__BackingField: 4
+          <displayName>k__BackingField: Sturdy Item of Hero
+          <imageId>k__BackingField: FEET_1
         <contentItem>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
           <level>k__BackingField: 0
         <contentCurrency>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
-          <imageId>k__BackingField: 
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
           <currencyType>k__BackingField: 
         <contentFood>k__BackingField:
           <uid>k__BackingField: 
-          <displayName>k__BackingField: 
           <sellPrice>k__BackingField: 0
+          <itemId>k__BackingField: 
+          <stackSize>k__BackingField: 0
+          <amount>k__BackingField: 0
+          <rarity>k__BackingField: 
+          <fatigueRecoveryBonus>k__BackingField: 0
+          <timeBonus>k__BackingField: 0
+      - <contentType>k__BackingField: ITEM
+        <contentEquip>k__BackingField:
+          <uid>k__BackingField: 
+          <sellPrice>k__BackingField: 0
+          <itemId>k__BackingField: 
+          <stackSize>k__BackingField: 0
+          <amount>k__BackingField: 0
+          <rarity>k__BackingField: 
+          <equipSlotId>k__BackingField: 
+          <iLevel>k__BackingField: 0
+          <equipSet>k__BackingField: 0
+          <attributes>k__BackingField:
+            <intellect>k__BackingField: 0
+            <stamina>k__BackingField: 0
+            <strength>k__BackingField: 0
+            <agility>k__BackingField: 0
+            <spirit>k__BackingField: 0
+            <armor>k__BackingField: 0
+            <durability>k__BackingField: 0
+          <skill>k__BackingField:
+            <skillId>k__BackingField: 
+            <characterClass>k__BackingField: 
+            <manaCost>k__BackingField: 0
+            <amounts>k__BackingField: []
+            <rank>k__BackingField: 0
+            <buff>k__BackingField:
+              <buffId>k__BackingField: 
+              <durationTurns>k__BackingField: 0
+              <amounts>k__BackingField: []
+              <rank>k__BackingField: 0
+          <level>k__BackingField: 0
+          <displayName>k__BackingField: 
           <imageId>k__BackingField: 
+        <contentItem>k__BackingField:
+          <uid>k__BackingField: Dh2oENZLen3bc1VJ8kcu
+          <sellPrice>k__BackingField: 10
+          <itemId>k__BackingField: OLD_BOOT
+          <stackSize>k__BackingField: 1
+          <amount>k__BackingField: 1
+          <rarity>k__BackingField: COMMON
+          <level>k__BackingField: 0
+        <contentCurrency>k__BackingField:
+          <uid>k__BackingField: 
+          <sellPrice>k__BackingField: 0
+          <itemId>k__BackingField: 
+          <stackSize>k__BackingField: 0
+          <amount>k__BackingField: 0
+          <rarity>k__BackingField: 
+          <currencyType>k__BackingField: 
+        <contentFood>k__BackingField:
+          <uid>k__BackingField: 
+          <sellPrice>k__BackingField: 0
+          <itemId>k__BackingField: 
           <stackSize>k__BackingField: 0
           <amount>k__BackingField: 0
           <rarity>k__BackingField: 
           <fatigueRecoveryBonus>k__BackingField: 0
           <timeBonus>k__BackingField: 0
     <equipment>k__BackingField:
-    - <uid>k__BackingField: xUdD48hOKqoAvR75JT1r
-      <displayName>k__BackingField: Rusty Thing of Hero
-      <sellPrice>k__BackingField: 36
-      <imageId>k__BackingField: TRINKET_1
+    - <uid>k__BackingField: BvyGgOzc2T1Q7nieVdOj
+      <sellPrice>k__BackingField: 1
+      <itemId>k__BackingField: EQUIP
       <stackSize>k__BackingField: 1
       <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: TRINKET
-      <iLevel>k__BackingField: 12
+      <rarity>k__BackingField: COMMON
+      <equipSlotId>k__BackingField: BODY
+      <iLevel>k__BackingField: 1
       <equipSet>k__BackingField: 0
       <attributes>k__BackingField:
         <intellect>k__BackingField: 0
         <stamina>k__BackingField: 0
-        <strength>k__BackingField: 1
-        <agility>k__BackingField: 1
-        <spirit>k__BackingField: 1
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: SHADOWBOLT
-        <imageId>k__BackingField: SHADOWBOLT
-        <characterClass>k__BackingField: WARLOCK
-        <manaCost>k__BackingField: 30
-        <amounts>k__BackingField:
-        - 25
-        - 0.1
-        <rank>k__BackingField: 2
-        <buff>k__BackingField:
-          <uid>k__BackingField: VTdCPvpYLHCout4k5nRF
-          <buffId>k__BackingField: WEAKNESS_BUFF
-          <turnsLeft>k__BackingField: 3
-          <amounts>k__BackingField:
-          - 0.1
-          <rank>k__BackingField: 2
-          <imageId>k__BackingField: WEAKNESS_BUFF
-      <level>k__BackingField: 7
-    - <uid>k__BackingField: rwpPlAmVuuB0DXdWmWX7
-      <displayName>k__BackingField: Mighty Stuff of King
-      <sellPrice>k__BackingField: 39
-      <imageId>k__BackingField: WRIST_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: WRIST
-      <iLevel>k__BackingField: 13
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 1
-        <stamina>k__BackingField: 1
         <strength>k__BackingField: 0
         <agility>k__BackingField: 0
-        <spirit>k__BackingField: 1
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: EXECUTE
-        <imageId>k__BackingField: EXECUTE
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 24
-        <amounts>k__BackingField:
-        - 25
-        <rank>k__BackingField: 2
-        <buff>k__BackingField:
-          <uid>k__BackingField: 
-          <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
-          <amounts>k__BackingField: []
-          <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 8
-    - <uid>k__BackingField: NUw3SaMAbpneVGrlhUeF
-      <displayName>k__BackingField: Glorious Object of Beggar
-      <sellPrice>k__BackingField: 27
-      <imageId>k__BackingField: NECK_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: NECK
-      <iLevel>k__BackingField: 9
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 0
-        <stamina>k__BackingField: 0
-        <strength>k__BackingField: 2
-        <agility>k__BackingField: 0
         <spirit>k__BackingField: 0
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
+        <armor>k__BackingField: 1
+        <durability>k__BackingField: 10
       <skill>k__BackingField:
         <skillId>k__BackingField: SLAM
-        <imageId>k__BackingField: SLAM
-        <characterClass>k__BackingField: WARRIOR
+        <characterClass>k__BackingField: ANY
         <manaCost>k__BackingField: 8
         <amounts>k__BackingField:
         - 10
         - 3
         <rank>k__BackingField: 1
         <buff>k__BackingField:
-          <uid>k__BackingField: 
           <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
+          <durationTurns>k__BackingField: 0
           <amounts>k__BackingField: []
           <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 4
-    - <uid>k__BackingField: DrAnDhCZyPGAtEdFjUXe
-      <displayName>k__BackingField: Sturdy Stuff of Peasant
-      <sellPrice>k__BackingField: 24
-      <imageId>k__BackingField: AMULET_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: AMULET
-      <iLevel>k__BackingField: 8
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 1
-        <stamina>k__BackingField: 0
-        <strength>k__BackingField: 1
-        <agility>k__BackingField: 0
-        <spirit>k__BackingField: 0
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: REJUVENATION
-        <imageId>k__BackingField: REJUVENATION
-        <characterClass>k__BackingField: SHAMAN
-        <manaCost>k__BackingField: 25
-        <amounts>k__BackingField: []
-        <rank>k__BackingField: 1
-        <buff>k__BackingField:
-          <uid>k__BackingField: 4QCaaI5EjoH0bqs29Ypy
-          <buffId>k__BackingField: REJUVENATION_BUFF
-          <turnsLeft>k__BackingField: 5
-          <amounts>k__BackingField:
-          - 35
-          <rank>k__BackingField: 1
-          <imageId>k__BackingField: REJUVENATION_BUFF
-      <level>k__BackingField: 3
-    - <uid>k__BackingField: 1TdziMq3fbDZq3b8KJEx
-      <displayName>k__BackingField: Rusty Equipment of Lord
-      <sellPrice>k__BackingField: 27
-      <imageId>k__BackingField: FEET_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: FEET
-      <iLevel>k__BackingField: 9
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 1
-        <stamina>k__BackingField: 0
-        <strength>k__BackingField: 0
-        <agility>k__BackingField: 1
-        <spirit>k__BackingField: 0
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: SHIELD_WALL
-        <imageId>k__BackingField: SHIELD_WALL
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 25
-        <amounts>k__BackingField: []
-        <rank>k__BackingField: 1
-        <buff>k__BackingField:
-          <uid>k__BackingField: CGyEPuTaFr9UTDNsEbzg
-          <buffId>k__BackingField: SHIELD_WALL_BUFF
-          <turnsLeft>k__BackingField: 2
-          <amounts>k__BackingField:
-          - 0.5
-          <rank>k__BackingField: 1
-          <imageId>k__BackingField: SHIELD_WALL_BUFF
-      <level>k__BackingField: 4
-    - <uid>k__BackingField: 9YxtIgcSyVNlNDp72u2c
-      <displayName>k__BackingField: Rusty Item of the Wild
-      <sellPrice>k__BackingField: 30
+      <level>k__BackingField: 1
+      <displayName>k__BackingField: Apprentice Shirt
       <imageId>k__BackingField: BODY_1
+    - <uid>k__BackingField: kKnysIKWn8d8NP22PO8p
+      <sellPrice>k__BackingField: 1
+      <itemId>k__BackingField: EQUIP
       <stackSize>k__BackingField: 1
       <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: BODY
-      <iLevel>k__BackingField: 10
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 0
-        <stamina>k__BackingField: 1
-        <strength>k__BackingField: 1
-        <agility>k__BackingField: 0
-        <spirit>k__BackingField: 1
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: SHADOWBOLT
-        <imageId>k__BackingField: SHADOWBOLT
-        <characterClass>k__BackingField: WARLOCK
-        <manaCost>k__BackingField: 25
-        <amounts>k__BackingField:
-        - 15
-        - 0.1
-        <rank>k__BackingField: 1
-        <buff>k__BackingField:
-          <uid>k__BackingField: Jn7ub1U0aRbi80wVdHXe
-          <buffId>k__BackingField: WEAKNESS_BUFF
-          <turnsLeft>k__BackingField: 2
-          <amounts>k__BackingField:
-          - 0.1
-          <rank>k__BackingField: 1
-          <imageId>k__BackingField: WEAKNESS_BUFF
-      <level>k__BackingField: 5
-    - <uid>k__BackingField: fkH777aDxHAU8V7wQlFk
-      <displayName>k__BackingField: Iron Item  of Silent
-      <sellPrice>k__BackingField: 45
-      <imageId>k__BackingField: WAIST_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: WAIST
-      <iLevel>k__BackingField: 15
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 2
-        <stamina>k__BackingField: 2
-        <strength>k__BackingField: 1
-        <agility>k__BackingField: 0
-        <spirit>k__BackingField: 0
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: CLEAVE
-        <imageId>k__BackingField: CLEAVE
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 24
-        <amounts>k__BackingField:
-        - 18
-        <rank>k__BackingField: 2
-        <buff>k__BackingField:
-          <uid>k__BackingField: 
-          <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
-          <amounts>k__BackingField: []
-          <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 10
-    - <uid>k__BackingField: 5gVOg8RJeTQlqjWZjMZ4
-      <displayName>k__BackingField: Sturdy Equipment of Peasant
-      <sellPrice>k__BackingField: 33
-      <imageId>k__BackingField: FINGER_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: FINGER_1
-      <iLevel>k__BackingField: 11
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 0
-        <stamina>k__BackingField: 0
-        <strength>k__BackingField: 0
-        <agility>k__BackingField: 1
-        <spirit>k__BackingField: 1
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: REJUVENATION
-        <imageId>k__BackingField: REJUVENATION
-        <characterClass>k__BackingField: SHAMAN
-        <manaCost>k__BackingField: 25
-        <amounts>k__BackingField: []
-        <rank>k__BackingField: 1
-        <buff>k__BackingField:
-          <uid>k__BackingField: msLhQEZqhcoqBZwqL6vw
-          <buffId>k__BackingField: REJUVENATION_BUFF
-          <turnsLeft>k__BackingField: 5
-          <amounts>k__BackingField:
-          - 50
-          <rank>k__BackingField: 2
-          <imageId>k__BackingField: REJUVENATION_BUFF
-      <level>k__BackingField: 6
-    - <uid>k__BackingField: 6q7ByjQXbp3CNv1WBKIk
-      <displayName>k__BackingField: Rusty Construct of Beggar
-      <sellPrice>k__BackingField: 33
-      <imageId>k__BackingField: SHOULDER_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: SHOULDER
-      <iLevel>k__BackingField: 11
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 0
-        <stamina>k__BackingField: 1
-        <strength>k__BackingField: 1
-        <agility>k__BackingField: 0
-        <spirit>k__BackingField: 1
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: FIRSTAID
-        <imageId>k__BackingField: FIRSTAID
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 12
-        <amounts>k__BackingField:
-        - 15
-        <rank>k__BackingField: 2
-        <buff>k__BackingField:
-          <uid>k__BackingField: 
-          <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
-          <amounts>k__BackingField: []
-          <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 6
-    - <uid>k__BackingField: hXljHPSyHdGBMljsCaET
-      <displayName>k__BackingField: Rusty Equipment of Lord
-      <sellPrice>k__BackingField: 30
-      <imageId>k__BackingField: BACK_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: BACK
-      <iLevel>k__BackingField: 10
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 0
-        <stamina>k__BackingField: 0
-        <strength>k__BackingField: 2
-        <agility>k__BackingField: 0
-        <spirit>k__BackingField: 0
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: FIRSTAID
-        <imageId>k__BackingField: FIRSTAID
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 10
-        <amounts>k__BackingField:
-        - 10
-        <rank>k__BackingField: 1
-        <buff>k__BackingField:
-          <uid>k__BackingField: 
-          <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
-          <amounts>k__BackingField: []
-          <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 5
-    - <uid>k__BackingField: UP1cE8Qz1HZIK59U0EFE
-      <displayName>k__BackingField: Iron Equipment of Lord
-      <sellPrice>k__BackingField: 27
-      <imageId>k__BackingField: HANDS_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: HANDS
-      <iLevel>k__BackingField: 9
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 0
-        <stamina>k__BackingField: 1
-        <strength>k__BackingField: 0
-        <agility>k__BackingField: 0
-        <spirit>k__BackingField: 1
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: CLEAVE
-        <imageId>k__BackingField: CLEAVE
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 20
-        <amounts>k__BackingField:
-        - 10
-        <rank>k__BackingField: 1
-        <buff>k__BackingField:
-          <uid>k__BackingField: 
-          <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
-          <amounts>k__BackingField: []
-          <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 4
-    - <uid>k__BackingField: 0qAxiuyOYnqrLZJAgLI2
-      <displayName>k__BackingField: Mighty Item of the Wild
-      <sellPrice>k__BackingField: 45
-      <imageId>k__BackingField: MAIN_HAND_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: MAIN_HAND
-      <iLevel>k__BackingField: 15
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 1
-        <stamina>k__BackingField: 2
-        <strength>k__BackingField: 1
-        <agility>k__BackingField: 1
-        <spirit>k__BackingField: 1
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: CLEAVE
-        <imageId>k__BackingField: CLEAVE
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 24
-        <amounts>k__BackingField:
-        - 18
-        <rank>k__BackingField: 2
-        <buff>k__BackingField:
-          <uid>k__BackingField: 
-          <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
-          <amounts>k__BackingField: []
-          <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 10
-    - <uid>k__BackingField: sNhqnSZGAmLyoAN6eZMY
-      <displayName>k__BackingField: Godly Thing of King
-      <sellPrice>k__BackingField: 45
-      <imageId>k__BackingField: OFF_HAND_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: OFF_HAND
-      <iLevel>k__BackingField: 15
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 0
-        <stamina>k__BackingField: 0
-        <strength>k__BackingField: 1
-        <agility>k__BackingField: 0
-        <spirit>k__BackingField: 3
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: SHIELD_WALL
-        <imageId>k__BackingField: SHIELD_WALL
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 25
-        <amounts>k__BackingField: []
-        <rank>k__BackingField: 1
-        <buff>k__BackingField:
-          <uid>k__BackingField: m7dCoo9rDZNXNmmWj90s
-          <buffId>k__BackingField: SHIELD_WALL_BUFF
-          <turnsLeft>k__BackingField: 3
-          <amounts>k__BackingField:
-          - 0.75
-          <rank>k__BackingField: 2
-          <imageId>k__BackingField: SHIELD_WALL_BUFF
-      <level>k__BackingField: 10
-    - <uid>k__BackingField: AvBj9dULWJMDUJVuVMWY
-      <displayName>k__BackingField: Sturdy Object of King
-      <sellPrice>k__BackingField: 36
-      <imageId>k__BackingField: LEGS_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 1
-      <rarity>k__BackingField: UNCOMMON
-      <equipSlotId>k__BackingField: LEGS
-      <iLevel>k__BackingField: 12
-      <equipSet>k__BackingField: 0
-      <attributes>k__BackingField:
-        <intellect>k__BackingField: 1
-        <stamina>k__BackingField: 0
-        <strength>k__BackingField: 1
-        <agility>k__BackingField: 2
-        <spirit>k__BackingField: 0
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
-      <skill>k__BackingField:
-        <skillId>k__BackingField: FIRSTAID
-        <imageId>k__BackingField: FIRSTAID
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 12
-        <amounts>k__BackingField:
-        - 15
-        <rank>k__BackingField: 2
-        <buff>k__BackingField:
-          <uid>k__BackingField: 
-          <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
-          <amounts>k__BackingField: []
-          <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 7
-    - <uid>k__BackingField: HyoG1VMeV8yGsLhJewjr
-      <displayName>k__BackingField: Kurug's Hat
-      <sellPrice>k__BackingField: 50
-      <imageId>k__BackingField: HEAD_1
-      <stackSize>k__BackingField: 1
-      <amount>k__BackingField: 0
       <rarity>k__BackingField: COMMON
       <equipSlotId>k__BackingField: HEAD
-      <iLevel>k__BackingField: 8
+      <iLevel>k__BackingField: 1
       <equipSet>k__BackingField: 0
       <attributes>k__BackingField:
-        <intellect>k__BackingField: 5
-        <stamina>k__BackingField: 1
+        <intellect>k__BackingField: 0
+        <stamina>k__BackingField: 0
         <strength>k__BackingField: 0
         <agility>k__BackingField: 0
-        <spirit>k__BackingField: 1
-        <armor>k__BackingField: 0
-        <durability>k__BackingField: 0
+        <spirit>k__BackingField: 0
+        <armor>k__BackingField: 1
+        <durability>k__BackingField: 10
       <skill>k__BackingField:
-        <skillId>k__BackingField: FIRSTAID
-        <imageId>k__BackingField: FIRSTAID
-        <characterClass>k__BackingField: WARRIOR
-        <manaCost>k__BackingField: 10
+        <skillId>k__BackingField: SLAM
+        <characterClass>k__BackingField: ANY
+        <manaCost>k__BackingField: 8
         <amounts>k__BackingField:
         - 10
+        - 3
         <rank>k__BackingField: 1
         <buff>k__BackingField:
-          <uid>k__BackingField: 
           <buffId>k__BackingField: 
-          <turnsLeft>k__BackingField: 0
+          <durationTurns>k__BackingField: 0
           <amounts>k__BackingField: []
           <rank>k__BackingField: 0
-          <imageId>k__BackingField: 
-      <level>k__BackingField: 5
+      <level>k__BackingField: 1
+      <displayName>k__BackingField: Apprentice Cap
+      <imageId>k__BackingField: HEAD_1
+    - <uid>k__BackingField: sDkHmkZ3JpyGJtR4bXcr
+      <sellPrice>k__BackingField: 1
+      <itemId>k__BackingField: EQUIP
+      <stackSize>k__BackingField: 1
+      <amount>k__BackingField: 1
+      <rarity>k__BackingField: COMMON
+      <equipSlotId>k__BackingField: LEGS
+      <iLevel>k__BackingField: 1
+      <equipSet>k__BackingField: 0
+      <attributes>k__BackingField:
+        <intellect>k__BackingField: 0
+        <stamina>k__BackingField: 0
+        <strength>k__BackingField: 0
+        <agility>k__BackingField: 0
+        <spirit>k__BackingField: 0
+        <armor>k__BackingField: 1
+        <durability>k__BackingField: 10
+      <skill>k__BackingField:
+        <skillId>k__BackingField: SLAM
+        <characterClass>k__BackingField: ANY
+        <manaCost>k__BackingField: 8
+        <amounts>k__BackingField:
+        - 10
+        - 3
+        <rank>k__BackingField: 1
+        <buff>k__BackingField:
+          <buffId>k__BackingField: 
+          <durationTurns>k__BackingField: 0
+          <amounts>k__BackingField: []
+          <rank>k__BackingField: 0
+      <level>k__BackingField: 1
+      <displayName>k__BackingField: Apprentice Pants
+      <imageId>k__BackingField: LEGS_1
     <currency>k__BackingField:
-      <gold>k__BackingField: 820
-      <silver>k__BackingField: 8605
-      <food>k__BackingField: 480
+      <gold>k__BackingField: 1000
+      <silver>k__BackingField: 11
+      <food>k__BackingField: 500
       <time>k__BackingField: 16
-      <fatigue>k__BackingField: 8
+      <fatigue>k__BackingField: 33
     <stats>k__BackingField:
-      <exp>k__BackingField: 2028
-      <expNeededToReachNextLevel>k__BackingField: 2720
-      <expNeededToReachLastLevel>k__BackingField: 1280
-      <level>k__BackingField: 3
+      <exp>k__BackingField: 210
+      <expNeededToReachNextLevel>k__BackingField: 400
+      <expNeededToReachLastLevel>k__BackingField: 0
+      <level>k__BackingField: 1
       <healthMultiplier>k__BackingField: 10
       <manaMultiplier>k__BackingField: 1
-      <stamina>k__BackingField: 22
-      <spirit>k__BackingField: 22
-      <strength>k__BackingField: 22
+      <stamina>k__BackingField: 21
+      <spirit>k__BackingField: 20
+      <strength>k__BackingField: 19
       <intellect>k__BackingField: 22
-      <agility>k__BackingField: 22
+      <agility>k__BackingField: 18
     <position>k__BackingField:
       <locationId>k__BackingField: VALLEY_OF_TRIALS
       <zoneId>k__BackingField: DUNOTAR
+      <pointOfInterestId>k__BackingField: PLAINS
     <monsterKills>k__BackingField:
-    - <count>k__BackingField: 13
-      <id>k__BackingField: BOAR_1
-    - <count>k__BackingField: 20
+    - <count>k__BackingField: 2
+      <id>k__BackingField: BOAR
+    - <count>k__BackingField: 1
       <id>k__BackingField: SCORPID_GRAY
-    - <count>k__BackingField: 3
-      <id>k__BackingField: IMP_VILE
-    - <count>k__BackingField: 4
+    - <count>k__BackingField: 1
       <id>k__BackingField: SCORPID_CORRUPTED
-    <questgiversClaimed>k__BackingField:
-    - KtZuLAvADZVAvUmoXRrT
-    - SDFKE33VVNFJ44DKCJ
+    <questgiversClaimed>k__BackingField: []
+    <characterPortrait>k__BackingField: CHARACTER_PORTRAIT_WARLOCK
+    <timestamps>k__BackingField:
+      <lastClaimTime>k__BackingField: 1671475276314
+    <exploredPositions>k__BackingField:
+      <pointsOfInterest>k__BackingField:
+      - PLAINS
+      - MUDDY_PLAINS
+      - SCORPID_LAIR
+      <locations>k__BackingField:
+      - VALLEY_OF_TRIALS
+    <professions>k__BackingField: []
   PlayerData:
     <uid>k__BackingField: 6FFXiYluAWTB2NqwghTAKCCwg063
     <country>k__BackingField: US
     <playerName>k__BackingField: 6FFXiYluAWTB2NqwghTAKCCwg063
     <gems>k__BackingField: 10
     <characters>k__BackingField:
-    - <uid>k__BackingField: 2he13ZUKZ0cX3jugtMeT
-      <name>k__BackingField: AnonymousWAR
+    - <uid>k__BackingField: fzyflUWVXU4x8pRT7Ckx
+      <name>k__BackingField: Flekoun
+      <characterClass>k__BackingField: WARLOCK
+      <level>k__BackingField: 2
+      <portrait>k__BackingField: CHARACTER_PORTRAIT_WARLOCK
+    - <uid>k__BackingField: Xo516Ocojxj3na0NGlVR
+      <name>k__BackingField: Fleknovy
       <characterClass>k__BackingField: WARRIOR
-      <level>k__BackingField: 3
-    - <uid>k__BackingField: OLlDXG98fgVuzdYoLcYc
-      <name>k__BackingField: SuperWarlock
+      <level>k__BackingField: 1
+      <portrait>k__BackingField: CHARACTER_PORTRAIT_WARRIOR
+    - <uid>k__BackingField: 7HvE5zZFnFF0xDY4VbMi
+      <name>k__BackingField: Fleksh
+      <characterClass>k__BackingField: SHAMAN
+      <level>k__BackingField: 1
+      <portrait>k__BackingField: CHARACTER_PORTRAIT_SHAMAN
+    - <uid>k__BackingField: slwCO7MKIaDJUzlmkTtb
+      <name>k__BackingField: Flekoo
+      <characterClass>k__BackingField: SHAMAN
+      <level>k__BackingField: 1
+      <portrait>k__BackingField: CHARACTER_PORTRAIT_SHAMAN
+    - <uid>k__BackingField: qClHR6ChGi0rY9j9og3h
+      <name>k__BackingField: Flekheroid
+      <characterClass>k__BackingField: SHAMAN
+      <level>k__BackingField: 1
+      <portrait>k__BackingField: CHARACTER_PORTRAIT_SHAMAN
+    - <uid>k__BackingField: akmTtSqmg6xxR8FizA7V
+      <name>k__BackingField: Fleknovia
       <characterClass>k__BackingField: WARLOCK
       <level>k__BackingField: 1
+      <portrait>k__BackingField: CHARACTER_PORTRAIT_WARLOCK
   PartyData:
-    <partyLeaderUid>k__BackingField: 
-    <partySizeMax>k__BackingField: 0
-    <partyMembers>k__BackingField: []
+    <uid>k__BackingField: KS0wl60itMqMi6IqS1MN
+    <partyLeaderUid>k__BackingField: qClHR6ChGi0rY9j9og3h
+    <partySizeMax>k__BackingField: 5
+    <partyMembers>k__BackingField:
+    - <uid>k__BackingField: akmTtSqmg6xxR8FizA7V
+      <displayName>k__BackingField: Fleknovia
+      <characterClass>k__BackingField: WARLOCK
+      <level>k__BackingField: 1
+      <position>k__BackingField:
+        <locationId>k__BackingField: VALLEY_OF_TRIALS
+        <zoneId>k__BackingField: DUNOTAR
+        <pointOfInterestId>k__BackingField: PLAINS
+      <isPartyLeader>k__BackingField: 0
+      <isOnline>k__BackingField: 1
+      <characterPortrait>k__BackingField: CHARACTER_PORTRAIT_WARLOCK
+    - <uid>k__BackingField: qClHR6ChGi0rY9j9og3h
+      <displayName>k__BackingField: Flekheroid
+      <characterClass>k__BackingField: SHAMAN
+      <level>k__BackingField: 1
+      <position>k__BackingField:
+        <locationId>k__BackingField: VALLEY_OF_TRIALS
+        <zoneId>k__BackingField: DUNOTAR
+        <pointOfInterestId>k__BackingField: PLAINS
+      <isPartyLeader>k__BackingField: 1
+      <isOnline>k__BackingField: 0
+      <characterPortrait>k__BackingField: CHARACTER_PORTRAIT_SHAMAN
+    <dungeonProgress>k__BackingField:
+      <dungeonLocationId>k__BackingField: 
+      <exploredPointsOnInterest>k__BackingField: []
   RareEncounterData:
     <uid>k__BackingField: 
     <foundByCharacterUid>k__BackingField: 
@@ -980,35 +534,631 @@ MonoBehaviour:
     <watchersList>k__BackingField: []
     <isFull>k__BackingField: 0
     <foundByName>k__BackingField: 
-    <chatLog>k__BackingField: 
     <combatLog>k__BackingField: 
     <randomIndex>k__BackingField: 0
     <expireDate>k__BackingField: 
     <position>k__BackingField:
       <locationId>k__BackingField: 
       <zoneId>k__BackingField: 
+      <pointOfInterestId>k__BackingField: 
     <turnNumber>k__BackingField: 0
     <expireDateTurn>k__BackingField: 
   EncountersData: []
   EncounterResultsData: []
-  VendorsData: []
   InboxData: []
   PartyInviteData:
-    <uid>k__BackingField: 
     <partyLeaderUid>k__BackingField: 
     <partyLeaderDisplayName>k__BackingField: 
     <invitedCharacterUid>k__BackingField: 
-  AvailablePointsOfInterestData:
-    <locations>k__BackingField:
-    - <locationId>k__BackingField: VALLEY_OF_TRIALS
-      <pointsOfInterest>k__BackingField:
-      - PLAINS
-      - VILE_DEN
-      - SCORPID_LAIR
-    - <locationId>k__BackingField: DEEP_RAVINE
-      <pointsOfInterest>k__BackingField:
-      - ROCKY_PATH
-  PartyFinderData: []
+  ZoneData:
+    <dijkstraMap>k__BackingField:
+    - <id>k__BackingField: VALLEY_OF_TRIALS
+      <nodes>k__BackingField:
+      - <idOfVertex>k__BackingField: VILLAGE_OF_MALAKA
+        <weight>k__BackingField: 8
+    - <id>k__BackingField: VILLAGE_OF_MALAKA
+      <nodes>k__BackingField:
+      - <idOfVertex>k__BackingField: DEEP_RAVINE
+        <weight>k__BackingField: 50
+      - <idOfVertex>k__BackingField: VALLEY_OF_TRIALS
+        <weight>k__BackingField: 8
+      - <idOfVertex>k__BackingField: MALAKA_DUNGEON
+        <weight>k__BackingField: 10
+    - <id>k__BackingField: DEEP_RAVINE
+      <nodes>k__BackingField:
+      - <idOfVertex>k__BackingField: VILLAGE_OF_MALAKA
+        <weight>k__BackingField: 50
+    - <id>k__BackingField: MALAKA_DUNGEON
+      <nodes>k__BackingField:
+      - <idOfVertex>k__BackingField: VILLAGE_OF_MALAKA
+        <weight>k__BackingField: 10
+    <locationScreenPositions>k__BackingField:
+    - <id>k__BackingField: VALLEY_OF_TRIALS
+      <screenPosition>k__BackingField:
+        <x>k__BackingField: -223
+        <y>k__BackingField: 625
+    - <id>k__BackingField: VILLAGE_OF_MALAKA
+      <screenPosition>k__BackingField:
+        <x>k__BackingField: 178
+        <y>k__BackingField: -71
+    - <id>k__BackingField: MALAKA_DUNGEON
+      <screenPosition>k__BackingField:
+        <x>k__BackingField: -800
+        <y>k__BackingField: -505
+    - <id>k__BackingField: DEEP_RAVINE
+      <screenPosition>k__BackingField:
+        <x>k__BackingField: 628
+        <y>k__BackingField: 439
+  LocationData:
+    <id>k__BackingField: VALLEY_OF_TRIALS
+    <locationType>k__BackingField: ENCOUNTERS
+    <pointsOfInterest>k__BackingField:
+    - <id>k__BackingField: PLAINS
+      <exploreTimePrice>k__BackingField: 1
+      <pointOfInterestType>k__BackingField: ENCOUNTER
+      <questgivers>k__BackingField:
+      - <id>k__BackingField: UROG_HUNTER
+        <position>k__BackingField:
+          <locationId>k__BackingField: VALLEY_OF_TRIALS
+          <zoneId>k__BackingField: DUNOTAR
+          <pointOfInterestId>k__BackingField: 
+        <minLevel>k__BackingField: 1
+        <qLevel>k__BackingField: 1
+        <hasExpireDate>k__BackingField: 0
+        <expireDate>k__BackingField: 
+        <killsRequired>k__BackingField:
+        - <count>k__BackingField: 3
+          <id>k__BackingField: BOAR
+        <itemsRequired>k__BackingField: []
+        <rewards>k__BackingField: []
+        <rewardsRandomEquip>k__BackingField:
+        - <rarity>k__BackingField: UNCOMMON
+          <equipSlotId>k__BackingField: WRIST
+        <prereqQuests>k__BackingField: []
+        <prereqExploredPointsOfInterest>k__BackingField: []
+      - <id>k__BackingField: UROG_HUNTER_2
+        <position>k__BackingField:
+          <locationId>k__BackingField: VALLEY_OF_TRIALS
+          <zoneId>k__BackingField: DUNOTAR
+          <pointOfInterestId>k__BackingField: 
+        <minLevel>k__BackingField: 1
+        <qLevel>k__BackingField: 2
+        <hasExpireDate>k__BackingField: 0
+        <expireDate>k__BackingField: 
+        <killsRequired>k__BackingField: []
+        <itemsRequired>k__BackingField:
+        - <count>k__BackingField: 6
+          <id>k__BackingField: BOAR_TUSK
+        <rewards>k__BackingField:
+        - <characterClassIds>k__BackingField:
+          - WARRIOR
+          - SHAMAN
+          - WARLOCK
+          <content>k__BackingField:
+            <contentType>k__BackingField: EQUIP
+            <contentEquip>k__BackingField:
+              <uid>k__BackingField: WILL_BE_AUTOGENERATED
+              <sellPrice>k__BackingField: 50
+              <itemId>k__BackingField: EQUIP
+              <stackSize>k__BackingField: 1
+              <amount>k__BackingField: 1
+              <rarity>k__BackingField: UNCOMMON
+              <equipSlotId>k__BackingField: HANDS
+              <iLevel>k__BackingField: 6
+              <equipSet>k__BackingField: 0
+              <attributes>k__BackingField:
+                <intellect>k__BackingField: 0
+                <stamina>k__BackingField: 1
+                <strength>k__BackingField: 0
+                <agility>k__BackingField: 0
+                <spirit>k__BackingField: 0
+                <armor>k__BackingField: 0
+                <durability>k__BackingField: 0
+              <skill>k__BackingField:
+                <skillId>k__BackingField: FIRST_AID
+                <characterClass>k__BackingField: ANY
+                <manaCost>k__BackingField: 2
+                <amounts>k__BackingField:
+                - 25
+                <rank>k__BackingField: 1
+                <buff>k__BackingField:
+                  <buffId>k__BackingField: 
+                  <durationTurns>k__BackingField: 0
+                  <amounts>k__BackingField: []
+                  <rank>k__BackingField: 0
+              <level>k__BackingField: 1
+              <displayName>k__BackingField: Boar Gloves
+              <imageId>k__BackingField: HANDS_1
+            <contentItem>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <level>k__BackingField: 0
+            <contentCurrency>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <currencyType>k__BackingField: 
+            <contentFood>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <fatigueRecoveryBonus>k__BackingField: 0
+              <timeBonus>k__BackingField: 0
+        <rewardsRandomEquip>k__BackingField: []
+        <prereqQuests>k__BackingField:
+        - UROG_HUNTER
+        <prereqExploredPointsOfInterest>k__BackingField: []
+      - <id>k__BackingField: UROG_HUNTER_3
+        <position>k__BackingField:
+          <locationId>k__BackingField: VALLEY_OF_TRIALS
+          <zoneId>k__BackingField: DUNOTAR
+          <pointOfInterestId>k__BackingField: 
+        <minLevel>k__BackingField: 2
+        <qLevel>k__BackingField: 4
+        <hasExpireDate>k__BackingField: 0
+        <expireDate>k__BackingField: 
+        <killsRequired>k__BackingField:
+        - <count>k__BackingField: 12
+          <id>k__BackingField: BOAR
+        - <count>k__BackingField: 10
+          <id>k__BackingField: SCORPID_SMALL
+        - <count>k__BackingField: 8
+          <id>k__BackingField: IMP_VILE
+        <itemsRequired>k__BackingField: []
+        <rewards>k__BackingField: []
+        <rewardsRandomEquip>k__BackingField:
+        - <rarity>k__BackingField: RARE
+          <equipSlotId>k__BackingField: MAIN_HAND
+        - <rarity>k__BackingField: UNCOMMON
+          <equipSlotId>k__BackingField: OFF_HAND
+        <prereqQuests>k__BackingField:
+        - UROG_HUNTER_2
+        <prereqExploredPointsOfInterest>k__BackingField: []
+      <vendors>k__BackingField: []
+      <trainers>k__BackingField: []
+      <specials>k__BackingField:
+      - MAILBOX
+      <screenPosition>k__BackingField:
+        <x>k__BackingField: -570
+        <y>k__BackingField: -404
+    - <id>k__BackingField: VILE_DEN
+      <exploreTimePrice>k__BackingField: 1
+      <pointOfInterestType>k__BackingField: ENCOUNTER
+      <questgivers>k__BackingField: []
+      <vendors>k__BackingField: []
+      <trainers>k__BackingField: []
+      <specials>k__BackingField: []
+      <screenPosition>k__BackingField:
+        <x>k__BackingField: -485
+        <y>k__BackingField: 294
+    - <id>k__BackingField: SCORPID_LAIR
+      <exploreTimePrice>k__BackingField: 1
+      <pointOfInterestType>k__BackingField: ENCOUNTER
+      <questgivers>k__BackingField:
+      - <id>k__BackingField: LOST_MALADY
+        <position>k__BackingField:
+          <locationId>k__BackingField: VALLEY_OF_TRIALS
+          <zoneId>k__BackingField: DUNOTAR
+          <pointOfInterestId>k__BackingField: 
+        <minLevel>k__BackingField: 1
+        <qLevel>k__BackingField: 0
+        <hasExpireDate>k__BackingField: 0
+        <expireDate>k__BackingField: 
+        <killsRequired>k__BackingField:
+        - <count>k__BackingField: 1
+          <id>k__BackingField: SCORPID_CORRUPTED
+        <itemsRequired>k__BackingField: []
+        <rewards>k__BackingField:
+        - <characterClassIds>k__BackingField:
+          - SHAMAN
+          <content>k__BackingField:
+            <contentType>k__BackingField: EQUIP
+            <contentEquip>k__BackingField:
+              <uid>k__BackingField: GENERATED
+              <sellPrice>k__BackingField: 18
+              <itemId>k__BackingField: EQUIP
+              <stackSize>k__BackingField: 1
+              <amount>k__BackingField: 1
+              <rarity>k__BackingField: UNCOMMON
+              <equipSlotId>k__BackingField: FEET
+              <iLevel>k__BackingField: 7
+              <equipSet>k__BackingField: 0
+              <attributes>k__BackingField:
+                <intellect>k__BackingField: 1
+                <stamina>k__BackingField: 1
+                <strength>k__BackingField: 0
+                <agility>k__BackingField: 0
+                <spirit>k__BackingField: 0
+                <armor>k__BackingField: 0
+                <durability>k__BackingField: 0
+              <skill>k__BackingField:
+                <skillId>k__BackingField: CHAIN_LIGHTNING
+                <characterClass>k__BackingField: SHAMAN
+                <manaCost>k__BackingField: 10
+                <amounts>k__BackingField:
+                - 20
+                - 0.25
+                <rank>k__BackingField: 1
+                <buff>k__BackingField:
+                  <buffId>k__BackingField: 
+                  <durationTurns>k__BackingField: 0
+                  <amounts>k__BackingField: []
+                  <rank>k__BackingField: 0
+              <level>k__BackingField: 2
+              <displayName>k__BackingField: Malady's Boots
+              <imageId>k__BackingField: FEET
+            <contentItem>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <level>k__BackingField: 0
+            <contentCurrency>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <currencyType>k__BackingField: 
+            <contentFood>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <fatigueRecoveryBonus>k__BackingField: 0
+              <timeBonus>k__BackingField: 0
+        - <characterClassIds>k__BackingField:
+          - WARRIOR
+          - SHAMAN
+          - WARLOCK
+          <content>k__BackingField:
+            <contentType>k__BackingField: CURRENCY
+            <contentEquip>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <equipSlotId>k__BackingField: 
+              <iLevel>k__BackingField: 0
+              <equipSet>k__BackingField: 0
+              <attributes>k__BackingField:
+                <intellect>k__BackingField: 0
+                <stamina>k__BackingField: 0
+                <strength>k__BackingField: 0
+                <agility>k__BackingField: 0
+                <spirit>k__BackingField: 0
+                <armor>k__BackingField: 0
+                <durability>k__BackingField: 0
+              <skill>k__BackingField:
+                <skillId>k__BackingField: 
+                <characterClass>k__BackingField: 
+                <manaCost>k__BackingField: 0
+                <amounts>k__BackingField: []
+                <rank>k__BackingField: 0
+                <buff>k__BackingField:
+                  <buffId>k__BackingField: 
+                  <durationTurns>k__BackingField: 0
+                  <amounts>k__BackingField: []
+                  <rank>k__BackingField: 0
+              <level>k__BackingField: 0
+              <displayName>k__BackingField: 
+              <imageId>k__BackingField: 
+            <contentItem>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <level>k__BackingField: 0
+            <contentCurrency>k__BackingField:
+              <uid>k__BackingField: WILL_BE_AUTOGENERATED
+              <sellPrice>k__BackingField: 1
+              <itemId>k__BackingField: SILVER
+              <stackSize>k__BackingField: 1000000000
+              <amount>k__BackingField: 50
+              <rarity>k__BackingField: COMMON
+              <currencyType>k__BackingField: 
+            <contentFood>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <fatigueRecoveryBonus>k__BackingField: 0
+              <timeBonus>k__BackingField: 0
+        - <characterClassIds>k__BackingField:
+          - WARRIOR
+          <content>k__BackingField:
+            <contentType>k__BackingField: EQUIP
+            <contentEquip>k__BackingField:
+              <uid>k__BackingField: GENERATED
+              <sellPrice>k__BackingField: 18
+              <itemId>k__BackingField: EQUIP
+              <stackSize>k__BackingField: 1
+              <amount>k__BackingField: 1
+              <rarity>k__BackingField: UNCOMMON
+              <equipSlotId>k__BackingField: FEET
+              <iLevel>k__BackingField: 7
+              <equipSet>k__BackingField: 0
+              <attributes>k__BackingField:
+                <intellect>k__BackingField: 0
+                <stamina>k__BackingField: 1
+                <strength>k__BackingField: 1
+                <agility>k__BackingField: 0
+                <spirit>k__BackingField: 0
+                <armor>k__BackingField: 0
+                <durability>k__BackingField: 0
+              <skill>k__BackingField:
+                <skillId>k__BackingField: EXECUTE
+                <characterClass>k__BackingField: WARRIOR
+                <manaCost>k__BackingField: 12
+                <amounts>k__BackingField:
+                - 15
+                <rank>k__BackingField: 1
+                <buff>k__BackingField:
+                  <buffId>k__BackingField: 
+                  <durationTurns>k__BackingField: 0
+                  <amounts>k__BackingField: []
+                  <rank>k__BackingField: 0
+              <level>k__BackingField: 2
+              <displayName>k__BackingField: Malady's Boots
+              <imageId>k__BackingField: FEET_2
+            <contentItem>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <level>k__BackingField: 0
+            <contentCurrency>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <currencyType>k__BackingField: 
+            <contentFood>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <fatigueRecoveryBonus>k__BackingField: 0
+              <timeBonus>k__BackingField: 0
+        - <characterClassIds>k__BackingField:
+          - WARLOCK
+          <content>k__BackingField:
+            <contentType>k__BackingField: EQUIP
+            <contentEquip>k__BackingField:
+              <uid>k__BackingField: GENERATED
+              <sellPrice>k__BackingField: 18
+              <itemId>k__BackingField: EQUIP
+              <stackSize>k__BackingField: 1
+              <amount>k__BackingField: 1
+              <rarity>k__BackingField: UNCOMMON
+              <equipSlotId>k__BackingField: FEET
+              <iLevel>k__BackingField: 7
+              <equipSet>k__BackingField: 0
+              <attributes>k__BackingField:
+                <intellect>k__BackingField: 2
+                <stamina>k__BackingField: 0
+                <strength>k__BackingField: 0
+                <agility>k__BackingField: 0
+                <spirit>k__BackingField: 0
+                <armor>k__BackingField: 0
+                <durability>k__BackingField: 0
+              <skill>k__BackingField:
+                <skillId>k__BackingField: SHADOWBOLT
+                <characterClass>k__BackingField: WARLOCK
+                <manaCost>k__BackingField: 15
+                <amounts>k__BackingField:
+                - 30
+                - 0.25
+                <rank>k__BackingField: 1
+                <buff>k__BackingField:
+                  <buffId>k__BackingField: FRAGILITY_BUFF
+                  <durationTurns>k__BackingField: 2
+                  <amounts>k__BackingField:
+                  - 0.05
+                  <rank>k__BackingField: 1
+              <level>k__BackingField: 2
+              <displayName>k__BackingField: Malady's Boots
+              <imageId>k__BackingField: FEET_2
+            <contentItem>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <level>k__BackingField: 0
+            <contentCurrency>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <currencyType>k__BackingField: 
+            <contentFood>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <fatigueRecoveryBonus>k__BackingField: 0
+              <timeBonus>k__BackingField: 0
+        <rewardsRandomEquip>k__BackingField: []
+        <prereqQuests>k__BackingField: []
+        <prereqExploredPointsOfInterest>k__BackingField:
+        - SCORPID_LAIR
+      <vendors>k__BackingField: []
+      <trainers>k__BackingField: []
+      <specials>k__BackingField: []
+      <screenPosition>k__BackingField:
+        <x>k__BackingField: 490
+        <y>k__BackingField: 360
+    - <id>k__BackingField: MUDDY_PLAINS
+      <exploreTimePrice>k__BackingField: 1
+      <pointOfInterestType>k__BackingField: ENCOUNTER
+      <questgivers>k__BackingField:
+      - <id>k__BackingField: KAIN_THE_ELDER
+        <position>k__BackingField:
+          <locationId>k__BackingField: VALLEY_OF_TRIALS
+          <zoneId>k__BackingField: DUNOTAR
+          <pointOfInterestId>k__BackingField: 
+        <minLevel>k__BackingField: 2
+        <qLevel>k__BackingField: 3
+        <hasExpireDate>k__BackingField: 0
+        <expireDate>k__BackingField: 
+        <killsRequired>k__BackingField: []
+        <itemsRequired>k__BackingField:
+        - <count>k__BackingField: 1
+          <id>k__BackingField: DEATH_MEDAILON
+        <rewards>k__BackingField:
+        - <characterClassIds>k__BackingField:
+          - WARRIOR
+          - SHAMAN
+          - WARLOCK
+          <content>k__BackingField:
+            <contentType>k__BackingField: CURRENCY
+            <contentEquip>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <equipSlotId>k__BackingField: 
+              <iLevel>k__BackingField: 0
+              <equipSet>k__BackingField: 0
+              <attributes>k__BackingField:
+                <intellect>k__BackingField: 0
+                <stamina>k__BackingField: 0
+                <strength>k__BackingField: 0
+                <agility>k__BackingField: 0
+                <spirit>k__BackingField: 0
+                <armor>k__BackingField: 0
+                <durability>k__BackingField: 0
+              <skill>k__BackingField:
+                <skillId>k__BackingField: 
+                <characterClass>k__BackingField: 
+                <manaCost>k__BackingField: 0
+                <amounts>k__BackingField: []
+                <rank>k__BackingField: 0
+                <buff>k__BackingField:
+                  <buffId>k__BackingField: 
+                  <durationTurns>k__BackingField: 0
+                  <amounts>k__BackingField: []
+                  <rank>k__BackingField: 0
+              <level>k__BackingField: 0
+              <displayName>k__BackingField: 
+              <imageId>k__BackingField: 
+            <contentItem>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <level>k__BackingField: 0
+            <contentCurrency>k__BackingField:
+              <uid>k__BackingField: WILL_BE_AUTOGENERATED
+              <sellPrice>k__BackingField: 1
+              <itemId>k__BackingField: SILVER
+              <stackSize>k__BackingField: 1000000000
+              <amount>k__BackingField: 200
+              <rarity>k__BackingField: COMMON
+              <currencyType>k__BackingField: 
+            <contentFood>k__BackingField:
+              <uid>k__BackingField: 
+              <sellPrice>k__BackingField: 0
+              <itemId>k__BackingField: 
+              <stackSize>k__BackingField: 0
+              <amount>k__BackingField: 0
+              <rarity>k__BackingField: 
+              <fatigueRecoveryBonus>k__BackingField: 0
+              <timeBonus>k__BackingField: 0
+        <rewardsRandomEquip>k__BackingField:
+        - <rarity>k__BackingField: RARE
+          <equipSlotId>k__BackingField: NECK
+        <prereqQuests>k__BackingField: []
+        <prereqExploredPointsOfInterest>k__BackingField: []
+      <vendors>k__BackingField: []
+      <trainers>k__BackingField: []
+      <specials>k__BackingField: []
+      <screenPosition>k__BackingField:
+        <x>k__BackingField: 880
+        <y>k__BackingField: -930
+    <dijkstraMap>k__BackingField:
+    - <id>k__BackingField: PLAINS
+      <nodes>k__BackingField:
+      - <idOfVertex>k__BackingField: SCORPID_LAIR
+        <weight>k__BackingField: 2
+      - <idOfVertex>k__BackingField: MUDDY_PLAINS
+        <weight>k__BackingField: 3
+    - <id>k__BackingField: SCORPID_LAIR
+      <nodes>k__BackingField:
+      - <idOfVertex>k__BackingField: VILE_DEN
+        <weight>k__BackingField: 2
+      - <idOfVertex>k__BackingField: PLAINS
+        <weight>k__BackingField: 2
+      - <idOfVertex>k__BackingField: MUDDY_PLAINS
+        <weight>k__BackingField: 2
+    - <id>k__BackingField: VILE_DEN
+      <nodes>k__BackingField:
+      - <idOfVertex>k__BackingField: SCORPID_LAIR
+        <weight>k__BackingField: 2
+    - <id>k__BackingField: MUDDY_PLAINS
+      <nodes>k__BackingField:
+      - <idOfVertex>k__BackingField: SCORPID_LAIR
+        <weight>k__BackingField: 2
+      - <idOfVertex>k__BackingField: PLAINS
+        <weight>k__BackingField: 3
+    <screenPosition>k__BackingField:
+      <x>k__BackingField: 0
+      <y>k__BackingField: 0
+  PlayersOnline: 1
+  OtherMetadataData:
+    <whatIsNew>k__BackingField: '<b>v0.1.4</b>
+
+
+      -Gathering mechanics added.
+      You can now gather resources while traveling around the world. Learn herbalism
+      with Herbalist trainer in Village of Malaka
+
+
+      -Added a Malaka Dungeon!
+      Gather your party and try to defeat the Boss!
+
+
+      -Many other tweeks and
+      fixes'
+  GlobalMetadata:
+    <serverVersion>k__BackingField: 0.1.5
   CharacterName: {fileID: 11400000, guid: d71bbb55ca4fa4069bf2129b5eef71aa, type: 2}
   CharacterUid: {fileID: 11400000, guid: 6cbee9033747b43ae8279124a40d4884, type: 2}
   Gold: {fileID: 11400000, guid: 8d697931b06724fcebafdabf26efb8e8, type: 2}

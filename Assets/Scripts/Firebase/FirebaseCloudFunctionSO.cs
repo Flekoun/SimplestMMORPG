@@ -24,6 +24,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     public UnityAction OnCloudFunctionInProgress;
     public UnityAction OnCloudFunctionFinished;
 
+
     public bool UseLocalHost = false;
 
 
@@ -31,9 +32,11 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     {
         functions = FirebaseFunctions.DefaultInstance;
 
+#if UNITY_EDITOR
         if (UseLocalHost)
             functions.UseFunctionsEmulator("localhost:5001");
-
+#endif
+       
     }
 
 
@@ -67,7 +70,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         CloudFunctionFinished(result);
     }
 
-    
+
 
 
     public async void Test()
@@ -192,7 +195,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         data["characterUid"] = AccountDataSO.CharacterData.uid;
         data["locationId"] = _locationId;
         data["serverSecret"] = ServerSecret.Value;
-        
+
 
         Debug.Log("traveling to location on world map  ... ");
         await CallCloudFunction("worldMap-travel", data);
@@ -916,7 +919,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
 
     private string OnCloudFuntionResult(Task<HttpsCallableResult> _task)
     {
-//        Debug.Log("sem tu");
+        //        Debug.Log("sem tu");
         if (_task.IsFaulted)
         {
             string resultError = "ERROR " + _task.Exception.InnerException.Message;

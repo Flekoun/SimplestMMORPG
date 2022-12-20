@@ -38,14 +38,13 @@ public class UIEncounterResultItem : MonoBehaviour
         if (WhoWantedThisItem_Text.text != "")
             WhoWantedThisItem_Text.SetText(WhoWantedThisItem_Text.text.Remove(WhoWantedThisItem_Text.text.Length - 2));
 
-        if (_resultLoot.characterWhoWillHaveThis == null)
+        if (!_resultLoot.DoesAnyoneWillHaveThisItem())//_resultLoot.characterWhoWillHaveThis == null )
         {
             ClaimedGO.SetActive(false);
 
         }
         else
         {
-
             WhoWillHaveThisItem_Text.SetText(Utils.ColorizeGivenTextWithClassColor(Data.characterWhoWillHaveThis.displayName, Data.characterWhoWillHaveThis.characterClass));
 
             ClaimedGO.SetActive(true);

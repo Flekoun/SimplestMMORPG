@@ -42,7 +42,7 @@ public class UIVendorSpawner : MonoBehaviour
 
     void Refresh()
     {
-        Debug.Log("kdo to zavolal??");
+//        Debug.Log("kdo to zavolal??");
         Utils.DestroyAllChildren(Parent,1);
         UIEntriesList.Clear();
         foreach (var vendor in AccountDataSO.GetCurrentPointOfInterest().vendors)

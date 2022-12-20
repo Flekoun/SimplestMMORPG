@@ -179,6 +179,13 @@ namespace simplestmmorpg.data
         public EncounterResultCombatant characterWhoWillHaveThis { get; set; }
 
 
+        public bool DoesAnyoneWillHaveThisItem()
+        {
+            if (characterWhoWillHaveThis == null) return false;
+            Debug.Log(" characterWhoWillHaveThis.characterClass:" + characterWhoWillHaveThis.characterClass);
+          //  else if (charactersWhoWantThis.Count == 0) return false;
+            return true;
+        }
     }
 
 

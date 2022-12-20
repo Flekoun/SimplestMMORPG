@@ -21,7 +21,7 @@ public class FirebaseGoogleLogin : MonoBehaviour
 
     private GoogleSignInConfiguration configuration;
 
-    DependencyStatus dependencyStatus = DependencyStatus.UnavailableOther;
+//    DependencyStatus dependencyStatus = DependencyStatus.UnavailableOther;
    // FirebaseAuth auth;
     //FirebaseUser user;
 

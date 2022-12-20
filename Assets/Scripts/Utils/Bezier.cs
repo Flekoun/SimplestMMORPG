@@ -13,7 +13,7 @@ public class Bezier : MonoBehaviour
 
     private Transform MyTarget;
 
-    private float offset = 0;
+//    private float offset = 0;
     public void SetTarget(Transform _target)
     {
         // if (_target.position.x < this.transform.position.x)
@@ -81,7 +81,7 @@ public class Bezier : MonoBehaviour
                 int nodeIndex = j * 3;
                 Vector3 pixel = CalculateCubicBezierPoint(t, controlPoints[nodeIndex].position, controlPoints[nodeIndex + 1].position, controlPoints[nodeIndex + 2].position, controlPoints[nodeIndex + 3].position);
 
-                lineRenderer.SetVertexCount(((j * SEGMENT_COUNT) + i));
+                lineRenderer.positionCount = (((j * SEGMENT_COUNT) + i));
                 lineRenderer.SetPosition((j * SEGMENT_COUNT) + (i - 1), pixel);
             }
 

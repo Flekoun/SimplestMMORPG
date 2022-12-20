@@ -20,39 +20,48 @@ public class ListenOnEncounterData : MonoBehaviour
     public AccountDataSO AccountDataSO;
     private ListenerRegistration listenerRegistration;
 
-    private string oldLocation = "";
-    private string oldZone = "";
+    //private string oldLocation = "";
+    //private string oldZone = "";
+    //private string oldPointOfInterestId = "";
     //public void Awake()
     //{
     //    AccountDataSO.OnCharacterLoadedFirstTime += StartListening;
     //}
 
-    public void StartListening(string _locationId, string _zoneId)
+    public void Awake()
     {
-        if (oldLocation != _locationId || oldZone != _zoneId) //zmenil jsem lokaci na ktere chci poslouchat
-        {
-            StopListening();
+        AccountDataSO.OnWorldPointOfInterestChanged += StartListening;
+        AccountDataSO.OnCharacterLoadedFirstTime += StartListening;
+        
+    }
 
-            AccountDataSO.EncountersData.Clear();
+    public void StartListening()
+    {
+        //if (oldLocation != _locationId || oldZone != _zoneId || oldPointOfInterestId != _pointOfInterestId) //zmenil jsem lokaci na ktere chci poslouchat
+        //{
+        StopListening();
 
-            FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
+        AccountDataSO.EncountersData.Clear();
 
-            listenerRegistration = db.Collection("encounters").WhereArrayContains("watchersList", AccountDataSO.CharacterData.uid).WhereEqualTo("position.locationId", _locationId).WhereEqualTo("position.zoneId", _zoneId).Listen(snapshot =>
-            // ListenerRegistration listenerRegistration = db.Collection("encounters").WhereArrayContains("combatantList", AccountDataSO.CharacterData.uid).Listen(snapshot =>
+        FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
 
-                    {
-                        AccountDataSO.SetEncounterData(snapshot);
-                        Debug.Log("New data on ENCOUNTERS recieved : " + JsonConvert.SerializeObject(AccountDataSO.EncountersData, Formatting.Indented));
-                        //            Debug.Log("Count: " + AccountDataSO.EncountersData.Count.ToString());
-                        OnListenerStarted.Invoke();
+        listenerRegistration = db.Collection("encounters").WhereArrayContains("watchersList", AccountDataSO.CharacterData.uid).WhereEqualTo("position.locationId", AccountDataSO.CharacterData.position.locationId).WhereEqualTo("position.zoneId", AccountDataSO.CharacterData.position.zoneId).WhereEqualTo("position.pointOfInterestId", AccountDataSO.CharacterData.position.pointOfInterestId).Listen(snapshot =>
+        // ListenerRegistration listenerRegistration = db.Collection("encounters").WhereArrayContains("combatantList", AccountDataSO.CharacterData.uid).Listen(snapshot =>
 
-                    });
-            Debug.Log("Starting to listen on Encounters...");
+                {
+                    AccountDataSO.SetEncounterData(snapshot);
+                    Debug.Log("Listener recieved new ENCOUNTERS data ");
+                    //            Debug.Log("Count: " + AccountDataSO.EncountersData.Count.ToString());
+                    OnListenerStarted.Invoke();
 
-            oldLocation = _locationId;
-            oldZone = _zoneId;
-            //   listenerRegistrations.Add(listenerRegistration);
-        }
+                });
+        Debug.Log("Starting to listen on Encounters...");
+
+        //oldLocation = _locationId;
+        //oldZone = _zoneId;
+        //oldPointOfInterestId = _pointOfInterestId;
+        //   listenerRegistrations.Add(listenerRegistration);
+        //}
 
 
     }
@@ -67,7 +76,6 @@ public class ListenOnEncounterData : MonoBehaviour
 
     public void StopListening()
     {
-        if (listenerRegistration != null)
-            listenerRegistration.Stop();
+        listenerRegistration?.Stop();
     }
 }

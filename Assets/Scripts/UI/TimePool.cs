@@ -26,7 +26,7 @@ public class TimePool : MonoBehaviour
     {
         const int FATIGUE_RECOVERED_PER_HOUR = 10;
         const int TIME_GAINED_PER_HOUR = 3;
-        const int MAX_FATIGUE = 90;
+     //   const int MAX_FATIGUE = 90;
         const int MAX_TRAVEL_TIME = 48;
 
         double hoursPassedSinceLastClaim = Utils.SecondsToHours(Utils.GetTimePassedSinceDateInSeconds(AccountDataSO.CharacterData.timestamps.lastClaimTime));

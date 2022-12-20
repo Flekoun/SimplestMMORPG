@@ -36,11 +36,13 @@ public class UIQuestgiverSpawner : UISelectableSpawner
         Refresh();
 
         AccountDataSO.OnWorldPointOfInterestChanged += Refresh;
+        AccountDataSO.OnCharacterDataChanged += Refresh;
     }
 
     public void OnDisable()
     {
        AccountDataSO.OnWorldPointOfInterestChanged -= Refresh;
+        AccountDataSO.OnCharacterDataChanged -= Refresh;
     }
 
     public bool HasSpawnedAnyQuests()

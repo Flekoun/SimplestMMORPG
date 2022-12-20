@@ -37,7 +37,7 @@ public class UISpecialsSpawner : MonoBehaviour
 
     public bool HasSpawnedAnySpecials()
     {
-        Debug.Log("DDD :" + UIEntriesList.Count);
+//        Debug.Log("DDD :" + UIEntriesList.Count);
         return UIEntriesList.Count > 0;
     }
 
