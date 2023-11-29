@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 885a4a50026f14016a6311f924dd6d27, type: 3}
+  m_Name: ImageIdDefinition-TAUNT
+  m_EditorClassIdentifier: 
+  IdPrefix: SKILL
+  ImageId: TAUNT
+  Image: {fileID: 21300000, guid: c0d5978e2a3cc7f489d11d40204d77b4, type: 3}
+  ProjectileEffectPrefab: {fileID: 339493304534246249, guid: 88e709a3220d64c3e8943877d05ecabf, type: 3}
+  ImpactEffectPrefab: {fileID: 6213619859274339249, guid: 1e20fbff9946843d1adb068370de3350, type: 3}
+  ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}
