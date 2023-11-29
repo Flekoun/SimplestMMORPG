@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
+using simplestmmorpg.data;
 
 public class UIChatMessageSpawner : MonoBehaviour
 {
@@ -18,23 +19,33 @@ public class UIChatMessageSpawner : MonoBehaviour
     public RectTransform ScrollRectZone;
     public RectTransform ScrollRectLocation;
     public RectTransform ScrollRectParty;
+    public RectTransform ScrollRectCombatLog;
 
     public Button PartyChannelButton;
     public Button ZoneChannelButton;
     public Button LocationChannelButton;
+    public Button CombatLogButton;
 
     public TextMeshProUGUI LocationChannelText;
 
     public GameObject NewMessageBadgeGOParty;
     public GameObject NewMessageBadgeGOLocation;
     public GameObject NewMessageBadgeGOZone;
+    public GameObject NewMessageBadgeGOCombatLog;
     public GameObject ChannelPanel;
+
+    public Color ColorActiveChatButton;
+    public Color ColorInActiveChatButton;
 
     public UnityAction<UIChatEntry> OnChatEntryClicked;
 
     private List<UIChatEntry> EntriesList_Zone = new List<UIChatEntry>();
     private List<UIChatEntry> EntriesList_Location = new List<UIChatEntry>();
     private List<UIChatEntry> EntriesList_Party = new List<UIChatEntry>();
+
+    public TextMeshProUGUI CombatLogText;
+
+    public UIEncounterDetailPanel_CombatView UIEncounterDetailPanel_CombatView;
 
     private IEnumerator Wait()
     {
@@ -52,6 +63,7 @@ public class UIChatMessageSpawner : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
+        UIEncounterDetailPanel_CombatView.OnRefreshed += UpdateCombatLog; //mam to tu proto ze potrebuji ziskat ten jeden encounter spravny, ktery mas defakto ted aktivni v ui...
 
 
         RealtimeDatabaseChat.OnNewZoneChatMessageAdded += OnNewZoneMessage;
@@ -69,7 +81,7 @@ public class UIChatMessageSpawner : MonoBehaviour
 
     private void OnWorldLocationChanged()
     {
-        LocationChannelText.SetText(Utils.GetMetadataForLocation(AccountDataSO.CharacterData.position.locationId).title.GetText());
+        LocationChannelText.SetText(Utils.DescriptionsMetadata.GetLocationsMetadata(AccountDataSO.CharacterData.position.locationId).descriptionData.title.GetText());
     }
 
     public void ShowPartyChat()
@@ -77,12 +89,14 @@ public class UIChatMessageSpawner : MonoBehaviour
         ScrollRectParty.parent.gameObject.SetActive(true);
         ScrollRectLocation.parent.gameObject.SetActive(false);
         ScrollRectZone.parent.gameObject.SetActive(false);
+        ScrollRectCombatLog.parent.gameObject.SetActive(false);
 
-        PartyChannelButton.targetGraphic.color = Color.black;
-        LocationChannelButton.targetGraphic.color = Color.gray;
-        ZoneChannelButton.targetGraphic.color = Color.gray;
-    //    Utils.SetAlphaColorFromGivenImage(LocationChannelButton.targetGraphic, 0.5f);
-      //  Utils.SetAlphaColorFromGivenImage(ZoneChannelButton.targetGraphic, 0.5f);
+        PartyChannelButton.targetGraphic.color = ColorActiveChatButton;
+        LocationChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        ZoneChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        CombatLogButton.targetGraphic.color = ColorInActiveChatButton;
+        //    Utils.SetAlphaColorFromGivenImage(LocationChannelButton.targetGraphic, 0.5f);
+        //  Utils.SetAlphaColorFromGivenImage(ZoneChannelButton.targetGraphic, 0.5f);
 
 
         NewMessageBadgeGOParty.gameObject.SetActive(false);
@@ -92,13 +106,16 @@ public class UIChatMessageSpawner : MonoBehaviour
 
     public void ShowLocationChat()
     {
+        Debug.Log("EH?2");
         ScrollRectParty.parent.gameObject.SetActive(false);
         ScrollRectZone.parent.gameObject.SetActive(false);
         ScrollRectLocation.parent.gameObject.SetActive(true);
+        ScrollRectCombatLog.parent.gameObject.SetActive(false);
 
-        PartyChannelButton.targetGraphic.color = Color.gray;
-        LocationChannelButton.targetGraphic.color = Color.black;
-        ZoneChannelButton.targetGraphic.color = Color.gray;
+        PartyChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        LocationChannelButton.targetGraphic.color = ColorActiveChatButton;
+        ZoneChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        CombatLogButton.targetGraphic.color = ColorInActiveChatButton;
 
         //Utils.SetAlphaColorFromGivenImage(PartyChannelButton.targetGraphic, 0.5f);
         //Utils.SetAlphaColorFromGivenImage(LocationChannelButton.targetGraphic, 1f);
@@ -114,14 +131,50 @@ public class UIChatMessageSpawner : MonoBehaviour
         ScrollRectParty.parent.gameObject.SetActive(false);
         ScrollRectZone.parent.gameObject.SetActive(true);
         ScrollRectLocation.parent.gameObject.SetActive(false);
+        ScrollRectCombatLog.parent.gameObject.SetActive(false);
 
-        PartyChannelButton.targetGraphic.color = Color.gray;
-        LocationChannelButton.targetGraphic.color = Color.gray;
-        ZoneChannelButton.targetGraphic.color = Color.black;
+        PartyChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        LocationChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        ZoneChannelButton.targetGraphic.color = ColorActiveChatButton;
+        CombatLogButton.targetGraphic.color = ColorInActiveChatButton;
 
         NewMessageBadgeGOZone.gameObject.SetActive(false);
 
         StartCoroutine(Wait());
+    }
+
+    public void ShowCombatLog()
+    {
+        Debug.Log("EH?");
+        ScrollRectParty.parent.gameObject.SetActive(false);
+        ScrollRectZone.parent.gameObject.SetActive(false);
+        ScrollRectLocation.parent.gameObject.SetActive(false);
+        ScrollRectCombatLog.parent.gameObject.SetActive(true);
+
+        PartyChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        LocationChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        ZoneChannelButton.targetGraphic.color = ColorInActiveChatButton;
+        CombatLogButton.targetGraphic.color = ColorActiveChatButton;
+
+        NewMessageBadgeGOCombatLog.gameObject.SetActive(false);
+
+        StartCoroutine(Wait());
+    }
+
+    public void UpdateCombatLog(UIEncounterDetailPanel_CombatView _encounterDetail)
+    {
+        if (_encounterDetail.Data != null)
+
+        {
+            CombatLogText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(_encounterDetail.Data.combatLog));
+            CombatLogButton.gameObject.SetActive(true);
+
+        }
+        else
+        {
+            CombatLogButton.gameObject.SetActive(false);
+            ShowZoneChat();
+        }
     }
 
 

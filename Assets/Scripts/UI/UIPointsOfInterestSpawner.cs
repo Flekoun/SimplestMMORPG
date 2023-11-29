@@ -13,7 +13,9 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
     public Transform Parent;
     public GameObject UIEntryPrefab;
     public GameObject UIEntryPrefab_NoDescriptionData;
-    public UILineMaker AllPathsUILineMaker;
+    public RectTransform Content; //abychom nastavili spravnou vysku a sirku
+    // public UILineMaker AllPathsUILineMaker;
+    public DijkstraMapMaker DijkstraMapMaker;
 
     public UnityAction<UIPointOfInterestButton> OnUIEntryClicked;
 
@@ -21,53 +23,124 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
 
     public void Awake()
     {
-        AccountDataSO.OnLocationDataChanged += Refresh;
-        //  AccountDataSO.OnEncounterDataChanged += CheckForAvailability;
-        //  AccountDataSO.OnEncounterResultsDataChanged += CheckForAvailability;
+        //    AccountDataSO.OnLocationDataChanged += Refresh;
+
     }
 
     public void OnDestroy()
     {
-        AccountDataSO.OnLocationDataChanged -= Refresh;
-        //  AccountDataSO.OnEncounterDataChanged -= CheckForAvailability;
-        //   AccountDataSO.OnEncounterResultsDataChanged -= CheckForAvailability;
+        //      AccountDataSO.OnLocationDataChanged -= Refresh;
+
     }
 
-    public void ShowPointOfInterestButton(ScreenPoisitionWihtId _locationDef)
-    {
-        foreach (var item in EntryList)
-        {
-            if (item.Data.id == _locationDef.id)
-                item.Show(true);
-        }
-    }
+    //public void ShowPointOfInterestButton(DijkstraMapVertex _vertex)
+    //{
+    //    foreach (var item in EntryList)
+    //    {
+    //        if (item.WorldPosition.pointOfInterestId == _vertex.id)
+    //        {
+    //            //TADY  JE PROSTE PROBLEM visaulni ze tohle se zavola driv nez se zavoola ten refresh poi pres location changed...takze se ukaze vzhled stareho poi a pak to preblikne...
+    //            item.Show(true);
+
+    //        }
+    //    }
+
+    //}
 
     public void Refresh()
     {
+        //   Debug.Log("MAZU vsechny PoIButtony a vytvarim nove");
+        var reachableVertices = DijkstraMapMaker.GetReacheableVertices();
+
         EntryList.Clear();
         Utils.DestroyAllChildren(Parent);
 
+        float largestPositionX = 0;
+        float largestPositionY = 0;
 
-        foreach (var poi in AccountDataSO.LocationData.pointsOfInterest)//AccountDataSO.LocationData.dijkstraMap)
+        foreach (var vertex in AccountDataSO.LocationData.dijkstraMap.exportMap)
         {
+
             UIPointOfInterestButton entry = null;
 
-            if (Utils.GetMetadataForPointOfInterest(poi.id) == null)
-                entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab_NoDescriptionData, Parent);
-            else
-                entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab, Parent);
+            //if (Utils.DescriptionsMetadata.GetPointsOfInterestMetadata(vertex.id) == null)
+            //    entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab_NoDescriptionData, Parent);
+            //else
+            entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab, Parent);
 
-            entry.SetData(poi);
-            entry.OnClicked += UIEncounterEntryClicked;
+            //    EntryList.Add(entry);
+
+            var worldPosition = new WorldPosition();
+            worldPosition.pointOfInterestId = vertex.id;
+            worldPosition.locationId = AccountDataSO.LocationData.id;
+            worldPosition.zoneId = "DUNOTAR";
+
+
+            entry.SetData(worldPosition);
+
+            entry.OnClicked += UIEntryClicked;
+            entry.OnQuestgiverClicked += OnQuestgiverClicked;
+            entry.OnEncounterClicked += OnEncounterEntryClicked;
+            entry.OnEncounterResultClicked += OnEncounterResultEntryClicked;
+            entry.OnVendorClicked += OnVendorEntryClicked;
+            entry.OnTrainerClicked += OnTrainerEntryClicked;
+
+            entry.SetReachable(reachableVertices.Contains(vertex.id));
+            ///  entry.Show(false);
             EntryList.Add(entry);
-            entry.Show(false);
+
+            if (largestPositionX < Mathf.Abs(vertex.screenPosition.x))
+                largestPositionX = Mathf.Abs(vertex.screenPosition.x);
+
+            if (largestPositionY < Mathf.Abs(vertex.screenPosition.y))
+                largestPositionY = Mathf.Abs(vertex.screenPosition.y);
         }
 
+        largestPositionX = (largestPositionX + 500) * 2;
+        largestPositionY = (largestPositionY + 500) * 2;
+        Content.sizeDelta = new Vector2(largestPositionX, largestPositionY);
 
+        // Debug.Log("HOTOVO smazany a vytvoreny");
+    }
+
+    public UIPointOfInterestButton GetPointOfInterestButtonAtCharacterPosition()
+    {
+        foreach (var item in EntryList)
+        {
+            if (AccountDataSO.PointOfInterestData.id == item.WorldPosition.pointOfInterestId)
+                return item;
+        }
+
+        return null;
+    }
+
+    private void OnEncounterResultEntryClicked(UIEncounterResultEntry _entry)
+    {
+        UIManager.instance.UIEncounterResultDetailPanel.Show(_entry.Data);
+    }
+
+    private void OnTrainerEntryClicked(UITrainerEntry _entry)
+    {
+        UIManager.instance.UITrainerDetailPanel.Show(_entry.Data);
+    }
+
+    private void OnQuestgiverClicked(UIQuestgiverEntry _entry)
+    {
+        UIManager.instance.UIQuestgiverDetailPanel.Show(_entry.Data);
+    }
+
+    private void OnEncounterEntryClicked(UIEncounterEntryMap _entry)
+    {
+        UIManager.instance.UIEncounterDetailSwitcher.Show(_entry.Data);
+    }
+
+    private void OnVendorEntryClicked(UIVendorEntry _entry)
+    {
+        UIManager.instance.UIVendorDetailPanel.Show(_entry.Data);
     }
 
 
-    public void UIEncounterEntryClicked(UIPointOfInterestButton _data)
+    private void UIEntryClicked(UIPointOfInterestButton _data)
     {
         if (OnUIEntryClicked != null)
             OnUIEntryClicked.Invoke(_data);
@@ -78,7 +151,7 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
     {
         foreach (var item in EntryList)
         {
-            if (item.Data.id == AccountDataSO.CharacterData.position.pointOfInterestId)
+            if (item.WorldPosition.pointOfInterestId == AccountDataSO.CharacterData.position.pointOfInterestId)
                 return item;
         }
 

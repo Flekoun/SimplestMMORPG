@@ -92,6 +92,40 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public int turnsNumber { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public WorldPosition position { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<EncounterResultContentLoot> bonusLoot { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<EncounterResultContentLoot> dungeonLoot { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string dungeonFinished { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<PerkChoiceParticipant> perkChoices { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string foundBy { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public DungeonData dungeonData { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int tier { get; set; }
+
+
+
 
         public EncounterResultCombatant GetCombatantResultForUid(string _characterUid)
         {
@@ -132,6 +166,36 @@ namespace simplestmmorpg.data
             return (int)secondsLeft;
 
         }
+
+    }
+
+    [Serializable]
+    [FirestoreData]
+    public class DungeonData
+    {
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string dungeonId { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int tier { get; set; }
+
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public bool isFinished { get; set; }
+
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public bool isFinalDungeon { get; set; }
+
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public bool isEndlessDungeon { get; set; }
+
 
     }
 
@@ -183,7 +247,7 @@ namespace simplestmmorpg.data
         {
             if (characterWhoWillHaveThis == null) return false;
             Debug.Log(" characterWhoWillHaveThis.characterClass:" + characterWhoWillHaveThis.characterClass);
-          //  else if (charactersWhoWantThis.Count == 0) return false;
+            //  else if (charactersWhoWantThis.Count == 0) return false;
             return true;
         }
     }
@@ -215,6 +279,18 @@ namespace simplestmmorpg.data
         [field: SerializeField]
         [FirestoreProperty]
         public int expGainedEstimate { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int deckShuffleCount { get; set; }
+
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public List<SimpleTally> successSkillsRolled { get; set; }//ktery skill byl vylosovan a kolik ma  success slots
+
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public int successResult { get; set; }//soucet successu z narolovaneho equipu....pro snadnost...je to jen soucet
 
 
 

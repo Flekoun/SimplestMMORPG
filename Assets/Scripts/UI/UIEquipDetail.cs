@@ -22,11 +22,18 @@ public class UIEquipDetail : MonoBehaviour
     public TextMeshProUGUI Attribute_AgilityText;
     public TextMeshProUGUI Attribute_SpiritText;
 
+    public TextMeshProUGUI BidTypeText;
+
+    public TextMeshProUGUI RareEffect_Text;
+  //  public TextMeshProUGUI Bonu_Text;
+
     public UnityAction OnHideClicked;
 
     public UIContentDetail UIContentDetail;
     public UISkill UISkill;
     public GameObject Model;
+
+    public UIQualityProgress UIQualityProgress;
 
     public ContentFitterRefresh ContentFitterRefresh;
     private Equip Data;
@@ -36,13 +43,15 @@ public class UIEquipDetail : MonoBehaviour
         UIContentDetail.OnHideClicked += HideClicked;
     }
 
-    public void Show(Equip _data)
+    public void Show(Equip _data, int _forcedQuality)
     {
         Data = _data;
         Model.gameObject.SetActive(true);
-        UISkill.SetData(Data.skill);
+        UISkill.SetData(Data.skill, _forcedQuality);
         UIContentDetail.Show(_data);
         DisplayNameText.SetText(_data.displayName);
+
+        UIQualityProgress.Setup(_forcedQuality, Data.qualityMax);
 
         EquipSlotText.SetText(Data.equipSlotId);
         if (Data.level > AccountDataSO.CharacterData.stats.level)
@@ -53,27 +62,38 @@ public class UIEquipDetail : MonoBehaviour
         RarityText.SetText(Data.rarity);
         RarityText.color = Utils.GetRarityColor(Data.rarity);
 
-        //if (AccountDataSO.CharacterData.characterClass == Data.skill.characterClass)
-        //    ClassText.SetText(Utils.ColorizeGivenTextWithClassColor(Data.skill.characterClass, Data.skill.characterClass));
-        //else
-        //    ClassText.SetText("<color=red>" + Data.skill.characterClass + "</color>");
+        RareEffect_Text.gameObject.SetActive(Data.rareEffects.Count > 0 || Data.skillBonusEffects.Count>0 || Data.buffBonusEffects.Count > 0);
+        RareEffect_Text.text = "";
+        foreach (var effect in Data.rareEffects)
+        {
+            RareEffect_Text.SetText(RareEffect_Text.text + effect.GetDescription() + "\n");
+        }
+        foreach (var skillEffect in Data.skillBonusEffects)
+        {
+            RareEffect_Text.SetText(RareEffect_Text.text + Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(skillEffect.GetDescription()) + "\n");
+        }
 
-        Attribute_StrenghtText.gameObject.SetActive(Data.attributes.strength > 0);
-        Attribute_StrenghtText.SetText("+" + Data.attributes.strength.ToString() + " Strength");
+        foreach (var buffEffect in Data.buffBonusEffects)
+        {
+            RareEffect_Text.SetText(RareEffect_Text.text + Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(buffEffect.GetDescription()) + "\n");
+        }
 
-        Attribute_IntellectText.gameObject.SetActive(Data.attributes.intellect > 0);
-        Attribute_IntellectText.SetText("+" + Data.attributes.intellect.ToString() + " Intellect");
 
-        Attribute_AgilityText.gameObject.SetActive(Data.attributes.agility > 0);
-        Attribute_AgilityText.SetText("+" + Data.attributes.agility.ToString() + " Agility");
+        BidTypeText.gameObject.SetActive(true);
 
-        Attribute_StaminaText.gameObject.SetActive(Data.attributes.stamina > 0);
-        Attribute_StaminaText.SetText("+" + Data.attributes.stamina.ToString() + " Stamina");
+        if (Data.neverEquiped)
+            BidTypeText.SetText("Binds when equipped");
+        else
+            BidTypeText.SetText("Soulbound");
 
-        Attribute_SpiritText.gameObject.SetActive(Data.attributes.spirit > 0);
-        Attribute_SpiritText.SetText("+" + Data.attributes.spirit.ToString() + " Spirit");
 
         ContentFitterRefresh.RefreshContentFitters();
+    }
+
+    public void Show(Equip _data)
+    {
+        Show(_data, _data.quality);
+
     }
 
     public void Hide()
@@ -87,16 +107,5 @@ public class UIEquipDetail : MonoBehaviour
             OnHideClicked.Invoke();
     }
 
-    //private void TryToFixScrollReckGlitches()
-    //{
-    //    StartCoroutine(Wait());
-
-    //}
-
-    //private IEnumerator Wait()
-    //{
-    //    yield return new WaitForSecondsRealtime(0.1f);
-    //    LayoutRebuilder.ForceRebuildLayoutImmediate(RectTransform);
-    //    Canvas.ForceUpdateCanvases();
-    //}
+  
 }

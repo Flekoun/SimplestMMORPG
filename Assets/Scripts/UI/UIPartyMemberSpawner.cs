@@ -48,7 +48,7 @@ public class UIPartyMemberSpawner : MonoBehaviour
             foreach (var item in AccountDataSO.PartyData.partyMembers)
             {
                 var member = PrefabFactory.CreateGameObject<UIPartyMemberEntry>(UIPartyMemberPrefab, Parent);
-                member.SetData(item);
+                member.SetData(item, AccountDataSO.PartyData.IsPartyLeader(item.uid));
 
             }
 

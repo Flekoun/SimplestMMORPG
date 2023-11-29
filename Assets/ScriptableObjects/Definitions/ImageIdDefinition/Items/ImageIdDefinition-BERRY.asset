@@ -14,5 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IdPrefix: ITEMS
   ImageId: BERRY
-  Image: {fileID: 21300000, guid: 6d3592e39c60841fb9d09d724c953ee5, type: 3}
+  Image: {fileID: 21300000, guid: 2110500d2bc2443e794f03a98515e458, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

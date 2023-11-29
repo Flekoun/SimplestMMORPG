@@ -15,4 +15,6 @@ MonoBehaviour:
   IdPrefix: ITEMS
   ImageId: MARIGOLD
   Image: {fileID: 21300000, guid: ac4eee6cb7fda1c449e1b18fd2a00937, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

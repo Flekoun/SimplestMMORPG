@@ -1,24 +1,22 @@
 import * as functions from "firebase-functions";
 // [START import]
 
-import { CharacterDocument, characterDocumentConverter, ContentContainer, CONTENT_TYPE, SimpleTally, WorldPosition } from ".";
-import { generateContentItemSimple, ITEMS, RARITY } from "./equip";
-import {  randomIntFromInterval } from "./general2";
-import { getLocationsForZoneId, getPoIsForLocationId, ZONE } from "./worldMap";
+import { CharacterDocument, characterDocumentConverter, ContentContainer, generateContentContainer, randomIntFromInterval, SimpleTally, WorldPosition } from ".";
+import { PROFESSION } from "./crafting";
+import { generateContent, ITEMS, RARITY } from "./equip";
+
+import { ServerData_Economy } from "./utils";
+import {  getPoIsForLocationId, LOC, ZONE } from "./worldMap";
 
 const admin = require('firebase-admin');
 // // [END import]
 
 
-export const enum PROFESSION {
-  HERBALISM = "HERBALISM",
-  MINING = "MINING"
-}
-
 export const enum GATHERABLE_TYPE {
   COPPER_VEIN = "COPPER_VEIN",
   MARIGOLD_SPOT = "MARIGOLD_SPOT",
-  KINGSLEAF_SPOT = "KINGSLEAF_SPOT"
+  KINGSLEAF_SPOT = "KINGSLEAF_SPOT",
+  GOLD_COIN = "GOLD_COIN"
 }
 
 export class Gatherable {
@@ -39,14 +37,18 @@ function generateGatherableContent(_gatherable: Gatherable): ContentContainer[] 
 
   switch (_gatherable.gatherableType) {
     case GATHERABLE_TYPE.COPPER_VEIN:
-      contents.push(new ContentContainer(CONTENT_TYPE.ITEM, generateContentItemSimple(ITEMS.COPPER_ORE, 1), undefined, undefined, undefined));
+      contents.push(generateContentContainer(generateContent(ITEMS.COPPER_ORE, 10)));
       break;
     case GATHERABLE_TYPE.MARIGOLD_SPOT:
-      contents.push(new ContentContainer(CONTENT_TYPE.ITEM, generateContentItemSimple(ITEMS.MARIGOLD, 1), undefined, undefined, undefined));
+      contents.push(generateContentContainer(generateContent(ITEMS.MARIGOLD, 10)));
       break;
-    case GATHERABLE_TYPE.MARIGOLD_SPOT:
-      contents.push(new ContentContainer(CONTENT_TYPE.ITEM, generateContentItemSimple(ITEMS.KINGSLEAF, 1), undefined, undefined, undefined));
+    case GATHERABLE_TYPE.KINGSLEAF_SPOT:
+      contents.push(generateContentContainer(generateContent(ITEMS.KINGSLEAF, 10)));
       break;
+    case GATHERABLE_TYPE.GOLD_COIN:
+      contents.push(generateContentContainer(generateContent(ITEMS.GOLD, 10)));
+      break;
+
 
     default:
       break;
@@ -60,6 +62,7 @@ exports.claimGatherable = functions.https.onCall(async (data, context) => {
   const gatherableUid = data.gatherableUid;
   const characterDb = await admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
   const gatherableDb = await admin.firestore().collection('gatherables').doc(gatherableUid);
+  const economyDb = await admin.firestore().collection('serverData').doc("Economy");
   try {
     const result = await admin.firestore().runTransaction(async (t: any) => {
 
@@ -69,23 +72,23 @@ exports.claimGatherable = functions.https.onCall(async (data, context) => {
       const gatherableDoc = await t.get(gatherableDb);
       let gatherableData: Gatherable = gatherableDoc.data();
       //zkontroluju jestli mas profesi na to gathernout
-      gatherableData.professionNeeded.forEach(profNeeded => {
-        let hasProfession = false;
-        characterData.professions.forEach(prof => {
+      // gatherableData.professionNeeded.forEach(profNeeded => {
+      //   let hasProfession = false;
+      //   characterData.professions.forEach(prof => {
 
-          if (prof.id == profNeeded.id)
-            if (prof.count >= profNeeded.count)
-              hasProfession = true;
+      //     if (prof.id == profNeeded.id)
+      //       if (prof.count >= profNeeded.count)
+      //         hasProfession = true;
 
-        });
-        if (hasProfession == false) {
-          let skillsRequired = "";
-          gatherableData.professionNeeded.forEach(element => {
-            skillsRequired+= element.count + " " + element.id +" ";
-          });
-          throw "You need "+ skillsRequired  +"to gather this!";
-        }
-      });
+      //   });
+      //   if (hasProfession == false) {
+      //     let skillsRequired = "";
+      //     gatherableData.professionNeeded.forEach(element => {
+      //       skillsRequired += element.count + " " + element.id + " ";
+      //     });
+      //     throw "You need " + skillsRequired + "to gather this!";
+      //   }
+      // });
 
       //pokud ano dam ti obsah gatherablu
       generateGatherableContent(gatherableData).forEach(content => {
@@ -95,8 +98,14 @@ exports.claimGatherable = functions.https.onCall(async (data, context) => {
       //zvednu profesi, zatim vzdy o 1 na 100%
       gatherableData.professionNeeded.forEach(element => {
         characterData.increaseProfessionSkill(element.id, 1);
-
       });
+
+      if (gatherableData.gatherableType == GATHERABLE_TYPE.GOLD_COIN) {
+        const economyDoc = await t.get(economyDb);
+        let economyData: ServerData_Economy = economyDoc.data();
+        economyData.goldCoinsAwardedThroughGatherables += 10;
+        t.set(economyDb, JSON.parse(JSON.stringify(economyData)), { merge: true });
+      }
 
       t.delete(gatherableDb);
       t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
@@ -148,8 +157,8 @@ export async function SpawnGatherables() {
 
       for (let index = 0; index < gatherablesToSpawn; index++) {
 
-        const locs = getLocationsForZoneId(ZONE.DUNOTAR);
-        let choosenLoc = locs[randomIntFromInterval(0, locs.length - 1)];
+      //  const locs = getLocationsForZoneId(ZONE.DUNOTAR);
+        let choosenLoc =  LOC.VALLEY_OF_TRIALS;//locs[randomIntFromInterval(0, locs.length - 1)];
 
         let pois = getPoIsForLocationId(choosenLoc);
         let choosenPoi = pois[randomIntFromInterval(0, pois.length - 1)];
@@ -158,10 +167,12 @@ export async function SpawnGatherables() {
         let newDocument = gatherableDb.doc();
         let gatherable: Gatherable | null = null;
 
-        if (Math.random() > 0.33)
+        if (Math.random() > 0.5)
           gatherable = new Gatherable(newDocument.id, GATHERABLE_TYPE.MARIGOLD_SPOT, position, [new SimpleTally(PROFESSION.HERBALISM, 0)], RARITY.COMMON);
-        else if (Math.random() > 0.1)
+        else if (Math.random() > 0.4)
           gatherable = new Gatherable(newDocument.id, GATHERABLE_TYPE.KINGSLEAF_SPOT, position, [new SimpleTally(PROFESSION.HERBALISM, 25)], RARITY.UNCOMMON);
+        else if (Math.random() > 0.3)
+          gatherable = new Gatherable(newDocument.id, GATHERABLE_TYPE.COPPER_VEIN, position, [], RARITY.UNCOMMON);
         else
           gatherable = new Gatherable(newDocument.id, GATHERABLE_TYPE.COPPER_VEIN, position, [new SimpleTally(PROFESSION.MINING, 0)], RARITY.UNCOMMON);
 

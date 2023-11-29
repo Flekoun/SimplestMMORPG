@@ -8,9 +8,14 @@ using UnityEngine.Events;
 
 public class UICharacterPreviewEntry : UISelectableEntry
 {
+    public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
     public TextMeshProUGUI CharacterNameText;
     public TextMeshProUGUI CharacterClassText;
     public TextMeshProUGUI CharacterLevelText;
+    public TextMeshProUGUI CharacterSeasonText;
+    public GameObject RetireButtonGO;
+    public GameObject RetiredGO;
+
     public UIPortrait Portrait;
 
     public UnityAction<UICharacterPreviewEntry> OnClicked;
@@ -18,7 +23,7 @@ public class UICharacterPreviewEntry : UISelectableEntry
 
     public override string GetUid()
     {
-        return Data.uid;
+        return Data.characterUid;
     }
 
     public void SelectButtonClicked()
@@ -37,10 +42,25 @@ public class UICharacterPreviewEntry : UISelectableEntry
         CharacterNameText.color = Utils.GetClassColor(Data.characterClass);
         CharacterClassText.SetText(_data.characterClass);
         CharacterLevelText.SetText("Level " + _data.level.ToString());
+        CharacterSeasonText.SetText("Season " + _data.seasonNumber);
+        Portrait.SetPortrait(Data.portrait, Data.characterClass);
+        RetireButtonGO.SetActive(!_data.isRetired);
+        RetiredGO.SetActive(_data.isRetired);
 
+    }
 
-        Portrait.SetPortrait(Data.portrait);
+    public void RetireCharacterClicked()
+    {
+        UIManager.instance.SpawnPromptPanel("Do you realy want to retire this character? It will no longer be playable. All artifacts from this character will be transfered to your player account.", async () =>
 
+        {
+            var result = await FirebaseCloudFunctionSO.retireCharacter(Data.characterUid);
+            if (result.Result)
+            {
+                UIManager.instance.ImportantMessage.ShowMesssage("Character Retired!");
+            }
+
+        }, null);
 
     }
 }

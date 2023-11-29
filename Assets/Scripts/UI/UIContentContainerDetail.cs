@@ -13,9 +13,10 @@ public class UIContentContainerDetail : MonoBehaviour
     public GameObject ButtonGO;
     public TextMeshProUGUI ButtonTMPText;
     public ContentFitterRefresh ContentFitterRefresh;
+
     public UIEquipDetail UIEquipDetail;
     public UIContentDetail UIContentDetail;
-    public UIContentFoodDetail UIContentFoodDetail;
+    // public UIContentFoodDetail UIContentFoodDetail;
 
     public GameObject ActionButton;
 
@@ -34,7 +35,7 @@ public class UIContentContainerDetail : MonoBehaviour
     {
         UIEquipDetail.OnHideClicked += HideButtonClicked;
         UIContentDetail.OnHideClicked += HideButtonClicked;
-        UIContentFoodDetail.OnHideClicked += HideButtonClicked;
+        // UIContentFoodDetail.OnHideClicked += HideButtonClicked;
     }
 
     public void ShowActionButton(bool _show)
@@ -52,36 +53,42 @@ public class UIContentContainerDetail : MonoBehaviour
         Show(_contentContainer.GetContent());
     }
 
-    public void Show(Content _content)
+    public void Show(IContentDisplayable _content)
     {
+        UIEquipDetail.gameObject.SetActive(false);
+        //  UIContentFoodDetail.gameObject.SetActive(false);
+        UIContentDetail.gameObject.SetActive(false);
+
         if (_content is Equip)
         {
+            UIEquipDetail.gameObject.SetActive(true);
             UIEquipDetail.Show(_content as Equip);
             UIContentDetail.Hide();
-            UIContentFoodDetail.Hide();
-        }
-        else if (_content is ContentItem )
-        {
-            UIContentDetail.Show(_content as ContentItem);
-            UIEquipDetail.Hide();
-            UIContentFoodDetail.Hide();
+            //      UIContentFoodDetail.Hide();
         }
 
-        else if (_content is ContentCurrency)
+
+        //else if (_content.contentType == Utils.CONTENT_TYPE.FOOD || _content.contentType == Utils.CONTENT_TYPE.RECIPE)
+        //{
+        //    //  nulll toto kdyz sem dropiuem logicky
+        //    UIContentFoodDetail.gameObject.SetActive(true);
+        //    UIContentFoodDetail.Show(_content);
+        //    UIContentDetail.Hide();
+        //    UIEquipDetail.Hide();
+        //}
+        else
         {
-            UIContentDetail.Show(_content as ContentCurrency);
+            UIContentDetail.gameObject.SetActive(true);
+            UIContentDetail.Show(_content);
             UIEquipDetail.Hide();
-            UIContentFoodDetail.Hide();
+
+            //      ActionButton.gameObject.SetActive(_content.contentType == Utils.CONTENT_TYPE.FOOD || _content.contentType == Utils.CONTENT_TYPE.RECIPE);
+            //       UIContentFoodDetail.Hide();
+
         }
 
-        else if (_content is ContentFood)
-        {
-            UIContentFoodDetail.Show(_content as ContentFood);
-            UIContentDetail.Hide();
-            UIEquipDetail.Hide();
-        }
 
-       
+
 
         ButtonTMPText.SetText(ButtonText);
         ContentFitterRefresh.RefreshContentFitters();
@@ -92,7 +99,7 @@ public class UIContentContainerDetail : MonoBehaviour
     {
         UIEquipDetail.Hide();
         UIContentDetail.Hide();
-        UIContentFoodDetail.Hide();
+        //   UIContentFoodDetail.Hide();
         ButtonGO.SetActive(false);
     }
 

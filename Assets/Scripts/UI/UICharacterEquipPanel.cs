@@ -10,24 +10,31 @@ public class UICharacterEquipPanel : MonoBehaviour
     public AccountDataSO AccountDataSO;
     public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
     public UIInventory UIInventoryPanel;
-    public List<UIEquipSlotItem> EquipSlots;
+    public UICharacterEquipSlots UICharacterEquipSlots;
     public UIEquipDetail UIEquipDetail_SelectedItem;
     public UIEquipDetail UIEquipDetail_EquipedItemToCompare;
     public UICharacterInfoPanel UICharacterInfoPanel;
     public Button EquipButton;
     public Button UnequipButton;
+
     public ContentFitterRefresh ContentFitterRefresh;
 
     public GameObject Model;
-   // public CharacterData Data;
+    public CharacterData Data;
 
 
     private bool changesToEquipMade = false;
     private Equip chooosenInventoryItem;
     private UIEquipSlotItem choosenSlot;
 
+    private bool IsMyCharacter()
+    {
+        return Data == AccountDataSO.CharacterData;
+    }
+
     public void OnEnable()
     {
+
         AccountDataSO.OnCharacterDataChanged += Refresh;
     }
 
@@ -47,10 +54,12 @@ public class UICharacterEquipPanel : MonoBehaviour
     {
         UIInventoryPanel.OnContentItemClicked += OnInventoryItemClicked;
 
-        foreach (var equipSlot in EquipSlots)
-        {
-            equipSlot.OnSlotClicked += OnSlotClicked;
-        }
+        //foreach (var equipSlot in EquipSlots)
+        //{
+        //    equipSlot.OnSlotClicked += OnSlotClicked;
+        //}
+
+        UICharacterEquipSlots.OnEquipSlotClicked += OnSlotClicked;
 
 
     }
@@ -59,38 +68,48 @@ public class UICharacterEquipPanel : MonoBehaviour
     {
         UIEquipDetail_SelectedItem.Hide();
         UIEquipDetail_EquipedItemToCompare.Hide();
+        UIEquipDetail_EquipedItemToCompare.gameObject.SetActive(false);
         EquipButton.gameObject.SetActive(false);
         UnequipButton.gameObject.SetActive(false);
     }
 
     private void Refresh()
     {
+        UIInventoryPanel.gameObject.SetActive(IsMyCharacter());
         changesToEquipMade = false;
-        UIInventoryPanel.Refresh(AccountDataSO.CharacterData.inventory.content);
+        UIInventoryPanel.Refresh(Data.inventory.content);
+
+        UICharacterEquipSlots.Setup(Data);
+        //foreach (var slot in EquipSlots)
+        //    slot.SetCharacter(Data);
     }
-    public void ShowPlayerCurrentCharacterInfo()
+
+    public void ShowPlayerCharacter()
     {
-        //  Data = AccountDataSO.CharacterData;
+        Show(AccountDataSO.CharacterData);
+    }
+
+    public void Show(CharacterData _data)
+    {
+        Data = _data;
         Model.gameObject.SetActive(true);
         Refresh();
 
-        // Show(AccountDataSO.CharacterData);
+        UICharacterInfoPanel.Show(Data);
+
     }
 
-    //public void Show(CharacterData _data)
-    //{
-    //    changesToEquipMade = false;
-    //    Data = _data;
-    //    Model.gameObject.SetActive(true);
-    //}
 
 
     private void OnInventoryItemClicked(UIContentItem _item)
     {
+        if (!IsMyCharacter())
+            return;
+
         EquipButton.gameObject.SetActive(true);
         UnequipButton.gameObject.SetActive(false);
 
-        UIEquipSlotItem equipedCorrespondingGear = GetCorrespondingEquipSlot((Equip)_item.GetData());
+        UIEquipSlotItem equipedCorrespondingGear = UICharacterEquipSlots.GetCorrespondingEquipSlot((Equip)_item.GetData());
 
         if (equipedCorrespondingGear.IsSlotOccupied())
         {
@@ -113,7 +132,10 @@ public class UICharacterEquipPanel : MonoBehaviour
 
     private void OnSlotClicked(UIEquipSlotItem _equipSlot)
     {
+
+
         UIEquipDetail_EquipedItemToCompare.Hide();
+        UIEquipDetail_EquipedItemToCompare.gameObject.SetActive(false);
         UnequipButton.gameObject.SetActive(true);
         EquipButton.gameObject.SetActive(false);
         choosenSlot = _equipSlot;
@@ -128,63 +150,72 @@ public class UICharacterEquipPanel : MonoBehaviour
     public void Close()
     {
         Model.gameObject.SetActive(false);
+        OnHideClicked();
+        chooosenInventoryItem = null;
+        choosenSlot = null;
     }
 
     public void OnDestroy()
     {
         UIInventoryPanel.OnContentItemClicked -= OnInventoryItemClicked;
 
-        foreach (var equipSlot in EquipSlots)
-        {
-            equipSlot.OnSlotClicked -= OnSlotClicked;
-        }
+        //foreach (var equipSlot in EquipSlots)
+        //{
+        //    equipSlot.OnSlotClicked -= OnSlotClicked;
+        //}
 
     }
 
-    private UIEquipSlotItem GetCorrespondingEquipSlot(Equip _equip)
-    {
-        foreach (var equipSlot in EquipSlots)
-        {
-            if (equipSlot.EquipSlotDefinition.EquipSlotId == _equip.equipSlotId) // a ma to ten samy equip slot jako to na co sem klikl
-                return equipSlot;
-        }
+    //private UIEquipSlotItem GetCorrespondingEquipSlot(Equip _equip)
+    //{
+    //    foreach (var equipSlot in EquipSlots)
+    //    {
+    //        if (equipSlot.EquipSlotDefinition.EquipSlotId == _equip.equipSlotId) // a ma to ten samy equip slot jako to na co sem klikl
+    //            return equipSlot;
+    //    }
 
-        return null;
-    }
+    //    return null;
+    //}
+
+
 
     public void EquipClicked() // v detailu itemu kliknu na equip
     {
-        if (chooosenInventoryItem.level>AccountDataSO.CharacterData.stats.level)
+        if (!IsMyCharacter())
+            return;
+
+
+        if (chooosenInventoryItem.level > AccountDataSO.CharacterData.stats.level)
         {
             UIManager.instance.ImportantMessage.ShowMesssage("Your level is too low!");
             return;
         }
 
-            //najdu si equip slot na doll
-            UIEquipSlotItem equipedAlterntive = GetCorrespondingEquipSlot(chooosenInventoryItem);
+        //najdu si equip slot na doll
+        UIEquipSlotItem equipedAlterntive = UICharacterEquipSlots.GetCorrespondingEquipSlot(chooosenInventoryItem);
 
         if (equipedAlterntive.IsSlotOccupied())//uz tam neco je vybaveneho
         {
-
+            Debug.Log("JE OBSAZENY? PROHAZUJU :" + equipedAlterntive.GetEquip().uid+ " za " + chooosenInventoryItem.uid);
             //item z doll dam do inventare
-            ContentContainer dummyContent = new ContentContainer();
-            dummyContent.contentEquip = equipedAlterntive.GetEquip();
-            dummyContent.contentType = Utils.CONTENT_TYPE.EQUIP;
+            //ContentContainer dummyContent = new ContentContainer();
+            //dummyContent.contentEquip = equipedAlterntive.GetEquip();
 
-            UIInventoryPanel.AddItemOffline(dummyContent);
+            UIInventoryPanel.AddItemOffline(equipedAlterntive.GetEquip(),true);
             equipedAlterntive.RemoveEquipManualy();
 
 
             //dam na doll kliknuty item
             equipedAlterntive.AddEquipManualy(chooosenInventoryItem);
-            UIInventoryPanel.RemoveItemOffline(chooosenInventoryItem.uid);
+            UIInventoryPanel.RemoveItemOffline(chooosenInventoryItem.uid, true);
 
 
         }
         else
         {
+            Debug.Log("NIC TAM NENI");
             equipedAlterntive.AddEquipManualy(chooosenInventoryItem);
-            UIInventoryPanel.RemoveItemOffline(chooosenInventoryItem.uid);
+            UIInventoryPanel.RemoveItemOffline(chooosenInventoryItem.uid, true);
 
         }
 
@@ -192,21 +223,25 @@ public class UICharacterEquipPanel : MonoBehaviour
         changesToEquipMade = true;
         UIEquipDetail_SelectedItem.Hide();
         UIEquipDetail_EquipedItemToCompare.Hide();
-        UICharacterInfoPanel.ShowPlayerCurrentCharacterInfo();
+        UIEquipDetail_EquipedItemToCompare.gameObject.SetActive(false);
+        UICharacterInfoPanel.Show(Data);
 
         EquipButton.gameObject.SetActive(false);
     }
 
     public void UnequipClicked()
     {
+        if (!IsMyCharacter())
+            return;
+
+
         if (choosenSlot.IsSlotOccupied())
         {
             //item z doll dam do inventare
-            ContentContainer dummyContent = new ContentContainer();
-            dummyContent.contentEquip = choosenSlot.GetEquip();
-            dummyContent.contentType = Utils.CONTENT_TYPE.EQUIP;
+            //ContentContainer dummyContent = new ContentContainer();
+            //dummyContent.contentEquip = choosenSlot.GetEquip();
 
-            UIInventoryPanel.AddItemOffline(dummyContent);
+            UIInventoryPanel.AddItemOffline(choosenSlot.GetEquip(), true);
             choosenSlot.RemoveEquipManualy();
 
 
@@ -217,13 +252,16 @@ public class UICharacterEquipPanel : MonoBehaviour
         changesToEquipMade = true;
         UIEquipDetail_SelectedItem.Hide();
 
-        UICharacterInfoPanel.ShowPlayerCurrentCharacterInfo();
+        UICharacterInfoPanel.Show(Data);
         UnequipButton.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
     public void ApplyEquipChanges()
     {
+        if (!IsMyCharacter())
+            return;
+
 
         if (changesToEquipMade)
         {

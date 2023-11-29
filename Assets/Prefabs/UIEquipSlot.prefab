@@ -319,6 +319,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AccountDataSO: {fileID: 11400000, guid: 55905d11d69c645c98d632ec3cb9745b, type: 2}
+  AllImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}
   EquipSlotDefinition: {fileID: 11400000, guid: 79d751a91dcd4492ab4e464613169288, type: 2}
   UIInventoryItem: {fileID: 1033464259761600295}
   NoDataGO: {fileID: 5203365557981710034}
@@ -420,6 +421,30 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6168094136241302918, guid: 6c5a45d7a11db46ffa36454871879bd6, type: 3}
       propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168094136241302918, guid: 6c5a45d7a11db46ffa36454871879bd6, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168094136241302918, guid: 6c5a45d7a11db46ffa36454871879bd6, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168094136241302918, guid: 6c5a45d7a11db46ffa36454871879bd6, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168094136241302918, guid: 6c5a45d7a11db46ffa36454871879bd6, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168094136241302918, guid: 6c5a45d7a11db46ffa36454871879bd6, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168094136241302918, guid: 6c5a45d7a11db46ffa36454871879bd6, type: 3}
+      propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6168094136241302918, guid: 6c5a45d7a11db46ffa36454871879bd6, type: 3}

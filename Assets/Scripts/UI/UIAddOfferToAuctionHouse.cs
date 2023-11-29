@@ -11,8 +11,13 @@ public class UIAddOfferToAuctionHouse : MonoBehaviour
     public UIInventory UIInventoryPlayer;
     public UIContentItem UIInventoryItemHighlight;
     public ListenOnAuctionHouse ListenOnAuctionHouse;
-    public TMP_InputField BidPriceInput;
-    public TMP_InputField BuyoutPriceInput;
+    public UIGoldAmountInput BidPriceInput;
+    public UIGoldAmountInput BuyoutPriceInput;
+    public TMP_InputField AmountInput;
+    public GameObject ChooseItemForAuctionPanelGO;
+    public GameObject ChooseItemToolsGO;
+    public GameObject AddtItemToAuctionToolsGO;
+
     public GameObject Model;
     public UIAuctionOfferSpawner UIAuctionOfferSpawner;
 
@@ -24,7 +29,9 @@ public class UIAddOfferToAuctionHouse : MonoBehaviour
     public void Awake()
     {
         UIInventoryPlayer.OnContentItemClicked += OnContentItemClicked;
+        UIInventoryItemHighlight.OnClicked += OnUIInventoryItemHighlightClicked;
     }
+
     public void OnEnable()
     {
         ListenOnAuctionHouse.OnAllOffersIPutOnAuctionChanged += OnAllOffersIPutOnAuctionChanged;
@@ -37,6 +44,20 @@ public class UIAddOfferToAuctionHouse : MonoBehaviour
         ListenOnAuctionHouse.OnAllOffersIPutOnAuctionChanged -= OnAllOffersIPutOnAuctionChanged;
         ListenOnAuctionHouse.OnnAllOffersIBiddedOnChanged -= OnnAllOffersIBiddedOnChanged;
         AccountDataSO.OnCharacterDataChanged -= Refresh;
+    }
+
+    private void OnUIInventoryItemHighlightClicked(UIContentItem _item)
+    {
+        ShowAddToAuctionChooser();
+    }
+
+
+
+    public void ShowAddToAuctionChooser()
+    {
+        UIInventoryPlayer.ClearItemsSelected();
+        ChooseItemForAuctionPanelGO.gameObject.SetActive(true);
+
     }
 
     private void OnAllOffersIPutOnAuctionChanged(List<AuctionOffer> _offers)
@@ -64,7 +85,18 @@ public class UIAddOfferToAuctionHouse : MonoBehaviour
     public void OnContentItemClicked(UIContentItem _item)
     {
         UIInventoryItemHighlight.SetData(_item.GetData());
+        ChooseItemForAuctionPanelGO.SetActive(false);
+
+        AmountInput.gameObject.SetActive(_item.GetData().stackSize > 1);
+
+
+        AmountInput.SetTextWithoutNotify(_item.GetData().amount.ToString());
+
+        ChooseItemToolsGO.SetActive(false);
+        AddtItemToAuctionToolsGO.SetActive(true);
     }
+
+
 
     public void OnAuctionOfferEntryClicked(UIAuctionOfferEntry _item)
     {
@@ -85,6 +117,11 @@ public class UIAddOfferToAuctionHouse : MonoBehaviour
     {
         ListenOnAuctionHouse.StopListeningOnAllOffersIPutOnAuction();
         ListenOnAuctionHouse.StopListeningOnAllOffersIBiddedOn();
+
+        ChooseItemToolsGO.SetActive(true);
+        AddtItemToAuctionToolsGO.SetActive(false);
+
+
         Model.SetActive(false);
     }
 
@@ -95,31 +132,67 @@ public class UIAddOfferToAuctionHouse : MonoBehaviour
 
     public void AddToAuction()
     {
+
         if (UIInventoryItemHighlight.GetData() != null)
         {
-            int buyoutPrice = 0;
-            int bitPrice = 0;
+            //int buyoutPrice = 0;
+            //int bitPrice = 0;
+            int amount = 1;
 
             var choosenItem = (UIInventoryPlayer.GetSelectedEntry() as UIContentItem).GetData();
 
+            if (AmountInput.text != "")
+            {
+                amount = int.Parse(AmountInput.text);
 
-            if (BuyoutPriceInput.text != "")
-                buyoutPrice = int.Parse(BuyoutPriceInput.text);
-
-            if (BidPriceInput.text != "")
-                bitPrice = int.Parse(BidPriceInput.text);
+                if (amount < 1)
+                {
+                    UIManager.instance.ImportantMessage.ShowMesssage("Enter amount!");
+                    return;
+                }
+            }
             else
             {
+                UIManager.instance.ImportantMessage.ShowMesssage("Enter amount!");
+                return;
+            }
+
+            //if (BuyoutPriceInput.GetAmount()>0)
+            //    buyoutPrice = int.Parse(BuyoutPriceInput.text);
+
+
+            if (BidPriceInput.GetAmount() <= 0)
+            {
                 Debug.Log("Enter Bid Price first!");
+                UIManager.instance.ImportantMessage.ShowMesssage("Enter Bid price!");
+                return;
+            }
+
+            if (BuyoutPriceInput.GetAmount() <= BidPriceInput.GetAmount() && BuyoutPriceInput.GetAmount() > 0)
+            {
+                UIManager.instance.ImportantMessage.ShowMesssage("Buyout price must be higher than Bid price");
                 return;
             }
 
 
-            FirebaseCloudFunctionSO.PutContentOnAuctionHouse(choosenItem.GetContentType(), choosenItem.uid, 0, buyoutPrice, bitPrice);
+            FirebaseCloudFunctionSO.PutContentOnAuctionHouse(choosenItem.uid, BuyoutPriceInput.GetAmount(), BidPriceInput.GetAmount(), amount);
+
+            ChooseItemToolsGO.SetActive(true);
+            AddtItemToAuctionToolsGO.SetActive(false);
+
+
         }
     }
 
+    //public void IncreaseAmountClicked()
+    //{
+
+    //}
 
 
+    //public void DecreaseAmountClicked()
+    //{
+
+    //}
 
 }

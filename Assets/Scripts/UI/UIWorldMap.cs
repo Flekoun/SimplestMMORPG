@@ -26,7 +26,7 @@ public class UIWorldMap : MonoBehaviour
         DijkstraMapMaker.OnVertexReachable += OnVertexReachable;
     }
 
-    private void OnVertexReachable(ScreenPoisitionWihtId _pos)
+    private void OnVertexReachable(DijkstraMapVertex _pos)
     {
         UIWorldMapLocationSpawner.ShowMapLocationButton(_pos);
     }
@@ -34,7 +34,7 @@ public class UIWorldMap : MonoBehaviour
     private void OnZoneChanged()
     {
         UIWorldMapLocationSpawner.SpawnWorldMap();
-        DijkstraMapMaker.Setup(AccountDataSO.ZoneData.dijkstraMap, AccountDataSO.ZoneData.locationScreenPositions);
+        DijkstraMapMaker.SetupForZone(AccountDataSO.ZoneData.dijkstraMap.exportMap, "DUNOTAR");//, AccountDataSO.ZoneData.locationScreenPositions);
         RefreshButtons();
     }
 
@@ -57,7 +57,7 @@ public class UIWorldMap : MonoBehaviour
         }
         else //jinak ti ukazu kolik by te stala cesta tam
         {
-            DijkstraMapMaker.ShowPlannedTravelPath(AccountDataSO.CharacterData.position.locationId, _entry.Data, AccountDataSO.ZoneData.locationScreenPositions);
+            DijkstraMapMaker.ShowPlannedTravelPath(AccountDataSO.CharacterData.position.locationId, _entry.Data);
 
         }
 
@@ -72,7 +72,7 @@ public class UIWorldMap : MonoBehaviour
         selectedWorldLocationButton = null;
 
         UIWorldMapLocationSpawner.SpawnWorldMap();
-        DijkstraMapMaker.Setup(AccountDataSO.ZoneData.dijkstraMap, AccountDataSO.ZoneData.locationScreenPositions);
+        DijkstraMapMaker.SetupForZone(AccountDataSO.ZoneData.dijkstraMap.exportMap, "DUNOTAR");//, AccountDataSO.ZoneData.locationScreenPositions);
 
         DijkstraMapMaker.ClearPlannedTravelPath();
         RefreshButtons();

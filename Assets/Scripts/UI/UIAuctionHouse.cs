@@ -13,9 +13,14 @@ public class UIAuctionHouse : MonoBehaviour
     public ListenOnAuctionHouse ListenOnAuctionHouse;
     public TMP_InputField BidPriceInput;
     public UIContentContainerDetail UIItemDetail;
+    public GameObject UIItemDetailPanelGO;
+    public GameObject UIToolsGO;
+    public Button BuyoutButton;
+    public Button BidButton;
+
+
     public GameObject Model;
 
-    public Button BuyoutButton;
 
     public UIAuctionOfferSpawner UIAuctionOfferSpawner;
 
@@ -23,7 +28,7 @@ public class UIAuctionHouse : MonoBehaviour
     {
         UIInventoryPlayer.OnContentItemClicked += OnPlayerInventoryItemClicked;
         UIAuctionOfferSpawner.OnEntryClicked += OnAuctionOfferEntryClicked;
-      //  UIAuctionOfferSpawner.OnGetInfo += OnGetInfoAboutOfferItemClicked;
+        //  UIAuctionOfferSpawner.OnGetInfo += OnGetInfoAboutOfferItemClicked;
     }
     public void OnEnable()
     {
@@ -55,16 +60,35 @@ public class UIAuctionHouse : MonoBehaviour
 
     public void OnAuctionOfferEntryClicked(UIAuctionOfferEntry _item)
     {
-        UIItemDetail.Show(_item.Data.content.GetContent());
+        if (_item.IsSelected)
+        {
+            UIItemDetailPanelGO.SetActive(true);
+            UIToolsGO.SetActive(true);
+            UIItemDetail.Show(_item.Data.content.GetContent());
 
-        BidPriceInput.SetTextWithoutNotify(_item.Data.nextBidPrice.ToString());
+            BidPriceInput.SetTextWithoutNotify(_item.Data.nextBidPrice.ToString());
 
-        BuyoutButton.gameObject.SetActive(_item.Data.buyoutPrice > 0);
+            BuyoutButton.gameObject.SetActive(_item.Data.buyoutPrice > 0);
+
+            BuyoutButton.interactable = true;
+            BidButton.interactable = true;
+        }
+        else
+        {
+            UIItemDetailPanelGO.SetActive(false);
+            UIToolsGO.SetActive(false);
+            BuyoutButton.interactable = false;
+            BidButton.interactable = false;
+        }
     }
 
     // Start is called before the first frame update
     public void Show()
     {
+        UIAuctionOfferSpawner.ClearItemsSelected();
+        BuyoutButton.interactable = false;
+        BidButton.interactable = false;
+
         ListenOnAuctionHouse.StartListeningOnAllAuctions();
         Model.SetActive(true);
         Refresh();
@@ -100,6 +124,7 @@ public class UIAuctionHouse : MonoBehaviour
         {
             var choosenOffer = UIAuctionOfferSpawner.GetSelectedEntry();
             FirebaseCloudFunctionSO.BuyoutContentOnAuctionHouse(choosenOffer.GetUid());
+            UIItemDetail.Hide();
         }
     }
 

@@ -8,52 +8,39 @@ public class UICombatMemberSkillsSpawner : MonoBehaviour
 {
     public PrefabFactory PrefabFactory;
     public GameObject UICombatMemberSkillEntryPrefab;
-    public List<Transform> Positions = new List<Transform>();
+    public Transform SkillsParent;
+    //  public List<Transform> Positions = new List<Transform>();
     private const int MAX_SKILLS_COUNT = 6;
 
     private List<UICombatMemberSkillEntry> UISkillsList = new List<UICombatMemberSkillEntry>();
 
-    public UnityAction<UICombatMemberSkillEntry> OnUICombatMemberSkillEntryClicked;
+    //public UnityAction<UICombatMemberSkillEntry> OnSkillClicked;
+    //public UnityAction<UICombatMemberSkillEntry> OnSkillHoldFinished;
+    public UnityAction<UICombatEntity, UICombatMemberSkillEntry> OnSkillDropedOnCombatEntity;
+    public UnityAction OnStartDrag;
 
-    public CombatMember Data; 
-
-    //public void Awake()
-    //{
-    //    AccountDataSO.OnCharacterDataChanged += Refresh;
-    //}
-
-    //public void OnDestroy()
-    //{
-    //    AccountDataSO.OnCharacterDataChanged -= Refresh;
-    //}
+    public CombatMember Data;
 
 
-    public void Show(CombatMember _combatMember, UIEncounterDetailPanel _spawner)
+
+    public void Show(CombatMember _combatMember)
     {
         Data = _combatMember;
 
+        Utils.DestroyAllChildren(SkillsParent);
 
-        int UISkillsCount = UISkillsList.Count;
-        for (int i = 0; i < MAX_SKILLS_COUNT - UISkillsCount; i++)
+        foreach (var item in Data.skillsInHand)
         {
-            UICombatMemberSkillEntry skillUI = PrefabFactory.CreateGameObject<UICombatMemberSkillEntry>(UICombatMemberSkillEntryPrefab, Positions[i]);
+            UICombatMemberSkillEntry skillUI = PrefabFactory.CreateGameObject<UICombatMemberSkillEntry>(UICombatMemberSkillEntryPrefab, SkillsParent);
+            //skillUI.OnClicked += SkillClicked;
+            //skillUI.OnHoldFinished += SkillHoldFinished;
+            skillUI.DropedOnCombatEntity += SkillDropedOnCombatEntity;
+            //  skillUI.StartDrag += () => { OnStartDrag?.Invoke(); };
+            skillUI.SetData(item, Data.stats.mana);
             UISkillsList.Add(skillUI);
         }
 
-        foreach (var item in UISkillsList)
-        {
-            item.gameObject.SetActive(false);
-        }
 
-        foreach (var skill in Data.skillsInHand)
-        {
-            // if (skill.equipSlot != 0)
-            //  {
-           
-            UISkillsList[skill.handSlotIndex].SetData(skill, this);
-            UISkillsList[skill.handSlotIndex].gameObject.SetActive(true);
-            //  }
-        }
 
     }
 
@@ -62,10 +49,22 @@ public class UICombatMemberSkillsSpawner : MonoBehaviour
 
     }
 
-    public void SkillClicked(UICombatMemberSkillEntry _skill)
+    //public void SkillClicked(UICombatMemberSkillEntry _skill)
+    //{
+    //    if (OnSkillClicked != null)
+    //        OnSkillClicked.Invoke(_skill);
+    //}
+
+    //public void SkillHoldFinished(UICombatMemberSkillEntry _skill)
+    //{
+    //    if (OnSkillHoldFinished != null)
+    //        OnSkillHoldFinished.Invoke(_skill);
+    //}
+
+    public void SkillDropedOnCombatEntity(UICombatEntity _combatEntity, UICombatMemberSkillEntry _skill)
     {
-        if (OnUICombatMemberSkillEntryClicked != null)
-            OnUICombatMemberSkillEntryClicked.Invoke(_skill);
+
+        OnSkillDropedOnCombatEntity?.Invoke(_combatEntity, _skill);
     }
 
 

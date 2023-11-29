@@ -17,11 +17,11 @@ public class UITrainerEntry : MonoBehaviour
     public void SetData(Trainer _data)
     {
         Data = _data;
-        NameText.SetText(Utils.GetMetadataForTrainers(Data.id).title.GetText());
+        NameText.SetText(Utils.DescriptionsMetadata.GetTrainersMetadata(Data.id).title.GetText());
     }
 
     public void Clicked()
     {
-        OnClicked.Invoke(this);
+        OnClicked?.Invoke(this);
     }
 }

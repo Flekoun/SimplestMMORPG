@@ -5,10 +5,12 @@ using TMPro;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using simplestmmorpg.data;
+using UnityEngine.TextCore.Text;
 
 public class UIEquipSlotItem : MonoBehaviour
 {
     public AccountDataSO AccountDataSO;
+    public ImageIdDefinitionSOSet AllImageIdDefinitionSOSet;
     public EquipSlotDefinition EquipSlotDefinition;
     public UIContentItem UIInventoryItem;
 
@@ -17,6 +19,8 @@ public class UIEquipSlotItem : MonoBehaviour
     public GameObject NoDataGO;
     public Image EquipSlotPortraitImage;
     public UnityAction<UIEquipSlotItem> OnSlotClicked;
+
+    private CharacterData Character = null;
 
     public bool IsSlotOccupied()
     {
@@ -34,16 +38,19 @@ public class UIEquipSlotItem : MonoBehaviour
         }
     }
 
-    public void SetCurrentCharacter()
+    public void SetCharacter(CharacterData _character)
     {
-
-        SetCharacter(AccountDataSO.CharacterData);
+        Character = _character;
+        Refresh();
     }
 
-    public void SetCharacter(CharacterData _characterData)
+    public void Refresh()
     {
+        if (Character == null)
+            Debug.LogWarning("Cant refresh equip in slot for character as it is null!");
+
         bool dataFound = false;
-        foreach (var item in _characterData.equipment)
+        foreach (var item in Character.equipment)
         {
             if (item.equipSlotId == EquipSlotDefinition.EquipSlotId)
             {
@@ -55,7 +62,11 @@ public class UIEquipSlotItem : MonoBehaviour
 
         NoDataGO.SetActive(!dataFound);
 
-        EquipSlotPortraitImage.sprite = EquipSlotDefinition.EquipSlotImage;
+        Debug.Log("EquipSlotDefinition.EquipSlotId:" + EquipSlotDefinition.EquipSlotId);
+        Debug.Log("EquipSlotDefinition.EquipSlotId2" + Utils.DescriptionsMetadata.GetEquipSlots(EquipSlotDefinition.EquipSlotId).imageId);
+        Debug.Log("EquipSlotDefinition.EquipSlotId3" + AllImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetEquipSlots(EquipSlotDefinition.EquipSlotId).imageId).Image);
+
+        EquipSlotPortraitImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetEquipSlots(EquipSlotDefinition.EquipSlotId).imageId).Image;
 
     }
 
@@ -77,14 +88,14 @@ public class UIEquipSlotItem : MonoBehaviour
 
     public void OnEnable()
     {
-        SetCurrentCharacter();
-        AccountDataSO.OnCharacterDataChanged += SetCurrentCharacter;
+        // Refresh(); toto dava null nenei jeste setup
+        //  AccountDataSO.OnCharacterDataChanged += SetCurrentCharacter;
         UIInventoryItem.OnClicked += SlotClicked;
     }
 
     public void OnDisable()
     {
-        AccountDataSO.OnCharacterDataChanged -= SetCurrentCharacter;
+        //   AccountDataSO.OnCharacterDataChanged -= SetCurrentCharacter;
         UIInventoryItem.OnClicked -= SlotClicked;
     }
 
@@ -92,7 +103,7 @@ public class UIEquipSlotItem : MonoBehaviour
     {
         AccountDataSO.CharacterData.equipment.Remove(Data);
         Data = null;
-        SetCurrentCharacter();
+        Refresh();
 
     }
 
@@ -101,7 +112,7 @@ public class UIEquipSlotItem : MonoBehaviour
         if (!AccountDataSO.CharacterData.equipment.Contains(_equip))
         {
             AccountDataSO.CharacterData.equipment.Add(_equip);
-            SetCurrentCharacter();
+            Refresh();
         }
 
     }

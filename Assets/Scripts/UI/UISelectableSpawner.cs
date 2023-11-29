@@ -11,7 +11,7 @@ public class UISelectableSpawner : MonoBehaviour
     //pokud to chapu spravne vzajemne se vylucujou? jedno je vyber vice itemu druhy je "toggle" select jednoho
     public bool UseItemSelectFeature = false;
     public bool MultiSelect = true;
-
+    public bool CanDeselectSelectedItem = true;//jestli lze opakovanym klikem na selected item ho deselectnout
     public List<UISelectableEntry> SelectedItems = new List<UISelectableEntry>();
 
     public List<string> GetSelectedItemsUids()
@@ -58,11 +58,17 @@ public class UISelectableSpawner : MonoBehaviour
             return null;
     }
 
+    public void AddAsSelected(UISelectableEntry _entry)
+    {
+        OnUISelectableItemClicked(_entry);
+    }
+
     //TODO: Tohle se nesmi zapomenout volat kdyz volam kliknuti na itemy.....jinak to cele nefunguje
     protected void OnUISelectableItemClicked(UISelectableEntry _item)
     {
         if (UseItemSelectFeature)
         {
+
             bool itemSelected = _item.IsSelected;
 
             if (!MultiSelect)
@@ -81,7 +87,8 @@ public class UISelectableSpawner : MonoBehaviour
             }
 
             //hack - to unselect if we clicked on already selected item
-            if (!MultiSelect && itemSelected)
+            
+            if (CanDeselectSelectedItem && !MultiSelect && itemSelected)
             {
                 _item.ToggleSelected();
                 SelectedItems.Remove(_item);

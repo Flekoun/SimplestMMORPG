@@ -18,41 +18,56 @@ public class ListenOnInbox : MonoBehaviour
 
     public AccountDataSO AccountDataSO;
     private ListenerRegistration listenerRegistration;
-
+    private ListenerRegistration listenerRegistrationPlayerInbox;
 
     public void Awake()
     {
-        AccountDataSO.OnCharacterLoadedFirstTime += StartListening;
+        AccountDataSO.OnCharacterLoadedFirstTime += StartListeningOnCharacterInbox;
+        AccountDataSO.OnPlayerDataLoadedFirstTime += StartListeningOnPlayerInbox;
     }
 
-    public void StartListening()
+    public void StartListeningOnCharacterInbox()
     {
 
         FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
-        ListenerRegistration listenerRegistration = db.Collection("inbox").WhereEqualTo("characterRecipientUid", AccountDataSO.CharacterData.uid).Listen(snapshot =>
+        listenerRegistration = db.Collection("inbox").WhereEqualTo("recipientUid", AccountDataSO.CharacterData.uid).Listen(snapshot =>
 
-     {
-         AccountDataSO.SetInboxData(snapshot);
-         Debug.Log("New data on INBOX recieved");// + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
-         OnListenerStarted.Invoke();
+    {
+        AccountDataSO.SetCharacterInboxData(snapshot);
+        Debug.Log("New data on INBOX recieved");// + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
 
-     });
-        Debug.Log("Starting to listen on Inbox Results...");
+    });
+
+
+    }
+
+    public void StartListeningOnPlayerInbox()
+    {
+
+        FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
+
+        listenerRegistrationPlayerInbox = db.Collection("inboxPlayer").WhereEqualTo("recipientUid", AccountDataSO.PlayerData.uid).Listen(snapshot =>
+
+        {
+            AccountDataSO.SetPlayerInboxData(snapshot);
+            Debug.Log("New data on plyer INBOX recieved");// + JsonConvert.SerializeObject(AccountDataSO.VendorsData, Formatting.Indented));
+
+        });
 
     }
 
     public void StopListening()
     {
-        listenerRegistration.Stop();
+        listenerRegistration?.Stop();
+        listenerRegistrationPlayerInbox?.Stop();
     }
 
     public void OnDestroy()
     {
-        if (listenerRegistration != null)
-            listenerRegistration.Stop();
+        listenerRegistration?.Stop();
+        listenerRegistrationPlayerInbox?.Stop();
 
     }
-    public UnityEvent OnListenerStarted;
 
 
 }

@@ -20,7 +20,7 @@ namespace simplestmmorpg.data
 
         [field: SerializeField]
         [FirestoreProperty]
-        public List<SimpleTally >professionNeeded { get; set; }
+        public List<SimpleTally> professionNeeded { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]

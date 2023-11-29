@@ -1,14 +1,16 @@
 
 // [START import]
-import * as functions from "firebase-functions";
+
 import { _namespaceWithOptions } from "firebase-functions/v1/firestore";
-import { characterDocumentConverter, CharacterDocument, CHARACTER_CLASS } from ".";
-import { CombatEnemy, CombatLog, CombatMember, DropTable, DropTableItem, EncounterDocument, } from "./encounter";
+import { CHARACTER_CLASS, randomIntFromInterval } from ".";
+import { CombatEnemy, CombatEntity, CombatMember, EncounterDocument, MONSTER_SKILL_TYPES, } from "./encounter";
 
 
-import { Combatskill, SKILL } from "./skills";
+
+import { BUFF_GROUP, Combatskill, SKILL, SKILL_GROUP } from "./skills";
+import { BLESS } from "./specials";
 //import { UserDimensions } from "firebase-functions/v1/analytics";
-const admin = require('firebase-admin');
+//const admin = require('firebase-admin');
 
 //const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore');
 //const { FieldValue } = require('firebase-admin/firestore');
@@ -27,247 +29,576 @@ export const firestoreAutoId = (): string => {
   return autoId
 }
 
-export function RollForRandomItem(_listOfStuff: IHasChanceToSpawn[], rollJustOnce: boolean): IHasChanceToSpawn | null {
-  let choosenIndex: number = -1;
 
-  const LOOP_LOCK_PREVENTION_MAX_ROLLS = 100;
-  let loopCount = 0;
-
-  do {
-    if (loopCount < LOOP_LOCK_PREVENTION_MAX_ROLLS) {
-      loopCount++
-    }
-    else {
-      console.log("LOOP PREVENTION TRIGGERED! : " + _listOfStuff.length);
-      break;
-    }
-    choosenIndex = randomIntFromInterval(0, _listOfStuff.length - 1);
-
-    if (Math.random() > _listOfStuff[choosenIndex].chanceToSpawn) { //roll failed
-      choosenIndex = -1
-    }
-
-  } while (choosenIndex == -1 && !rollJustOnce);
-
-  if (choosenIndex == -1)
-    return null;
-  else
-    return _listOfStuff[choosenIndex];
-}
-
-export function randomIntFromInterval(min, max) { // min and max included 
-  return Math.floor(Math.random() * (max - min + 1) + min)
-}
-
-export function applySkillEffect(_caster: CombatMember, _encounter: EncounterDocument, _skillUsed: Combatskill, _targetUid, _combatLog: CombatLog) {
+export function applySkillEffect(_caster: CombatMember, _encounter: EncounterDocument, _skillUsed: Combatskill, _targetUid: string) {
 
 
+  //pokud combatFlow ma nejaky zaznam uz se bojovalo, takze nekdo odesel po startu boje, takze ok, at se bojuje dal
+  if (_encounter.combatantList.length < _encounter.maxCombatants && _encounter.combatFlow.length == 0)
+    throw "Not enough players in combat! Need " + (_encounter.maxCombatants - _encounter.combatantList.length) + " more!";
+
+  let ignoreManaPrice: boolean = false;
   if (_caster.characterClass != _skillUsed.characterClass && _skillUsed.characterClass != CHARACTER_CLASS.ANY)
     throw ("This skill is not castable by your hero class!");
 
+  // if (_targetUid == "" && !_skillUsed.validTarget_Self)
+  //   throw ("Choose target first!");
+
   //TODO: TADY BYCH MOHL PREDAVAT combatEntity a ne tu carovat s enemyTarget a combatMember
   //Zkusim najit Target mezi Enemy
-  let enemyTarget: CombatEnemy | null = null;
+  let targetFound = false;
+  let target: CombatEntity | null = null;
   for (let index = 0; index < _encounter.enemies.length; index++) {
 
-    if (_encounter.enemies[index].stats.health > 0 && _encounter.enemies[index].uid == _targetUid)
-      enemyTarget = _encounter.enemies[index];
-
+    if (_encounter.enemies[index].stats.health > 0 && _encounter.enemies[index].uid == _targetUid) {
+      target = _encounter.enemies[index];
+      targetFound = true;
+    }
     //Kdyz uz iteruju vsechny enemy.....Zvysim threat vsem enemy o malinkato, hlavne proto aby na me vsichni targetnuli kdyz zacne boj at maji enemy nejaky target
     _encounter.enemies[index].addThreatForCombatant(_caster.characterUid, 1);
   }
 
   //Zkusim najit Target mezi Allies
-  let combatantTarget: CombatMember | null = null;
-  if (enemyTarget == null) {
+  //let combatantTarget: CombatMember | null = null;
+  if (!targetFound) {
 
     for (let index = 0; index < _encounter.combatants.length; index++) {
 
       if (_encounter.combatants[index].uid == _targetUid)
-        combatantTarget = _encounter.combatants[index];
+        target = _encounter.combatants[index];
     }
   }
-
-  _encounter.addEntryToCombatLog(_caster.displayName + " casted " + _skillUsed.skillId);
-
-
-  if (_skillUsed.skillId == SKILL.PUNCH) {
-
-    if (enemyTarget == null)
-      throw "Wrong target! You must target enemy !";
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    _caster.stats.mana -= _skillUsed.manaCost;
-    _encounter.dealDamageToCombatEntity(_caster, enemyTarget, _skillUsed.amounts[0], _skillUsed.skillId);
+  if (_skillUsed.validTarget_Self && target == _caster) {
+    //everything ok
   }
-  else if (_skillUsed.skillId == SKILL.SLAM) {
+  else {
+    if (target == null && !_skillUsed.validTarget_Self) {
+      throw ("Select your target first!");
 
-    if (enemyTarget == null)
-      throw "Wrong target! You must target enemy !";
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    _encounter.giveHealthToAlly(_caster, _caster, _skillUsed.amounts[1], _skillUsed.skillId);
-    _caster.stats.mana -= _skillUsed.manaCost;
-    _encounter.dealDamageToCombatEntity(_caster, enemyTarget, _skillUsed.amounts[0], _skillUsed.skillId);
-  }
-  else if (_skillUsed.skillId == SKILL.FIRST_AID) {
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    _encounter.giveHealthToAlly(_caster, _caster, _skillUsed.amounts[0], _skillUsed.skillId);
-    _caster.stats.mana -= _skillUsed.manaCost;
-  }
-
-  else if (_skillUsed.skillId == SKILL.EXECUTE) {
-
-    if (enemyTarget == null)
-      throw "Wrong target! You must target enemy !";
-
-    if (enemyTarget.stats.health / enemyTarget.stats.healthMax <= 0.2)
-      _encounter.dealDamageToCombatEntity(_caster, enemyTarget, _skillUsed.amounts[0] * 2, _skillUsed.skillId);
-
+    }
     else {
-      if (_caster.stats.mana < _skillUsed.manaCost)
-        throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-      _encounter.dealDamageToCombatEntity(_caster, enemyTarget, _skillUsed.amounts[0], _skillUsed.skillId);
-      _caster.stats.mana -= _skillUsed.manaCost;
-    }
 
-  }
-  else if (_skillUsed.skillId == SKILL.CLEAVE) {
-    //   if (enemyTarget == null)
-    //   throw "Wrong target! You must target enemy !";
+      if (target instanceof CombatEnemy && !_skillUsed.validTarget_AnyEnemy)//&& !_skillUsed.validTarget_Self)
+        throw "Wrong target! Cant target enemy!";
+      else if (target instanceof CombatMember) {
+        if (!_skillUsed.validTarget_AnyAlly)//&& !_skillUsed.validTarget_Self)
+          throw "Wrong target! Cant target ally!";
 
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    //enemyTarget.stats.health -= _skillUsed.amounts[0];
-    for (let index = 0; index < _encounter.enemies.length; index++) {
-      if (_encounter.enemies[index].stats.health > 0)
-        if (_encounter.enemies[index].targetUid == _caster.uid)
-          _encounter.dealDamageToCombatEntity(_caster, _encounter.enemies[index], _skillUsed.amounts[0], _skillUsed.skillId);
-    }
-    _caster.stats.mana -= _skillUsed.manaCost;
-  }
-  else if (_skillUsed.skillId == SKILL.SHIELD_WALL) {
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    if (_skillUsed.buff == undefined)
-      throw ("How is it possible that you are casting skill which should have Buff defined but has none?! " + _skillUsed.skillId);
-
-    _caster.addBuff(_skillUsed.buff);
-
-    _caster.stats.mana -= _skillUsed.manaCost;
-  }
-  else if (_skillUsed.skillId == SKILL.CURSE_OF_WEAKNESS) {
-    if (enemyTarget == null)
-      throw "Wrong target! You must target enemy !";
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    if (_skillUsed.buff == undefined)
-      throw ("How is it possible that you are casting skill which should have Buff defined but has none?! " + _skillUsed.skillId);
-
-    enemyTarget.addBuff(_skillUsed.buff);
-
-    _caster.stats.mana -= _skillUsed.manaCost;
-  }
-  else if (_skillUsed.skillId == SKILL.SHADOWBOLT) {
-    if (enemyTarget == null)
-      throw "Wrong target! You must target enemy !";
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    if (_skillUsed.buff == undefined)
-      throw ("How is it possible that you are casting skill which should have Buff defined but has none?! " + _skillUsed.skillId);
-
-    _encounter.dealDamageToCombatEntity(_caster, enemyTarget, _skillUsed.amounts[0], _skillUsed.skillId);
-
-    if (Math.random() <= _skillUsed.amounts[1])
-      enemyTarget.addBuff(_skillUsed.buff);
-
-    _caster.stats.mana -= _skillUsed.manaCost;
-  }
-  else if (_skillUsed.skillId == SKILL.REJUVENATION) {
-    if (combatantTarget == null)
-      throw "Wrong target! You must target ally!";
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    if (_skillUsed.buff == undefined)
-      throw ("How is it possible that you are casting skill which should have Buff defined but has none?! " + _skillUsed.skillId);
-
-    combatantTarget.addBuff(_skillUsed.buff);
-
-    _caster.stats.mana -= _skillUsed.manaCost;
-  }
-  else if (_skillUsed.skillId == SKILL.LIFE_TAP) {
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    _encounter.dealDamageToCombatEntity(_caster, _caster, _skillUsed.amounts[0], _skillUsed.skillId);
-    _caster.stats.mana -= _skillUsed.manaCost;
-    _caster.giveMana(_skillUsed.amounts[1]);
-
-  }
-  else if (_skillUsed.skillId == SKILL.HEALING_WAVE) {
-    if (combatantTarget == null)
-      throw "Wrong target! You must target ally!";
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    _caster.stats.mana -= _skillUsed.manaCost;
-    _encounter.giveHealthToAlly(_caster, combatantTarget, _skillUsed.amounts[0], _skillUsed.skillId);
-
-  }
-  else if (_skillUsed.skillId == SKILL.CHAIN_LIGHTNING) {
-
-    if (enemyTarget == null)
-      throw "Wrong target! You must target enemy !";
-
-    if (_caster.stats.mana < _skillUsed.manaCost)
-      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
-
-    _caster.stats.mana -= _skillUsed.manaCost;
-    //blesk preskoci na dalsi 2 enemy co nejsou stejni jako ten kdo dostal dmg a dmg se snizi o 25%
-    let damage = _skillUsed.amounts[0];
-    let damageDiminish = _skillUsed.amounts[0] * _skillUsed.amounts[1];
-
-    //dame dmg primary targetu 100%
-    _encounter.dealDamageToCombatEntity(_caster, enemyTarget, damage, _skillUsed.skillId);
-
-    //75% dalsimu targetu
-    damage -= damageDiminish;
-    let nextEnemy = _encounter.getRandomEnemy(enemyTarget.uid);
-    if (nextEnemy != null) {
-      _encounter.dealDamageToCombatEntity(_caster, nextEnemy, damage, _skillUsed.skillId);
-
-      //50% dalsimu targetu
-      damage -= damageDiminish;
-      nextEnemy = _encounter.getRandomEnemy(nextEnemy.uid);
-      if (nextEnemy != null)
-        _encounter.dealDamageToCombatEntity(_caster, nextEnemy, damage, _skillUsed.skillId);
+      }
     }
   }
+  _encounter.addEntryToCombatLog(_caster.displayName + " casted {" + _skillUsed.skillGroupId + "}");
+  let manaCostIncrease = 0;
 
+
+  _caster.buffs.forEach(buff => {
+    buff.applyBeforeAnySkillCastedByOwner(_caster, _encounter);
+  });
+
+
+  switch (_skillUsed.skillId) {
+
+    case SKILL.PUNCH_1:
+      {
+        console.log("_skillUsed.skillGroupId _X :" + _skillUsed.skillGroupId);
+        _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        manaCostIncrease = 1;
+        break;
+
+      }
+
+    case SKILL.SLAM_1:
+      {
+        if (target!.hasBuff(BUFF_GROUP.BLEED_BUFF))
+          _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0] + _skillUsed.amounts[1], _skillUsed.skillGroupId, _encounter);
+        else
+          _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+
+        break;
+      }
+    // case SKILL.SLAM_2:
+    //   {
+
+    //     if (target!.hasBuff(BUFF_GROUP.BLEED_BUFF)) {
+    //       _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0] + _skillUsed.amounts[1], _skillUsed.skillGroupId, _encounter);
+    //       drawSkill(_caster, _skillUsed.amounts[2]);
+
+    //     }
+    //     else
+    //       _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+
+    //     break;
+    //   }
+    // case SKILL.SLAM_3:
+    // case SKILL.SLAM_4:
+    // case SKILL.SLAM_5:
+    //   {
+
+    //     if (target?.stats.healthMax == target?.stats.health)
+    //       _caster.blockAmount += _skillUsed.amounts[3];
+
+    //     if (target!.hasBuff(BUFF_GROUP.BLEED_BUFF)) {
+    //       _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0] + _skillUsed.amounts[1], _skillUsed.skillGroupId, _encounter);
+    //       drawSkill(_caster, _skillUsed.amounts[2]);
+    //     }
+    //     else
+    //       _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+
+    //     break;
+    //   }
+    case SKILL.BLOCK_1:
+      {
+        _caster.addBlock(_skillUsed.amounts[0], _encounter);
+
+        _skillUsed.originalStats.amountsSkill[0] -= _skillUsed.amounts[1];
+        break;
+      }
+    case SKILL.MYSTIC_SHIELD_1:
+      {
+        _caster.addBlock(_skillUsed.amounts[0], _encounter);
+
+        _caster.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.BARRIER_STRIKE_1:
+      {
+        _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        _caster.addBlock(_skillUsed.amounts[1], _encounter);
+
+        break;
+      }
+    case SKILL.BUCKLER_1:
+      {
+        _caster.addBlock(_skillUsed.amounts[0], _encounter);
+
+        break;
+      }
+    case SKILL.SHIELD_BASH_1:
+      {
+        _encounter.dealDamageToCombatEntity(_caster, target!, _caster.blockAmount, _skillUsed.skillGroupId, _encounter);
+
+        break;
+      }
+
+    case SKILL.COUNTERSTRIKE_1:
+      {
+        _caster.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.CRUSADER_1:
+      {
+        _caster.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.DEFENSIVE_STANCE_1:
+      {
+        _caster.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.HONEY_BADGER_1:
+      {
+        _caster.stats.resistanceTotal *= (1 + _skillUsed.amounts[0]);
+        break;
+      }
+    case SKILL.REND_1:
+
+      {
+        _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        target!.addBuff(_skillUsed.buff!, _caster);
+
+        break;
+      }
+    case SKILL.CLEAVE_1:
+
+      {
+
+        for (let index = 0; index < _encounter.enemies.length; index++) {
+          if (_encounter.enemies[index].stats.health > 0)
+            if (_encounter.enemies[index].targetUid == _caster.uid)
+              _encounter.dealDamageToCombatEntity(_caster, _encounter.enemies[index], _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        }
+        break;
+      }
+
+    case SKILL.TAUNT_1:
+      {
+        _caster.addBlock(_skillUsed.amounts[0], _encounter);
+        _encounter.forceEnemyToChangeTarget(_caster, target! as CombatEnemy, _caster, _skillUsed.amounts[1]);
+        break;
+
+      }
+
+    case SKILL.FIRST_AID_1:
+      {
+        _encounter.giveHealthToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId);
+        let drawnSkills = drawSkill(target! as CombatMember, _skillUsed.amounts[1]);
+        drawnSkills.forEach(element => {
+          element.manaCost = 0;
+        });
+        break;
+
+      }
+
+    case SKILL.SHIELD_WALL_1:
+      {
+        _caster.addBuff(_skillUsed.buff!, _caster);
+
+        _caster.blockAmount = _caster.blockAmount + Math.round(_caster.blockAmount * _skillUsed.amounts[0]);
+        break;
+      }
+
+
+    case SKILL.MORTAL_STRIKE_1:
+
+      {
+        _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        target!.addBuff(_skillUsed.buff!, _caster);
+
+        break;
+      }
+
+
+    case SKILL.EXECUTE_1:
+      {
+        //muze se stat ze neco zvedne mana cost executu....proto toto
+        let playerManaLeftForBonusDmg = _caster.stats.mana - _skillUsed.manaCost;
+        if (playerManaLeftForBonusDmg < 0) //nemam dost many na to to vubec zakouzlit
+          ignoreManaPrice = false; //at to zahlasi error ze nemam dost many...
+        else {
+          ignoreManaPrice = true;
+          _caster.stats.mana = 0;
+        }
+        if (target!.stats.health / target!.stats.healthMax <= _skillUsed.amounts[1] || target!.hasBuff(BUFF_GROUP.BLEED_BUFF) || _encounter.getNumberOfEnemiesAlive() == 1) {
+          _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0] + (playerManaLeftForBonusDmg * _skillUsed.amounts[2]), _skillUsed.skillGroupId, _encounter);
+          _caster.stats.mana = 0;
+        }
+        else
+          throw "Cannot be casted. Enemy has too much health or dont have Bleed buff and is not alone";
+        break;
+      }
+    //-----WARLOCK-------
+    case SKILL.SHADOWBOLT_1:
+      {
+        _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        if (!target!.hasBuff(_skillUsed.buff?.buffGroupId!)) {
+          if (Math.random() <= _skillUsed.amounts[1])
+            target!.addBuff(_skillUsed.buff!, _caster);
+
+        }
+        break;
+      }
+    case SKILL.SHADOWBOLT_2:
+      {
+        _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        if (!target!.hasBuff(_skillUsed.buff?.buffGroupId!)) {
+          if (Math.random() <= _skillUsed.amounts[1]) {
+            target!.addBuff(_skillUsed.buff!, _caster);
+
+            let skillsWithManaCost = _caster.skillsInHand.filter(skill => skill.manaCost > 0)
+
+            if (skillsWithManaCost.length > 0) {
+              let choosenSkill = skillsWithManaCost[randomIntFromInterval(0, skillsWithManaCost.length - 1)];
+              choosenSkill.manaCost -= _skillUsed.amounts[2];
+              if (choosenSkill.manaCost < 0)
+                choosenSkill.manaCost = 0;
+            }
+          }
+        }
+        break;
+      }
+    case SKILL.SHADOWBOLT_3:
+      {
+        _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        if (!target!.hasBuff(_skillUsed.buff?.buffGroupId!)) {
+          let chanceToUse = _skillUsed.amounts[1];
+
+          if (target! instanceof CombatEnemy) {
+            if ((target! as CombatEnemy).targetUid != _caster.uid)
+              chanceToUse += _skillUsed.amounts[3];
+          }
+
+          if (Math.random() <= chanceToUse) {
+            target!.addBuff(_skillUsed.buff!, _caster);
+
+            let skillsWithManaCost = _caster.skillsInHand.filter(skill => skill.manaCost > 0)
+
+            if (skillsWithManaCost.length > 0) {
+              let choosenSkill = skillsWithManaCost[randomIntFromInterval(0, skillsWithManaCost.length - 1)];
+              choosenSkill.manaCost -= _skillUsed.amounts[2];
+              if (choosenSkill.manaCost < 0)
+                choosenSkill.manaCost = 0;
+            }
+          }
+        }
+        break;
+      }
+    case SKILL.CURSE_OF_WEAKNESS_2:
+      {
+        target!.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.CURSE_OF_WEAKNESS_3:
+      {
+        target!.addBuff(_skillUsed.buff!, _caster);
+        if (target! instanceof CombatEnemy) {
+          console.log("ano jdu te neutralizovat: " + target.nextSkill.typeId);
+          if (target.nextSkill.typeId == MONSTER_SKILL_TYPES.SKILL_TYPE_ATTACK_NORMAL) {
+            console.log("ano jdu te neutralizovat 2");
+            console.log(" target.nextSkill.amounts[0]:" + target.nextSkill.amounts[0]);
+            target.nextSkill.amounts[0] = 0;
+            console.log(" target.nextSkill.amounts[0]:" + target.nextSkill.amounts[0]);
+          }
+        }
+        break;
+      }
+    // case SKILL.LIFE_TAP_1:
+    //   {
+
+    //     let amountToTake = _caster.stats.health * _skillUsed.amounts[0];
+    //     _encounter.dealDamageToCombatEntity(_caster, _caster, amountToTake, _skillUsed.skillGroupId, _encounter, true);
+    //     _caster.giveMana(_skillUsed.amounts[1]);
+    //     break;
+    //   }
+    // case SKILL.LIFE_TAP_2:
+    //   {
+
+    //     let amountToTake = _caster.stats.health * _skillUsed.amounts[0];
+    //     _encounter.dealDamageToCombatEntity(_caster, _caster, amountToTake, _skillUsed.skillGroupId, _encounter, true);
+    //     _caster.giveMana(_skillUsed.amounts[1]);
+    //     break;
+    //   }
+    case SKILL.LIFE_TAP_1:
+    case SKILL.LIFE_TAP_2:
+    case SKILL.LIFE_TAP_3:
+      {
+
+        let amountToTake = _caster.stats.health * _skillUsed.amounts[0];
+        _encounter.dealDamageToCombatEntity(_caster, _caster, amountToTake, _skillUsed.skillGroupId, _encounter, true);
+        _caster.giveMana(_skillUsed.amounts[1]);
+        drawSkill(_caster, _skillUsed.amounts[2]);
+        break;
+      }
+    case SKILL.SIPHON_LIFE_2:
+      {
+        target!.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.SIPHON_LIFE_3:
+      {
+        target!.addBuff(_skillUsed.buff!, _caster);
+
+        let result = _encounter.getAdjecentEnemiesOfEnemy(target!.uid);
+
+        if (result[0] != null) {
+          result[0].addBuff(_skillUsed.buff!, _caster);
+        }
+        if (result[1] != null) {
+          result[1].addBuff(_skillUsed.buff!, _caster);
+        }
+
+        break;
+      }
+    case SKILL.CORRUPTION_1:
+    case SKILL.CORRUPTION_2:
+    case SKILL.CORRUPTION_3:
+      {
+        target!.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+
+    //SHAMAN
+    case SKILL.REJUVENATION_1:
+      {
+        target!.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.REJUVENATION_2:
+      {
+        target!.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.REJUVENATION_3:
+      {
+        if (target!.hasBuff(BUFF_GROUP.REJUVENATION_BUFF))
+          _encounter.giveHealthToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId);
+
+        target!.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+
+    case SKILL.CHAIN_LIGHTNING_2:
+    case SKILL.CHAIN_LIGHTNING_3:
+      {
+
+        let enemiesHitByLightingUid: string[] = [];
+        let damage = _skillUsed.amounts[0];
+        // let damageDiminish = damage * _skillUsed.amounts[1];
+
+        //dame dmg primary targetu 100%
+        _encounter.dealDamageToCombatEntity(_caster, target!, damage, _skillUsed.skillGroupId, _encounter);
+
+        let enemyThatGotHitByLastJump: CombatEnemy | null = target! as CombatEnemy;
+
+        for (let i = 0; i < _skillUsed.amounts[2]; i++) {
+
+          enemiesHitByLightingUid.push(enemyThatGotHitByLastJump!.uid);
+          //dalsi target snizime dmg a vyberem jiny nez ten co ted dostal blesk
+
+          // damage -= damageDiminish;
+          damage *= (1 - _skillUsed.amounts[1]);
+
+          if (damage <= 0)
+            break;
+
+          enemyThatGotHitByLastJump = _encounter.getRandomEnemyExcludeEnemies(enemiesHitByLightingUid, true);
+          if (enemyThatGotHitByLastJump != null) {
+            _encounter.dealDamageToCombatEntity(_caster, enemyThatGotHitByLastJump, damage, _skillUsed.skillGroupId, _encounter);
+          }
+          else {
+            break;
+          }
+
+        }
+        break;
+      }
+    case SKILL.HEALING_WAVE_1:
+    case SKILL.HEALING_WAVE_2:
+    case SKILL.HEALING_WAVE_3:
+      {
+
+        _encounter.giveHealthToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId);
+
+        break;
+      }
+    case SKILL.LIGHTNING_1:
+      {
+
+        let result = _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+
+        if (result.hasDamageKilledIt) {
+          _caster.skillsInHand.forEach(skill => {
+            if (skill.skillGroupId == SKILL_GROUP.LIGHTNING)
+              skill.manaCost = 0;
+          });
+        }
+        break;
+        break;
+      }
+    case SKILL.LIGHTNING_2:
+      {
+
+        let result = _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+
+        if (result.hasDamageKilledIt || result.wasCriticalHit) {
+          _caster.skillsInHand.forEach(skill => {
+            if (skill.skillGroupId == SKILL_GROUP.LIGHTNING)
+              skill.manaCost = 0;
+          });
+        }
+        break;
+      }
+    case SKILL.LIGHTNING_3:
+      {
+
+        let result = _encounter.dealDamageToCombatEntity(_caster, target!, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+
+        if (result.hasDamageKilledIt || result.wasCriticalHit) {
+          _caster.skillsInHand.forEach(skill => {
+            if (skill.skillGroupId == SKILL_GROUP.LIGHTNING || skill.skillGroupId == SKILL_GROUP.CHAIN_LIGHTNING)
+              skill.manaCost = 0;
+          });
+        }
+        break;
+      }
+    case SKILL.LIGHTNING_SHIELD_2:
+    case SKILL.LIGHTNING_SHIELD_3:
+      {
+        target!.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.BLOOD_LUST_1:
+      {
+        _caster!.addBuff(_skillUsed.buff!, _caster);
+        break;
+      }
+    case SKILL.BLOOD_LUST_2:
+      {
+        if (_caster != target!)
+          target!.addBuff(_skillUsed.buff!, _caster);
+
+        _caster!.addBuff(_skillUsed.buff!, _caster);
+
+        drawSkill(target! as CombatMember, _skillUsed.amounts[0]);
+        drawSkill(_caster! as CombatMember, _skillUsed.amounts[0]);
+
+        break;
+      }
+    case SKILL.BLOOD_LUST_3:
+      {
+        _encounter.combatants.forEach(combatant => {
+          combatant!.addBuff(_skillUsed.buff!, _caster);
+          drawSkill(combatant, _skillUsed.amounts[0]);
+        });
+
+
+        break;
+      }
+
+    //-----CURSES-------
+    case SKILL.CURSE_BROKEN_LEG:
+      {
+        _encounter.dealDamageToCombatEntity(_caster, _caster, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
+        break;
+      }
+    case SKILL.CURSE_MANA_COST_INCREASE:
+      {
+        // _encounter.dealDamageToCombatEntity(_caster, _caster, _skillUsed.amounts[0], _skillUsed.skillId);
+        break;
+      }
+    default:
+      // throw "Cannot find any skill with Id - " + _skillUsed.skillId;
+      break;
+  }
+
+
+  if (_skillUsed.singleUse) {
+    if (!_caster.hasBless(BLESS.LASTING_HAND))
+      moveSkillToExhaustDeck(_caster, _skillUsed.uid);
+    else {
+      moveSkillToDiscardDeck(_caster, _skillUsed.uid);
+      _skillUsed.originalStats.manaCost++;
+      // if (Math.random() < 0.25) {
+      //   moveSkillToExhaustDeck(_caster, _skillUsed.uid);
+      // }
+      // else
+      //   moveSkillToDiscardDeck(_caster, _skillUsed.uid);
+    }
+  }
   else
-    throw "Cannot find any skill with Id - " + _skillUsed.skillId;
+    moveSkillToDiscardDeck(_caster, _skillUsed.uid);
+
+  if (!ignoreManaPrice) {
+    if (_caster.stats.mana < _skillUsed.manaCost)
+      throw "Not enough Mana ! Mana cost - " + _skillUsed.manaCost + " you have - " + _caster.stats.mana;
+
+    _caster.stats.mana -= _skillUsed.manaCost;
+
+
+  }
+
+  _skillUsed.originalStats.manaCost += manaCostIncrease;
+
+
 
   return true;
 }
 
-export function shuffle(array) {
+export function shuffleArray(array) {
+  // Used like so
+  //var arr = [2, 11, 37, 42];
+  //shuffle(arr);
+  //console.log(arr);
+
   let currentIndex = array.length, randomIndex;
 
   // While there remain elements to shuffle.
@@ -283,33 +614,51 @@ export function shuffle(array) {
   }
 
   return array;
+
 }
 
-export function drawNewSkills(_skillsInHand: Combatskill[], _skillsDrawDeck: Combatskill[], _skillsDiscardDeck: Combatskill[]) {
+//vraci jestli doslo k shuffle
+export function drawNewSkills(_skillsInHand: Combatskill[], _skillsDrawDeck: Combatskill[], _skillsDiscardDeck: Combatskill[], _drawCount: number): boolean {
 
-
-  const HAND_SIZE = 6;
-  let numberOfSkillsToBeDrawn = HAND_SIZE;
+  //const HAND_SIZE = 5;
+  let shufflePerformed = false;
+  let numberOfSkillsToBeDrawn = _drawCount;
   let newHand: Combatskill[] = [];
+
+  //tirgguju efekty pri discardu karet v ruce
+  _skillsInHand.forEach(skill => {
+    switch (skill.skillId) {
+      case SKILL.REJUVENATION_2:
+      case SKILL.REJUVENATION_3:
+        {
+          if (skill.originalStats.manaCost > 0)
+            skill.originalStats.manaCost--;
+          break;
+        }
+      default:
+        break;
+    }
+  });
 
   //move skills from hand to discard deck
   Object.assign(_skillsDiscardDeck, _skillsDiscardDeck.concat(_skillsInHand));
 
-  //if draw deck has less than 6 skills 
-  if (_skillsDrawDeck.length < HAND_SIZE) {
+  //if draw deck has less than CARD_DRAW_COUNT skills 
+  if (_skillsDrawDeck.length < _drawCount) {
     // put remaining skills from draw deck into your hand
-    newHand = _skillsDrawDeck.slice();
+    //newHand = _skillsDrawDeck.slice();
     numberOfSkillsToBeDrawn -= _skillsDrawDeck.length;
+    newHand = _skillsDrawDeck.splice(0);
+    shufflePerformed = true;
   }
 
   //pokud je draw deck prazdny
   if (_skillsDrawDeck.length == 0) {
-
     //move discard deck back to drawdeck
     Object.assign(_skillsDrawDeck, _skillsDiscardDeck);
 
     //shuffle draw deck
-    shuffle(_skillsDrawDeck);
+    shuffleArray(_skillsDrawDeck);
 
     //set all skills as not already played
     _skillsDrawDeck.forEach(element => { element.alreadyUsed = false; });
@@ -317,218 +666,135 @@ export function drawNewSkills(_skillsInHand: Combatskill[], _skillsDrawDeck: Com
     //clear discard deck
     _skillsDiscardDeck.splice(0);
   }
+
   //draw cards from drawdeck
   newHand = newHand.concat(_skillsDrawDeck.slice(0, numberOfSkillsToBeDrawn));
-
   for (let index = 0; index < newHand.length; index++) {
-    newHand[index].handSlotIndex = index;
-
+    //  newHand[index].handSlotIndex = index;
+    newHand[index].uid = firestoreAutoId();
   }
+
   //remove drawn cards from draw deck
-  _skillsDrawDeck = _skillsDrawDeck.splice(0, numberOfSkillsToBeDrawn);
+  _skillsDrawDeck.splice(0, numberOfSkillsToBeDrawn);
   //save new hand
+  _skillsInHand.splice(0, _skillsInHand.length - 1) //kdyz prvni nesmazu tak kdyz assignuju pole s mensim poctem elementu nez co je toto pole, tak se pocet elementu nezmensi!? takze treba 6 se assigne a 7. zustane...
   Object.assign(_skillsInHand, newHand);
 
-}
+  //obnovim jakekoliv modifikace  skillu na originalni
+  _skillsInHand.forEach(skill => {
+    Object.assign(skill.amounts, skill.originalStats.amountsSkill);
+    if (skill.buff != undefined)
+      Object.assign(skill.buff.amounts, skill.originalStats.amountsBuff);
 
+    skill.manaCost = skill.originalStats.manaCost;
 
-
-export interface IHasChanceToSpawn {
-  chanceToSpawn: number
-}
-
-//[Enemies Meta]
-// export class EnemiesMeta {
-//   constructor(
-//     public enemies: EnemyMeta[]
-//   ) { }
-// }
-
-export class EnemyMeta implements IHasChanceToSpawn {
-  constructor(
-    public enemyId: string,
-   // public displayName: string,
-    public chanceToSpawn: number,
-    public health: number,
-    public damageMin: number,
-    public damageMax: number,
-    public level: number,
-    public mLevel: number,
-    // public dropCountMin: number,
-    // public dropCountMax: number,
-    public isRare: boolean,
-    public dropTable: DropTable[]
-  ) { }//super(chanceToSpawn)}
-}
-
-//[Enemies Meta]
-
-//!!! JEN PRO UKAZKU ....ZATIM NEPOUZITY
-export class MineralMeta implements IHasChanceToSpawn {
-  constructor(
-    public id: string,
-    public displayName: string,
-    public chanceToSpawn: number,
-    public dropCountMin: number,
-    public dropCountMax: number,
-    public dropTable: DropTableItem[],
-    public level: number
-  ) { }//super(chanceToSpawn)}
-
-
-}
-
-
-
-// [Encounter Mining]
-export class EncounterMiningDocument {
-  constructor(
-    public ore: Ore,
-    public participants: ParticipantMining[],
-    public participantsList: string[],
-    public randomIndex: number,
-    public created: number,
-    public foundByCharacterUid: string,
-    public characterSlotsLeft: number,
-    public watchersList: string[],
-    public isFull: boolean
-  ) { }
-}
-
-export class ParticipantMining {  //Z nejakeho duvodu nemuzu se dostat na metody tehle classy, moje podezreni je ze vzhledem k tomu ze je to array a convertuje se to nejak samo a nikde nevolam rucne new Combatant, tak to  neni  prava classa
-  constructor(
-    public characterName: string,
-    public characterUid: string,
-    public miningCount: number
-  ) { }
-}
-
-export class Ore {
-  constructor(
-    public oreId: string,
-    public oreContent: string[]
-  ) { }
-}
-
-
-exports.sellInventoryItems = functions.https.onCall(async (data, context) => {
-
-  const callerCharacterUid = data.characterUid;
-  const inventoryItemsToSellUids: string[] = data.inventoryItemsToSellEquipUids;
-
-  const characterDb = await admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
-
-  try {
-    const result = await admin.firestore().runTransaction(async (t: any) => {
-
-      const characterDoc = await t.get(characterDb);
-      let characterData: CharacterDocument = characterDoc.data();
-
-
-
-      // // console.log("bag index : " + bagIndex);
-      // for (let index = 0; index < bagItemsEquipIndexes.length; index++) {
-      //   // console.log("selling item at index: " + bagItemsEquipIndexes[index]);
-      //   //  console.log("sellprice index : " + characterData.inventory[0].itemsEquip[3].item.sellPrice);
-      //   totalSellPrice += characterData.inventory[bagIndex].itemsEquip[bagItemsEquipIndexes[index]].item.sellPrice;
-      //   characterData.inventory[bagIndex].itemsEquip[bagItemsEquipIndexes[index]].amount = -1; //UGH tak toto pouzivam jen jako flag, abych pak mohl promazat vsechny itemy z array a mezitim neresil ze se meni index po smazani
-      // }
-
-      let totalSellPrice: number = 0;
-
-      for (var i = characterData.inventory.content.length - 1; i >= 0; i--) {
-        if (inventoryItemsToSellUids.includes(characterData.inventory.content[i].getItem().uid)) {
-          totalSellPrice += characterData.inventory.content[i].getItem().sellPrice;
-          characterData.inventory.content.splice(i, 1);
-          characterData.inventory.capacityLeft++;
-        }
-      }
-
-
-
-      // for (var i = characterData.inventory.itemsEquip.length - 1; i >= 0; i--) {
-      //   if (inventoryItemsToSellUids.includes(characterData.inventory.itemsEquip[i].uid)) {
-      //     totalSellPrice += characterData.inventory.itemsEquip[i].sellPrice;
-      //     characterData.inventory.itemsEquip.splice(i, 1);
-      //     characterData.inventory.capacityLeft++;
-      //   }
-      // }
-      // for (var i = characterData.inventory.itemsSimple.length - 1; i >= 0; i--) {
-      //   if (inventoryItemsToSellUids.includes(characterData.inventory.itemsSimple[i].uid)) {
-      //     totalSellPrice += characterData.inventory.itemsSimple[i].sellPrice * characterData.inventory.itemsSimple[i].amount;
-      //     characterData.inventory.itemsSimple.splice(i, 1);
-      //     characterData.inventory.capacityLeft++;
-      //   }
-      // }
-
-      console.log("Total sell price: " + totalSellPrice);
-      characterData.currency.silver += totalSellPrice;
-
-      t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
-
-      return "OK";
-    });
-
-
-    console.log('Transaction success', result);
-    return result;
-  } catch (e) {
-    console.log('Transaction failure:', e);
-    throw new functions.https.HttpsError("aborted", "Error : " + e);
-  }
-
-
-});
-
-exports.createMiningEncounter = functions.https.onCall(async (data, context) => {//1 R , 1 W
-
-  var callerCharacterUid: string = data.characterUid;
-
-  //checknu jestli uz nahodou nemas encounter vytvoreny
-  var alreadyCreatedEncounter = await admin.firestore().collection('encounters_mining').where("foundByCharacterUid", "==", callerCharacterUid).get().then(querry => {
-    // console.log("querry" + querry);
-    if (querry.size > 0) {
-      return true;
-    }
-    return false;
   });
 
-  if (alreadyCreatedEncounter) {
-    console.log("already created mining encounter!");
-    return "already created mining encounter!";
+
+  //aplikuji CONFUSION CURSE
+  let confusionCurses = _skillsInHand.filter(skill => skill.skillId == SKILL.CURSE_MANA_COST_INCREASE);
+
+  //aplikuiju tuto kletbu pokud sem ji drawnul...
+  if (confusionCurses.length > 0) {
+    console.log("ok lizul sis :" + confusionCurses.length + " confusion");
+    let skillsInHandExcludingCursesOrUnplaybleSkills = _skillsInHand.filter(skill => skill.skillGroupId != SKILL_GROUP.CURSE && skill.manaCost != -1);//(skill.validTarget_Self || skill.validTarget_AnyAlly || skill.validTarget_AnyEnemy));
+    if (skillsInHandExcludingCursesOrUnplaybleSkills.length > 0) {
+      for (let index = 0; index < confusionCurses.length; index++) {
+        let skillToCripple = skillsInHandExcludingCursesOrUnplaybleSkills[randomIntFromInterval(0, skillsInHandExcludingCursesOrUnplaybleSkills.length - 1)];
+        skillToCripple.manaCost++;
+        console.log("zvedam manacost za confusion: " + skillToCripple.skillId + " mana :" + skillToCripple.manaCost);
+      }
+
+    }
   }
 
-  var ore: Ore = new Ore("IRON_VEIN", ["IRON", "IRON", "IRON", "GOLD"]);
+
+  return shufflePerformed;
+}
 
 
-  var watchersList: string[] = []; watchersList.push(callerCharacterUid);
-  var timestamp = admin.firestore.Timestamp.now();
-  var characterSlotsLeft: number = 3;
-  var isFull: boolean = characterSlotsLeft <= 0;
+export function moveSkillToDiscardDeck(_combatMember: CombatMember, _skillUid: string) {
 
-  //console.log("timestamp: " + timestamp);
+  for (const iterator of _combatMember.skillsInHand) {
+    if (iterator.uid == _skillUid) {
+      _combatMember.skillsDiscardDeck.push(iterator);
+      _combatMember.skillsInHand.splice(_combatMember.skillsInHand.indexOf(iterator), 1);
+      break;
+    }
+  }
+
+}
+
+export function moveSkillToExhaustDeck(_combatMember: CombatMember, _skillUid: string) {
+
+  for (const iterator of _combatMember.skillsInHand) {
+    if (iterator.uid == _skillUid) {
+      _combatMember.skillsExhaustDeck.push(iterator);
+      _combatMember.skillsInHand.splice(_combatMember.skillsInHand.indexOf(iterator), 1);
+      break;
+    }
+  }
+
+}
+
+//returns drawn skills
+export function drawSkill(_combatMember: CombatMember, _amountToDraw: number): Combatskill[] {
+
+  let numberOfSkillsToBeDrawn = _amountToDraw;
+
+  //pokud je v draw decku min skillu nez kolik chci drawnout
+  if (_combatMember.skillsDrawDeck.length < _amountToDraw) {
+    numberOfSkillsToBeDrawn -= _combatMember.skillsDrawDeck.length;
+    _combatMember.skillsInHand = _combatMember.skillsInHand.concat(_combatMember.skillsDrawDeck.splice(0));
+  }
+
+  //pokud je draw deck prazdny
+  if (_combatMember.skillsDrawDeck.length == 0) {
+    //move discard deck back to drawdeck
+    Object.assign(_combatMember.skillsDrawDeck, _combatMember.skillsDiscardDeck);
+
+    //shuffle draw deck
+    shuffleArray(_combatMember.skillsDrawDeck);
+
+    //set all skills as not already played
+    _combatMember.skillsDrawDeck.forEach(element => { element.alreadyUsed = false; });
+
+    //clear discard deck
+    _combatMember.skillsDiscardDeck.splice(0);
+  }
+
+  //draw cards from drawdeck
+  let drawnSkills = _combatMember.skillsDrawDeck.slice(0, numberOfSkillsToBeDrawn);
+  _combatMember.skillsInHand = _combatMember.skillsInHand.concat(drawnSkills);
+
+  for (let index = 0; index < _combatMember.skillsInHand.length; index++) {
+    _combatMember.skillsInHand[index].uid = firestoreAutoId();
+  }
+
+  //remove drawn cards from draw deck
+  _combatMember.skillsDrawDeck.splice(0, numberOfSkillsToBeDrawn);
+
+  //pokud sem drawnul zrovna tuto kletbu
+  let confusionCurses = drawnSkills.filter(skill => skill.skillId == SKILL.CURSE_MANA_COST_INCREASE)
+  if (confusionCurses.length > 0) {
+    let skillsInHandExcludingCursesOrUnplaybleSkills = _combatMember.skillsInHand.filter(skill => skill.skillGroupId != SKILL_GROUP.CURSE && skill.manaCost != -1);//(skill.validTarget_Self || skill.validTarget_AnyAlly || skill.validTarget_AnyEnemy));
+    if (skillsInHandExcludingCursesOrUnplaybleSkills.length > 0) {
+      for (let index = 0; index < confusionCurses.length; index++) {
+        skillsInHandExcludingCursesOrUnplaybleSkills[randomIntFromInterval(0, skillsInHandExcludingCursesOrUnplaybleSkills.length - 1)].manaCost++;
+
+      }
+
+    }
+  }
+
+  return drawnSkills;
+
+}
 
 
 
-  var encounterDoc: EncounterMiningDocument = new EncounterMiningDocument(ore, [], [], Math.random(), timestamp, callerCharacterUid, characterSlotsLeft, watchersList, isFull);
 
-  await admin.firestore().collection('encounters_mining').add(JSON.parse(JSON.stringify(encounterDoc)));
 
-  return "Encounter mining created!";
 
-  //SHOULD ATTACK HERE AUTOMATICALY? OR JUST ADD ME TO COMBATANTS??
 
-  //.set(encounterDb, JSON.parse(JSON.stringify(encounterData)), { merge: true });
-  //vstupy
-  //-typ encounteru (hidden stash, bandid camp, rare monster , atd.... )
-  //-lokace (badlands---level 1-10, barrens 10-20)
-
-  //zcheckovat jestli nejsem ucastnikem uz mnoha encounteru jinych??
-  //zecheckuj esli ma dost staminy?
-  // Vybrat nahodny encounter podle z daneho typu (pouzit metadata v databazi nebo natvrdo ve funkci?)
-  //vytvorit do "encounters" novy encounter found by player
-  // provede prvni utok hned - FightEncounter() prilepi si Listenery na nej a ostatni se tedy muzoz joinovat jde videt v "getRadomEncounterOfOtherPlayers"
-  // seber staminu?
-});
-
-  // [END allAdd]
+// [END allAdd]

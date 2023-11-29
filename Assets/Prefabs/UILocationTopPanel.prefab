@@ -75,7 +75,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 11.6, y: 0}
-  m_SizeDelta: {x: 282.62, y: 95.39}
+  m_SizeDelta: {x: 282.62, y: 94.95}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &8330035744464106171
 CanvasRenderer:
@@ -371,7 +371,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 282.62, y: 95.39}
+  m_SizeDelta: {x: 282.62, y: 94.95}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &8330035746067486559
 CanvasRenderer:
@@ -426,7 +426,7 @@ MonoBehaviour:
   Text: {fileID: 8330035744464106170}
   ResizeTextObject: 1
   Padding: {x: 23.68, y: 14.95}
-  MaxSize: {x: 1000, y: Infinity}
+  MaxSize: {x: 400, y: 80}
   MinSize: {x: 0, y: 0}
   ControlAxes: 3
 --- !u!1 &8330035746210191036
@@ -541,5 +541,5 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 111, y: 0}
-  m_SizeDelta: {x: 688.1414, y: 100}
+  m_SizeDelta: {x: 331.227, y: 100}
   m_Pivot: {x: 0, y: 0.5}

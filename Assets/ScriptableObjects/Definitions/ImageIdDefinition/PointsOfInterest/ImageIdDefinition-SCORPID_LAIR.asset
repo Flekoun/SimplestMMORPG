@@ -15,4 +15,6 @@ MonoBehaviour:
   IdPrefix: POI
   ImageId: SCORPID_LAIR
   Image: {fileID: 21300000, guid: f1d6c4ad698eb4d44a746c82b5977370, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

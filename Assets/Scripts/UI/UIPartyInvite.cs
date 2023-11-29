@@ -28,14 +28,24 @@ public class UIPartyInvite : MonoBehaviour
             Model.SetActive(false);
     }
 
-    public void Accept()
+    public async void Accept()
     {
-        FirebaseCloudFunctionSO.AcceptPartyInvite(AccountDataSO.PartyInviteData.partyLeaderUid);
+        var result = await FirebaseCloudFunctionSO.AcceptPartyInvite(AccountDataSO.PartyInviteData.partyLeaderUid);
+        if (result.Result)
+        {
+            UIManager.instance.ImportantMessage.ShowMesssage("Welcome to Party!");
+        }
+        Model.SetActive(false);
     }
 
-    public void Decline()
+    public async void Decline()
     {
-        FirebaseCloudFunctionSO.DeclinePartyInvite(AccountDataSO.PartyInviteData.partyLeaderUid);
+        var result = await FirebaseCloudFunctionSO.DeclinePartyInvite(AccountDataSO.PartyInviteData.partyLeaderUid);
+        if (result.Result)
+        {
+            UIManager.instance.ImportantMessage.ShowMesssage("Invitation declined!");
+        }
+        Model.SetActive(false);
     }
 
     //public void SendTestPartyInvite()

@@ -31,7 +31,7 @@ Material:
     - _FaceDilate: 0
     - _GradientScale: 10
     - _MaskSoftnessX: 0
-    - _MaskSoftnessY: 0
+    - _MaskSoftnessY: 100
     - _OutlineSoftness: 0
     - _OutlineWidth: 0.089
     - _PerspectiveFilter: 0.875

@@ -1,5 +1,10 @@
 {
   "dependencies": {
-    "firebase-functions": "^4.1.1"
+    "admin": "^1.4.1",
+    "axios": "^1.6.1",
+    "firebase-functions": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.0"
   }
 }

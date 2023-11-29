@@ -51,7 +51,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e49132e3d1161474fa33443fd920db04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TimeWeightText: {fileID: 3137246493570582294}
+  AccountDataSO: {fileID: 0}
+  TimePriceText: {fileID: 0}
+  TravelPointsPriceText: {fileID: 0}
+  TravelPricesGO: {fileID: 0}
+  TravelPointsPriceGO: {fileID: 0}
+  TimePriceGO: {fileID: 0}
 --- !u!1 &2939589527655283044
 GameObject:
   m_ObjectHideFlags: 0

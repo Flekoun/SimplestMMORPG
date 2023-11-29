@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,8 +13,11 @@ public class ContentFitterRefresh : MonoBehaviour
 
     public void RefreshContentFitters()
     {
-        var rectTransform = (RectTransform)transform;
-        RefreshContentFitter(rectTransform);
+        if (transform is RectTransform)
+        {
+            var rectTransform = (RectTransform)transform;
+            RefreshContentFitter(rectTransform);
+        }
     }
 
     private void RefreshContentFitter(RectTransform transform)
@@ -23,9 +27,10 @@ public class ContentFitterRefresh : MonoBehaviour
             return;
         }
 
-        foreach (RectTransform child in transform)
+        foreach (var child in transform)
         {
-            RefreshContentFitter(child);
+            if (child is RectTransform)
+                RefreshContentFitter(child as RectTransform);
         }
 
         var layoutGroup = transform.GetComponent<LayoutGroup>();
@@ -41,9 +46,9 @@ public class ContentFitterRefresh : MonoBehaviour
             }
             catch (System.Exception ex)
             {
-                Debug.LogWarning("Chyba pri refreshovani content size fitteru....."+ex.Message);
+                Debug.LogWarning("Chyba pri refreshovani content size fitteru....." + ex.Message);
             }
-          
+
         }
 
         if (contentSizeFitter != null)
@@ -51,4 +56,9 @@ public class ContentFitterRefresh : MonoBehaviour
             LayoutRebuilder.ForceRebuildLayoutImmediate(transform);
         }
     }
+
+
+
+
+
 }

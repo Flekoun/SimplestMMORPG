@@ -14,6 +14,7 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
     public TextMeshProUGUI DisplayNameText;
     public TextMeshProUGUI DescriptionText;
     public TextMeshProUGUI KillListText;
+    public TextMeshProUGUI XPRewardText;
     public UIContentContainerDetail UIContentContainerDetail;
     //public UIInventory UIInventoryRewards;
 
@@ -22,7 +23,7 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
     public Transform RewardsParent;
     public GameObject ClaimButton;
     public GameObject Model;
-    public QuestgiverMeta Data;
+    public Questgiver Data;
 
     public UIQuestgiverSpawner UIQuestgiverSpawner;
     //  private List<string> equiToSellUids = new List<string>();
@@ -31,7 +32,7 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
     public void Awake()
     {
         UIQuestgiverSpawner.OnEntryClicked += OnQuestgiverEntryClicked;
-     
+
     }
 
     private void OnQuestgiverEntryClicked(UIQuestgiverEntry _entry)
@@ -39,7 +40,7 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
         Show(_entry.Data);
     }
 
-    public void Show(QuestgiverMeta _data)
+    public void Show(Questgiver _data)
     {
 
         Data = _data;
@@ -67,7 +68,7 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
             else
                 textColor = Color.yellow;
 
-            killsNeeded = killsNeeded + Utils.ColorizeGivenText("<b>" + Utils.GetMetadataForEnemy(item.id).title.GetText() + "</b> slain : " + AccountDataSO.CharacterData.GetKillsForEnemyId(item.id) + "/" + item.count + textToAdd + "\n", textColor);
+            killsNeeded = killsNeeded + Utils.ColorizeGivenText("<b>" + Utils.DescriptionsMetadata.GetEnemyMetadata(item.id).title.GetText() + "</b> slain : " + AccountDataSO.CharacterData.GetKillsForEnemyId(item.id) + "/" + item.count + textToAdd + "\n", textColor);
         }
 
         foreach (var item in Data.itemsRequired)
@@ -82,13 +83,15 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
             else
                 textColor = Color.yellow;
 
-            killsNeeded = killsNeeded + Utils.ColorizeGivenText("<b>" + Utils.GetMetadataForItem(item.id).title.GetText() + "</b> : " + AccountDataSO.CharacterData.inventory.GetAmountOfItemsInInventory(item.id) + "/" + item.count + textToAdd + "\n", textColor);
+            killsNeeded = killsNeeded + Utils.ColorizeGivenText("<b>" + Utils.DescriptionsMetadata.GetItemsMetadata(item.id).title.GetText() + "</b> : " + AccountDataSO.CharacterData.inventory.GetAmountOfItemsInInventory(item.id) + "/" + item.count + textToAdd + "\n", textColor);
         }
 
         KillListText.SetText(killsNeeded);
-        DescriptionText.SetText(String.Format(Utils.GetMetadataForQuest(Data.id).description.GetText(), "<b>" + AccountDataSO.CharacterData.characterName + "</b>"));
-        DisplayNameText.SetText(Utils.GetMetadataForQuest(Data.id).title.GetText());
-
+        // DescriptionText.SetText(String.Format(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(Utils.GetMetadataForQuest(Data.id).description.GetText()), "<b>" + AccountDataSO.CharacterData.characterName + "</b>"));
+        DescriptionText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(Utils.DescriptionsMetadata.GetQuestMetadata(Data.id).description.GetText()));
+        //DescriptionText.SetText(Utils.GetMetadataForQuest(Data.id).description.GetText());
+        DisplayNameText.SetText(Utils.DescriptionsMetadata.GetQuestMetadata(Data.id).title.GetText());
+        XPRewardText.SetText((Data.expRewardPerLevel * Data.qLevel).ToString());
         UIContentContainerDetail.Hide();
 
         //List<ContentContainer> rewardsAsContent = new List<ContentContainer>();
@@ -117,6 +120,17 @@ public class UIQuestgiverDetailPanel : MonoBehaviour
             var equip = PrefabFactory.CreateGameObject<UIRandomEquip>(UIRandomEquipPrefab, RewardsParent);
             equip.SetData(item);
             equip.OnClicked += OnRewardRandomEquipClicked;
+        }
+
+
+        if (Data.rewardsGenerated != null)
+        {
+            foreach (var item in Data.rewardsGenerated)
+            {
+                var content = PrefabFactory.CreateGameObject<UIContentItem>(ContentContainerPrefab, RewardsParent);
+                content.SetData(item);
+                content.OnClicked += OnContentClicked;
+            }
         }
 
         ClaimButton.SetActive(AccountDataSO.CharacterData.IsQuestCompleted(Data));

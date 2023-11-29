@@ -21,7 +21,7 @@ public class UIInboxDetailPanel : MonoBehaviour
     public void Awake()
     {
         UIInboxItemsSpawner.OnUIEntryClicked += OnInboxEntryClicked;
-        AccountDataSO.OnInboxDataChanged += Hide;
+        AccountDataSO.OnInboxDataCharacterChanged += Hide;
     }
 
     private void OnInboxEntryClicked(UIInboxItemEntry _entry)
@@ -45,8 +45,28 @@ public class UIInboxDetailPanel : MonoBehaviour
     }
 
 
-    public void ClaimButtonClicked()
+    public async void ClaimButtonClicked()
     {
-        FirebaseCloudFunctionSO.ClaimInboxItem(Data.uid);
+
+        if (AccountDataSO.CharacterData != null && Data.recipientUid == AccountDataSO.CharacterData.uid)
+        {
+            var result = await FirebaseCloudFunctionSO.ClaimInboxItem(Data.uid);
+            if (result.Result)
+            {
+                UIManager.instance.ImportantMessage.ShowMesssage("Inbox item claimed!");
+                Hide();
+            }
+        }
+        else if (AccountDataSO.PlayerData != null && Data.recipientUid == AccountDataSO.PlayerData.uid)
+        {
+            var result = await FirebaseCloudFunctionSO.ClaimPlayerInboxItem(Data.uid);
+            if (result.Result)
+            {
+                UIManager.instance.ImportantMessage.ShowMesssage("Inbox item claimed!");
+                Hide();
+            }
+        }
+
+
     }
 }

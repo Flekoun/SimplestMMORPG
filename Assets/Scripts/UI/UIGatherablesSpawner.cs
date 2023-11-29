@@ -62,9 +62,9 @@ public class UIGatherablesSpawner : MonoBehaviour
 
         //}
 
-     
 
-            if (OnRefreshed != null)
+
+        if (OnRefreshed != null)
             OnRefreshed.Invoke();
 
         //ContentFitterRefresh.RefreshContentFitters();
@@ -73,34 +73,32 @@ public class UIGatherablesSpawner : MonoBehaviour
 
     public async void OnEntryClicked(UIGatherable _item)
     {
-        if (_item.Data.HasEnoughtSkillToGatherThis(AccountDataSO.CharacterData.professions))
-        {
+        //if (_item.Data.HasEnoughtSkillToGatherThis(AccountDataSO.CharacterData.professions))
+        //{
             await FirebaseCloudFunctionSO.ClaimGatherableAsync(_item.Data.uid);
-            UIManager.instance.ImportantMessage.ShowMesssage(Utils.GetMetadataForGatherable(_item.Data.gatherableType).title.GetText() + " gathered!");
+            UIManager.instance.ImportantMessage.ShowMesssage(Utils.DescriptionsMetadata.GetGatherablesMetadata(_item.Data.gatherableType).title.GetText() + " gathered!");
 
-        }
-        else
-        {
-            UIManager.instance.ImportantMessage.ShowMesssage(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata("Need " + _item.Data.SkillsNeededToGatherThis() + "to be gathered"));
-        }
+        //}
+        //else
+        //{
+        //    foreach (var item in _item.Data.professionNeeded)
+        //    {
+        //        if (AccountDataSO.CharacterData.GetProfessionById(item.id) == null)
+        //        {
+        //            UIManager.instance.ImportantMessage.ShowMesssage(("You need to learn " + Utils.DescriptionsMetadata.GetProfessionMetadata(item.id).title.GetText() + " first"));
+        //            return;
+        //        }
+
+        //    }
+        //    UIManager.instance.ImportantMessage.ShowMesssage(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata("Need "+ _item.Data.SkillsNeededToGatherThis() + " to be gathered"));
+        //}
 
     }
 
     private void SpawnAtRandomPositions()
     {
-
-//        Debug.Log("EGGG??" + Data.Count);
-        //// Generate a random distance from the reference object
-        //float distance = Random.Range(minDistance, maxDistance);
-
-        //// Generate a random angle around the reference object
-        //float angle = Random.Range(0.0f, 360.0f);
-
-        //Vector2 position = UIPointsOfInterestSpawner.GetPoIPlayerIsCurrentlyOn().transform.position + Quaternion.Euler(0, 0, angle) * Vector2.right * distance;
-
         float minDistance = 0.8f;
         float maxDistance = 1.8f;
-
 
         // Calculate the angle between each prefab
         float angleStep = 360.0f / Data.Count + 1;
@@ -110,7 +108,7 @@ public class UIGatherablesSpawner : MonoBehaviour
         for (int i = 0; i < Data.Count; i++)
         {
 
-         //   Debug.Log("EGGG??YYY" + i);
+            //   Debug.Log("EGGG??YYY" + i);
             float stepVariance = Random.Range(-(angleStep / 2f), (angleStep / 2f));  //50% variance in angle to make it look mor random
 
             // Generate a random distance from the reference object

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Firebase.Firestore;
+using Firebase.Functions;
 using Newtonsoft.Json;
 using RoboRyanTron.Unite2017.Variables;
 
@@ -13,11 +14,7 @@ using UnityEngine.Events;
 [CreateAssetMenu]
 public class AccountDataSO : ScriptableObject
 {
-    //public CharacterData GetCharacterData()
-    //{
-    //    public object MyProperty { get; set; }
-    //    return CharacterData;
-    //}
+    public bool UseLocalHost = false;
 
 
     // public SkillsMetadata SkillsMetadata;
@@ -28,13 +25,18 @@ public class AccountDataSO : ScriptableObject
     public List<EncounterData> EncountersData;
     public List<EncounterResult> EncounterResultsData;
     // public List<Vendor> VendorsData;
-    public List<InboxItem> InboxData;
+    public List<InboxItem> InboxDataCharacter;
+    public List<InboxItem> InboxDataPlayer;
+
     public PartyInvite PartyInviteData;
     public Zone ZoneData;
     public Location LocationData;
+    public PointOfInterest PointOfInterestData;
     public int PlayersOnline;
     public OtherMetadata OtherMetadataData;
+    public CraftingRecipesMetadata CraftingRecipesMetadata;
     public GlobalMetadata GlobalMetadata;
+
 
 
     //    public List<PartyFinderData> PartyFinderData;
@@ -42,6 +44,7 @@ public class AccountDataSO : ScriptableObject
     // public UnityAction OnMapsChanged;
     public UnityAction OnDescriptionsMetadataChanged;
     public UnityAction OnOtherMetadataChanged;
+    public UnityAction OnCraftingRecipesMetadataChanged;
     public UnityAction<bool> OnClientVersionMatch;
     public UnityAction OnCharacterDataChanged;
     public UnityAction<CharacterData> OnCharacterDataChanged_OldData;
@@ -49,10 +52,12 @@ public class AccountDataSO : ScriptableObject
     public UnityAction<PlayerData> OnPlayerDataChanged_OldData;
     public UnityAction OnRareEncounterDataChanged;
     public UnityAction OnPartyFinderDataChanged;
+    public UnityAction OnGlobalMetadataChanged;
     public UnityAction OnPartyDataChanged;
     public UnityAction OnEncounterDataChanged;
     public UnityAction OnEncounterResultsDataChanged;
-    public UnityAction OnInboxDataChanged;
+    public UnityAction OnInboxDataCharacterChanged;
+    public UnityAction OnInboxDataPlayerChanged;
     public UnityAction OnPartyInviteDataChanged;
     // public UnityAction OnVendorsDataChanged;
     public UnityAction OnEncounterLoadedFirstTime;
@@ -66,6 +71,7 @@ public class AccountDataSO : ScriptableObject
 
     public UnityAction OnZoneDataChanged;
     public UnityAction OnLocationDataChanged;
+    public UnityAction OnPointOfInterestDataChanged;
 
 
 
@@ -73,12 +79,19 @@ public class AccountDataSO : ScriptableObject
     [SerializeField] private StringVariable CharacterUid;
 
     [SerializeField] private IntVariable Gold;
-    [SerializeField] private IntVariable Silver;
+    [SerializeField] private IntVariable MonsterEssence;
     [SerializeField] private IntVariable Time;
     [SerializeField] private IntVariable Fatigue;
+
+
     [SerializeField] private StringVariable LocationName;
     [SerializeField] private StringVariable ZoneName;
     [SerializeField] private IntVariable OnlinePlayersCount;
+    [SerializeField] private StringVariable TimeAndTimeMax;
+    [SerializeField] private FloatVariable TravelPoints;
+    [SerializeField] private StringVariable TravelPointsMax;
+    [SerializeField] private StringVariable ScavengeAndScavengeMax;
+    [SerializeField] private IntVariable ScavengePoints;
 
 
     [NonSerialized]
@@ -94,16 +107,23 @@ public class AccountDataSO : ScriptableObject
     private WorldPosition LastWorldPosition = null;
 
 
+
+    public void OnEnable()
+    {
+#if UNITY_EDITOR
+        if (UseLocalHost)
+            FirebaseFunctions.DefaultInstance.UseFunctionsEmulator("localhost:5001");
+#endif
+    }
+
     public void SetDescriptionsMetadata(DocumentSnapshot _skillsMetaSnapshot)
     {
-
         Utils.SetDescriptionMetadata(_skillsMetaSnapshot.ConvertTo<DescriptionsMetadata>());
-
-        if (OnDescriptionsMetadataChanged != null)
-            OnDescriptionsMetadataChanged.Invoke();
+        //  if (OnDescriptionsMetadataChanged != null)
+        OnDescriptionsMetadataChanged?.Invoke();
 
         if (DescriptionsMetadataChangedFirstTime)
-            OnSkillsMetadataLoadedFirstTime.Invoke();
+            OnSkillsMetadataLoadedFirstTime?.Invoke();
 
         DescriptionsMetadataChangedFirstTime = false;
 
@@ -111,6 +131,14 @@ public class AccountDataSO : ScriptableObject
 
 
 
+    }
+
+    public void SetCraftingRecipesMetadata(DocumentSnapshot _snapshot)
+    {
+        CraftingRecipesMetadata = _snapshot.ConvertTo<CraftingRecipesMetadata>();
+
+        if (OnCraftingRecipesMetadataChanged != null)
+            OnCraftingRecipesMetadataChanged.Invoke();
     }
 
 
@@ -125,10 +153,12 @@ public class AccountDataSO : ScriptableObject
     public void SetGlobalMetadata(DocumentSnapshot _snapshot)
     {
         GlobalMetadata = _snapshot.ConvertTo<GlobalMetadata>();
-        Debug.Log("B:" + GlobalMetadata.serverVersion);
-        Debug.Log("C:" + Application.version);
+        //        Debug.Log("B:" + GlobalMetadata.serverVersion);
+        //    Debug.Log("C:" + Application.version);
         if (OnClientVersionMatch != null)
             OnClientVersionMatch.Invoke(GlobalMetadata.serverVersion == Application.version);
+
+        OnGlobalMetadataChanged?.Invoke();
     }
 
     public void SetOnlinePlayersCount(long _amount)
@@ -137,14 +167,23 @@ public class AccountDataSO : ScriptableObject
         OnlinePlayersCount.SetValue((int)PlayersOnline);
     }
 
+    public void SetPointOfInterest(DocumentSnapshot _snapshot)
+    {
+
+        PointOfInterestData = _snapshot.ConvertTo<PointOfInterest>();
+
+        if (OnPointOfInterestDataChanged != null)
+            OnPointOfInterestDataChanged.Invoke();
+    }
+
+
     public void SetLocation(DocumentSnapshot _snapshot)
     {
 
         LocationData = _snapshot.ConvertTo<Location>();
 
-        if (OnLocationDataChanged != null)
-            OnLocationDataChanged.Invoke();
 
+        OnLocationDataChanged?.Invoke();
     }
 
     public void SetZone(DocumentSnapshot _snapshot)
@@ -174,16 +213,26 @@ public class AccountDataSO : ScriptableObject
 
         CharacterData = _characterSnapshot.ConvertTo<CharacterData>();
         //   CharacterData.uid = _characterSnapshot.Id;
-
+        Utils.SetCharacterData(CharacterData);
 
         CharacterUid.SetValue(CharacterData.uid);
         CharacterName.SetValue(CharacterData.characterName);
 
         Gold.SetValue(CharacterData.currency.gold);
-        Silver.SetValue(CharacterData.currency.silver);
+        MonsterEssence.SetValue(CharacterData.currency.monsterEssence);
+        //   Silver.SetValue(CharacterData.currency.silver);
         Time.SetValue(CharacterData.currency.time);
+        TimeAndTimeMax.SetValue(CharacterData.currency.time + "/" + CharacterData.currency.timeMax);
+
+
+        TravelPoints.SetValue(CharacterData.currency.travelPoints);
+        TravelPointsMax.SetValue(Math.Floor(CharacterData.currency.travelPoints) + "/" + CharacterData.currency.travelPointsMax);
+
+        ScavengePoints.SetValue(CharacterData.currency.scavengePoints);
+        ScavengeAndScavengeMax.SetValue(CharacterData.currency.scavengePoints + "/" + CharacterData.currency.scavengePointsMax);
+
         Fatigue.SetValue(CharacterData.currency.fatigue);
-        LocationName.SetValue(Utils.GetMetadataForLocation(CharacterData.position.locationId).title.GetText());
+        LocationName.SetValue(Utils.DescriptionsMetadata.GetLocationsMetadata(CharacterData.position.locationId).descriptionData.title.GetText());
         ZoneName.SetValue(CharacterData.position.zoneId);
 
         Debug.Log("New Data for CHARACTER Set");
@@ -247,7 +296,8 @@ public class AccountDataSO : ScriptableObject
 
         PlayerData = _snapshot.ConvertTo<PlayerData>();
 
-        Debug.Log("PlayerData :" + PlayerData.gems);
+        // Satoshium.SetValue(PlayerData);
+        //        Debug.Log("PlayerData :" + PlayerData.gems);
 
         if (OnPlayerDataChanged_OldData != null)
             OnPlayerDataChanged_OldData.Invoke(oldDataPlayer);
@@ -299,18 +349,19 @@ public class AccountDataSO : ScriptableObject
 
     }
 
-    public bool IsInDungeon()
+    public bool IsDungeonOpen()
+    {
+        if (!IsInParty()) return false;
+        else if (PartyData.dungeonProgress == null) return false;
+
+        return true;
+    }
+
+    public bool AmIPartyLeader()
     {
         if (PartyData == null) return false;
-        else if (PartyData.partyMembers == null) return false;
-        else if (PartyData.dungeonProgress == null) return false;
-        else if (PartyData.dungeonProgress.dungeonLocationId == string.Empty) return false;
-        else if (PartyData.dungeonProgress.dungeonLocationId == "") return false;
-        else if (PartyData.dungeonProgress.dungeonLocationId == " ") return false;
-        else if (String.IsNullOrWhiteSpace(PartyData.dungeonProgress.dungeonLocationId)) return false;
+        else return (PartyData.partyLeaderUid == CharacterData.uid);
 
-        Debug.Log("PartyData.dungeonProgress.dungeonLocationId: " + PartyData.dungeonProgress.dungeonLocationId);
-        return true;
     }
 
 
@@ -444,7 +495,7 @@ public class AccountDataSO : ScriptableObject
 
         }
 
-
+        //        Debug.Log("ENCOUNTER RESULT DATA CHANGED!!! :" + EncounterResultsData.Count);
         if (OnEncounterResultsDataChanged != null)
             OnEncounterResultsDataChanged.Invoke();
     }
@@ -511,23 +562,32 @@ public class AccountDataSO : ScriptableObject
 
 
 
-    public void SetInboxData(QuerySnapshot _snapshot)
+    public void SetCharacterInboxData(QuerySnapshot _snapshot)
     {
-        InboxData.Clear();
+        InboxDataCharacter.Clear();
         foreach (var doc in _snapshot)
         {
-
             var entry = doc.ConvertTo<InboxItem>();
-            // entry.uid = doc.Id;
-            InboxData.Add(entry);
-
+            InboxDataCharacter.Add(entry);
         }
 
-
-
-        if (OnInboxDataChanged != null)
-            OnInboxDataChanged.Invoke();
+        if (OnInboxDataCharacterChanged != null)
+            OnInboxDataCharacterChanged.Invoke();
     }
+
+    public void SetPlayerInboxData(QuerySnapshot _snapshot)
+    {
+        InboxDataPlayer.Clear();
+        foreach (var doc in _snapshot)
+        {
+            var entry = doc.ConvertTo<InboxItem>();
+            InboxDataPlayer.Add(entry);
+        }
+
+        if (OnInboxDataPlayerChanged != null)
+            OnInboxDataPlayerChanged.Invoke();
+    }
+
 
 
 
@@ -541,37 +601,37 @@ public class AccountDataSO : ScriptableObject
         return false;
     }
 
-    public bool EncountersContainsGroupEncounter()
-    {
-        foreach (var encounter in EncountersData)
-        {
-            if (encounter.maxCombatants == 3)
-                return true;
-        }
-        return false;
-    }
+    //public bool EncountersContainsGroupEncounter()
+    //{
+    //    foreach (var encounter in EncountersData)
+    //    {
+    //        if (encounter.maxCombatants == 3)
+    //            return true;
+    //    }
+    //    return false;
+    //}
 
 
-    public PointOfInterest GetCurrentPointOfInterest()
-    {
-        return LocationData.GetPointOfInterestById(CharacterData.position.pointOfInterestId);
-    }
+    //public PointOfInterest GetCurrentPointOfInterest()
+    //{
+    //    return LocationData.GetPointOfInterestById(CharacterData.position.pointOfInterestId);
+    //}
 
     //only works for POI inside MY LOCATION or Locations on world map....
-    public bool IsPositionExplored(string _position)
-    {
-        //pokud sme v dungu divame se na prozkoumane pozice party i charakteru
-        if (IsInDungeon())
-        {
-            return (PartyData.dungeonProgress.IsPositionExplored(_position) || CharacterData.IsPositionExplored(_position));
+    //public bool IsPositionExplored(WorldPosition _position)
+    //{
+    //    ////pokud sme v dungu divame se na prozkoumane pozice party i charakteru
+    //    //if (IsInDungeon())
+    //    //{
+    //    //    return (CharacterData.IsWorldPositionExplored(_position));
 
 
-        }
-        //jinak prozkoumane pozice charakteru
-        else
-        {
-            return CharacterData.IsPositionExplored(_position);
-        }
-    }
+    //    //}
+    //    ////jinak prozkoumane pozice charakteru
+    //    //else
+    //    //{
+    //    return CharacterData.IsWorldPositionExplored(_position);
+    //    //}
+    //}
 
 }

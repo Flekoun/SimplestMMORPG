@@ -5,6 +5,7 @@
 // Date:   10/04/17
 // ----------------------------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using RoboRyanTron.Unite2017.Events;
 using UnityEngine;
@@ -33,6 +34,8 @@ namespace RoboRyanTron.Unite2017.Variables
         public float Value;
 
         public bool IsPercentages = false;
+
+        private List<Action> ChangeEventActions = new List<Action>();
 
         void ForceSerialization()
         {
@@ -157,7 +160,19 @@ namespace RoboRyanTron.Unite2017.Variables
             SetValue(Value - amount.Value);
 
         }
-       
+
+
+        public void ListenOnChangeEvent(Action _action)
+        {
+            if (!ChangeEventActions.Contains(_action))
+                ChangeEventActions.Add(_action);
+        }
+
+        public void UnlistenOnChangeEvent(Action _action)
+        {
+            if (ChangeEventActions.Contains(_action))
+                ChangeEventActions.Remove(_action);
+        }
 
 
         public GameEvent_Float ChangeEvent;

@@ -9,7 +9,7 @@ using UnityEngine.Events;
 public class UIEncounterResultEntry : MonoBehaviour
 {
     public PrefabFactory Factory;
-    public TextMeshProUGUI EnemiesText;
+ //   public TextMeshProUGUI EnemiesText;
     public Transform CorpseParent;
     public GameObject CorpsePrefab;
     public UnityAction<UIEncounterResultEntry> OnClicked; 
@@ -36,11 +36,11 @@ public class UIEncounterResultEntry : MonoBehaviour
         //    SelectedImage.gameObject.SetActive(_selected);
         //}
 
-    public void SetEncounter(EncounterResult _encounterData ,UIEncountersResultSpawner _parentSpawner)
+    public void SetEncounter(EncounterResult _encounterData )//,UIEncountersResultSpawner _parentSpawner)
     {
        
         Data = _encounterData;
-        Spawner = _parentSpawner;
+      //  Spawner = _parentSpawner;
 
         Utils.DestroyAllChildren(CorpseParent);
 

@@ -15,4 +15,6 @@ MonoBehaviour:
   IdPrefix: ENEMY
   ImageId: SKELETON
   Image: {fileID: 21300000, guid: c86a274cead2f4910ba68696fddf3762, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

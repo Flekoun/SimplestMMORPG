@@ -15,4 +15,6 @@ MonoBehaviour:
   IdPrefix: SKILL
   ImageId: SHADOWBOLT
   Image: {fileID: 21300000, guid: 69639acc50014f140a20d7f257afcaa4, type: 3}
+  ProjectileEffectPrefab: {fileID: 339493304534246249, guid: da3a4d1a9a9fc423bab01509e552f481, type: 3}
+  ImpactEffectPrefab: {fileID: 6213619859274339249, guid: 79896272faec2457e8262f22c334d1b9, type: 3}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

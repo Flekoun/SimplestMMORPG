@@ -10,6 +10,8 @@ public class ImageIdDefinition : ScriptableObject
     public string IdPrefix = "";
     public string ImageId;
     public Sprite Image;
+    public GameObject ProjectileEffectPrefab;
+    public GameObject ImpactEffectPrefab;
     [Space]
     public ImageIdDefinitionSOSet ImageIdDefinitionSOSet;
 

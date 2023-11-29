@@ -38,7 +38,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 651, y: -446}
-  m_SizeDelta: {x: 357.1762, y: 100}
+  m_SizeDelta: {x: 357.1762, y: 79.1036}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2574574251356644676
 MonoBehaviour:
@@ -52,6 +52,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30343a77c65ae4c32bd9fc7cb95a4a1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Prefix: 
+  Suffix: 
   Text: {fileID: 2574574252204876660}
   VariableToDisplay: {fileID: 11400000, guid: 8d697931b06724fcebafdabf26efb8e8, type: 2}
 --- !u!1 &2574574252204876666
@@ -89,8 +91,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -18.072, y: 0}
-  m_SizeDelta: {x: -115.4836, y: -34.285}
+  m_AnchoredPosition: {x: -39.4958, y: 0}
+  m_SizeDelta: {x: -78.9917, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2574574252204876661
 CanvasRenderer:
@@ -129,8 +131,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4293388263
+  m_fontColor: {r: 0.9056604, g: 0.9056604, b: 0.9056604, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -147,7 +149,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 58.8
+  m_fontSize: 70.8
   m_fontSizeBase: 37.5
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -248,14 +250,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.8018868, g: 0.8018868, b: 0.8018868, a: 1}
+  m_Color: {r: 0.09433961, g: 0.09433961, b: 0.09433961, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 42eaa88577c1f467abe2c6e0a57a629f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 22df6883fe9334dcda5473e7f9428e79, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1

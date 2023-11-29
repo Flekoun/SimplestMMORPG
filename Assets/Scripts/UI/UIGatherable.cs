@@ -22,10 +22,10 @@ public class UIGatherable : MonoBehaviour
     public void SetData(Gatherable _data)
     {
         Data = _data;
-        DisplayNameText.SetText(Utils.GetMetadataForGatherable(Data.gatherableType).title.GetText());
+        DisplayNameText.SetText(Utils.DescriptionsMetadata.GetGatherablesMetadata(Data.gatherableType).title.GetText());
 
         RarityImage.color = Utils.GetRarityColor(Data.rarity);
-        PortratImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById((Utils.GetMetadataForGatherable(Data.gatherableType).imageId)).Image;
+        PortratImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById((Utils.DescriptionsMetadata.GetGatherablesMetadata(Data.gatherableType).imageId)).Image;
 
         if (Data.HasEnoughtSkillToGatherThis(AccountDataSO.CharacterData.professions))
             PortratImage.color = Color.white;

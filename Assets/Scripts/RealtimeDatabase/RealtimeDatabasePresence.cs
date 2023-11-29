@@ -58,13 +58,13 @@ public class RealtimeDatabasePresence : MonoBehaviour
         {
             if (task.IsCompleted)
             {
-                Debug.Log("Presence setup Success!!");
+//                Debug.Log("Presence setup Success!!");
 
                 //    // We can now safely set ourselves as 'online' knowing that the
                 //    // server will mark us as offline once we lose connection.
                 userStatusDatabaseRef.SetRawJsonValueAsync(onlineJson);
             }
-            else Debug.Log("Presence setup Fail!");
+           // else Debug.Log("Presence setup Fail!");
 
         });
     }

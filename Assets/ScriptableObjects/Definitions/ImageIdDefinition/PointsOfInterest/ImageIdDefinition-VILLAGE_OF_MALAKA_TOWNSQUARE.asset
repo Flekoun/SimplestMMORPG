@@ -15,4 +15,6 @@ MonoBehaviour:
   IdPrefix: POI
   ImageId: VILLAGE_OF_MALAKA_TOWNSQUARE
   Image: {fileID: 21300000, guid: 360cd24b29cbe914481d55fee939b8ae, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

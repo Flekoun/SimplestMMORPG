@@ -45,7 +45,7 @@ public class UIVendorSpawner : MonoBehaviour
 //        Debug.Log("kdo to zavolal??");
         Utils.DestroyAllChildren(Parent,1);
         UIEntriesList.Clear();
-        foreach (var vendor in AccountDataSO.GetCurrentPointOfInterest().vendors)
+        foreach (var vendor in AccountDataSO.PointOfInterestData.vendors)
         {
             var vendorUI = PrefabFactory.CreateGameObject<UIVendorEntry>(UIVendorPrefab, Parent);
             vendorUI.SetData(vendor);

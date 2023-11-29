@@ -9,25 +9,26 @@ public class ImportantMessage : MonoBehaviour
     public GameObject Model;
 
     private bool IsMessageAnimationInProgress = false;
-    private List<string> MessageQueue = new List<string>();
+    private List<MessageData> MessageQueue = new List<MessageData>();
 
 
-    public void ShowMesssage(string _message)
+    public void ShowMesssage(string _message, float _displayDuration = 1f)
     {
-        MessageQueue.Add(_message);
+
+        MessageQueue.Add(new MessageData(_message, _displayDuration));
         ShowNextMessage();
     }
 
-    private void ShowNextMessage(float delay = 1f)
+    private void ShowNextMessage()
     {
         if (IsMessageAnimationInProgress)
             return;
 
         if (MessageQueue.Count > 0)
         {
-            BodyText.SetText(MessageQueue[0]);
+            BodyText.SetText(MessageQueue[0].Message);
             IsMessageAnimationInProgress = true;
-            TweenEffects.ImportantMessageShowTween(Model.transform, () => { ShowAnimOver(); }, delay);
+            TweenEffects.ImportantMessageShowTween(Model.transform, () => { ShowAnimOver(); }, MessageQueue[0].Duration);
             Model.gameObject.SetActive(true);
 
             MessageQueue.RemoveAt(0);
@@ -48,4 +49,16 @@ public class ImportantMessage : MonoBehaviour
     }
 
 
+    private struct MessageData
+    {
+        public string Message;
+        public float Duration;
+
+        public MessageData(string _message, float _duration)
+        {
+            Message = _message;
+            Duration = _duration;
+        }
+
+    }
 }

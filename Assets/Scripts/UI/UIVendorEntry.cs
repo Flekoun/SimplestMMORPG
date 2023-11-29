@@ -9,7 +9,7 @@ using UnityEngine.Events;
 public class UIVendorEntry : MonoBehaviour
 {
     public TextMeshProUGUI VendorNameText;
-  
+
     public Vendor Data;
     public UnityAction<UIVendorEntry> OnClicked;
 
@@ -17,7 +17,10 @@ public class UIVendorEntry : MonoBehaviour
     public void SetData(Vendor _vendorData)
     {
         Data = _vendorData;
-        VendorNameText.SetText(Utils.GetMetadataForVendors(Data.id).title.GetText());
+        if (Utils.DescriptionsMetadata.DoesDescriptionMetadataForIdExist(Data.id))
+            VendorNameText.SetText(Utils.DescriptionsMetadata.GetVendorsMetadata(Data.id).title.GetText());
+        else
+            VendorNameText.SetText(Data.id);
     }
 
     public void Clicked()

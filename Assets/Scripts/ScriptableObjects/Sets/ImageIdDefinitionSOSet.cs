@@ -16,18 +16,23 @@ public class ImageIdDefinitionSOSet : ScriptableObject
         return Items[UnityEngine.Random.Range(0, Items.Count)];
     }
 
-    public ImageIdDefinition GetDefinitionById(string _id)
+    public ImageIdDefinition GetDefinitionById(string _id, string _prefix = "")
     {
-
-        ImageIdDefinition effectDef = Items.Find(item => item.IdPrefix+item.ImageId == item.IdPrefix+_id /* (item.Id.CompareTo(_id)==0)*/ );
+        ImageIdDefinition effectDef = null;
+        if (_prefix == "")
+            effectDef = Items.Find(item => item.IdPrefix + item.ImageId == item.IdPrefix + _id /* (item.Id.CompareTo(_id)==0)*/ );
+        else
+            effectDef = Items.Find(item => item.IdPrefix + item.ImageId == _prefix + _id /* (item.Id.CompareTo(_id)==0)*/ );
 
         if (effectDef != null)
         {
             return effectDef;
         }
-        else Debug.LogWarning("ID  nenalezen! Dopln ho do " + this.name + " : " + _id); return Default;
+        else Debug.LogWarning("ID  nenalezen! Dopln ho do " + this.name + " : " + _id + " prefix : " + _prefix); return Default;
 
     }
+
+
 
     public void AddItem(ImageIdDefinition _item)
     {

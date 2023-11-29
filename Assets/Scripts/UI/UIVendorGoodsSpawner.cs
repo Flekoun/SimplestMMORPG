@@ -6,13 +6,13 @@ using UnityEngine.Events;
 using simplestmmorpg.data;
 using System.Linq;
 
-public class UIVendorGoodsSpawner : UISelectableSpawner
+public class UIVendorGoodsSpawner : MonoBehaviour
 {
 
-   
-  
-   // public AccountDataSO AccountDataSO;
- //   public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
+
+
+    // public AccountDataSO AccountDataSO;
+    //   public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
     public PrefabFactory Factory;
     public Transform GoodListParent;
     public GameObject UIVendorGoodEntryPrefab;
@@ -32,7 +32,7 @@ public class UIVendorGoodsSpawner : UISelectableSpawner
         foreach (var vendorGood in Data.goods)
         {
             UIVendorGoodEntry entry = Factory.CreateGameObject<UIVendorGoodEntry>(UIVendorGoodEntryPrefab, GoodListParent);
-            entry.SetData(vendorGood);
+            entry.SetData(vendorGood, _data.id);
             entry.OnClicked += OnItemClicked;
             entry.OnPortraitClicked += OnItemPortraitClicked;
         }
@@ -43,8 +43,8 @@ public class UIVendorGoodsSpawner : UISelectableSpawner
 
     private void OnItemClicked(UIVendorGoodEntry _item)
     {
-        base.OnUISelectableItemClicked(_item);
-  
+        //  base.OnUISelectableItemClicked(_item);
+
         if (OnEntryClicked != null)
             OnEntryClicked.Invoke(_item);
 

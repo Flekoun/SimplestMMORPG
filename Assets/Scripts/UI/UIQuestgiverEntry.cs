@@ -17,7 +17,7 @@ public class UIQuestgiverEntry : MonoBehaviour
     public GameObject QuestCompletedGO;
 
     public UnityAction<UIQuestgiverEntry> OnClicked;
-    public QuestgiverMeta Data;
+    public Questgiver Data;
 
     public void Awake()
     {
@@ -37,12 +37,12 @@ public class UIQuestgiverEntry : MonoBehaviour
         }
 
         EnemiesToKillText.SetText(killsNeeded_Title + killsNeeded);
-        DisplayNameText.SetText(  Utils.GetMetadataForQuest(Data.id).title.GetText());
+        DisplayNameText.SetText(  Utils.DescriptionsMetadata.GetQuestMetadata(Data.id).title.GetText());
 
        QuestCompletedGO.SetActive(AccountDataSO.CharacterData.IsQuestCompleted(Data));
     }
 
-    public void SetData(QuestgiverMeta _data)
+    public void SetData(Questgiver _data)
     {
         Data = _data;
         Refresh();

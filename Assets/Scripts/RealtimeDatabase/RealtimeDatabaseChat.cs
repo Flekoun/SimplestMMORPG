@@ -62,6 +62,8 @@ public class RealtimeDatabaseChat : MonoBehaviour
         ActiveChannel = CHANNEL_TYPE.ZONE;
     }
 
+  
+
     private DatabaseReference GetMessageChannelOnCurrentLocation()
     {
         Debug.Log("REF:" + FirebaseDatabase.DefaultInstance.RootReference

@@ -12,7 +12,7 @@ public class UICharactersListPanel : MonoBehaviour
     public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
     public AccountDataSO AccountDataSO;
     public UICharacterPreviewSpawner UICharacterPreviewSpawner;
-    public ListenOnAccountData ListenOnAccountData;
+    public ListenOnPlayerAndCharacterData ListenOnPlayerAndCharacterData;
     public Button EnterWorldButton;
     public Button DeleteCharacterButton;
     public GameObject OMGTohlejeHurzaBlockerGO;
@@ -24,7 +24,7 @@ public class UICharactersListPanel : MonoBehaviour
         AccountDataSO.OnPlayerDataLoadedFirstTime += Show;
         AccountDataSO.OnPlayerDataChanged += Refresh;
         AccountDataSO.OnCharacterLoadedFirstTime += CharacterLoaded;
-      
+
 
         UICharacterPreviewSpawner.OnEntryClicked += OnCharacterPreviewEntryClicked;
 
@@ -38,7 +38,7 @@ public class UICharactersListPanel : MonoBehaviour
     private void OnMetaDataLoaded()
     {
 
-        ListenOnAccountData.StartListeningOnPlayer();
+        ListenOnPlayerAndCharacterData.StartListeningOnPlayer();
     }
 
     public void Show()
@@ -54,7 +54,7 @@ public class UICharactersListPanel : MonoBehaviour
 
     private void Refresh()
     {
-        Debug.Log("PLAYER DATA CHANGED!");
+        //        Debug.Log("PLAYER DATA CHANGED!");
         UICharacterPreviewSpawner.Spawn();
         RefreshButtonsInteractibility();
     }
@@ -69,7 +69,7 @@ public class UICharactersListPanel : MonoBehaviour
     //    UICharacterPreviewSpawner.Spawn();
     //}
 
-  
+
 
     // Update is called once per frame
     public void Hide()
@@ -83,10 +83,11 @@ public class UICharactersListPanel : MonoBehaviour
     }
 
 
-    public void EnterWorldClicked()
+    public async void EnterWorldClicked()
     {
-        FirebaseCloudFunctionSO.CheckForIntegrityOfCharacterData(UICharacterPreviewSpawner.GetSelectedEntry().GetUid());
-        ListenOnAccountData.StartListeningOnCharacter(UICharacterPreviewSpawner.GetSelectedEntry().GetUid());
+        var result = await FirebaseCloudFunctionSO.CheckForIntegrityOfCharacterData(UICharacterPreviewSpawner.GetSelectedEntry().GetUid());
+        if (result.Result)
+            ListenOnPlayerAndCharacterData.StartListeningOnCharacter(UICharacterPreviewSpawner.GetSelectedEntry().GetUid());
     }
 
     public void DeleteCharacterClicked()

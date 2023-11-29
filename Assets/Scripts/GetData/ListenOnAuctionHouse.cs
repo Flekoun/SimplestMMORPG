@@ -35,7 +35,7 @@ public class ListenOnAuctionHouse : MonoBehaviour
     {
         FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
 
-        listenerRegistrationOnAllAuctions = db.Collection("auctionHouse").WhereGreaterThan("expireDate", Utils.GetNowInMillis().ToString()).Limit(10).Listen(snapshot =>
+        listenerRegistrationOnAllAuctions = db.Collection("auctionHouse").WhereGreaterThan("expireDate", Utils.GetNowInMillis().ToString()).Limit(AccountDataSO.OtherMetadataData.auctionHousePageSize).Listen(snapshot =>
         //  listenerRegistration = db.Collection("auctionHouse").Limit(10).Listen(snapshot =>
 
        {

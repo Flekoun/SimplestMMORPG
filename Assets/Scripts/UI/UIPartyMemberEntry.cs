@@ -13,7 +13,7 @@ public class UIPartyMemberEntry : MonoBehaviour
     public TextMeshProUGUI MemberNameText;
     public TextMeshProUGUI ClassText;
     public TextMeshProUGUI LevelText;
-    public UIPortrait Portrait; 
+    public UIPortrait Portrait;
     public GameObject OfflineTagGO;
     public PartyMember Data;
 
@@ -27,19 +27,19 @@ public class UIPartyMemberEntry : MonoBehaviour
     {
     }
 
-    public void SetData(PartyMember _data)
+    public void SetData(PartyMember _data, bool _isLeader)
     {
         Data = _data;
 
         MemberNameText.SetText(Data.displayName);
         MemberNameText.color = Utils.GetClassColor(Data.characterClass);
         ClassText.SetText(Data.characterClass);
-        LevelText.SetText("Level "+Data.level.ToString());
+        LevelText.SetText("Level " + Data.level.ToString());
 
-        Portrait.SetPortrait(Data.characterPortrait);
+        Portrait.SetPortrait(Data.characterPortrait, Data.characterClass);
 
         OfflineTagGO.SetActive(!Data.isOnline);
-        PartyLeaderGO.SetActive(Data.isPartyLeader);
+        PartyLeaderGO.SetActive(_isLeader);
     }
 
 }

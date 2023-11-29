@@ -13,7 +13,8 @@ public class UIChatEntry : MonoBehaviour
     public void Setup(RealtimeDatabaseChatMessageData _data)
     {
         Data = _data;
-        BodyText.SetText("["+Data.characterName +" "+Data.characterLevel+"] " + _data.body);
+        //BodyText.SetText("["+Data.characterName +" "+Data.characterLevel+"] " + _data.body);
+        BodyText.SetText("[" + Data.characterName +"] " + _data.body);
         if (Data.channelType == CHANNEL_TYPE.PARTY)
             BodyText.color = new Color(0.6f,0.85f,1f);
     }

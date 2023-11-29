@@ -16,7 +16,7 @@ public class UIWorldMapLocationButton : MonoBehaviour
     //public BaseDefinitionSOSet AllZonesDefinitionSOSet;
 
     public PrefabFactory PrefabFactory;
-   // public LocationIdDefinition LocationDef;
+    // public LocationIdDefinition LocationDef;
     //   public ZoneIdDefinition ZoneDef;
     public TextMeshProUGUI LocationNameText;
     public Image LocationPotrait;
@@ -29,6 +29,17 @@ public class UIWorldMapLocationButton : MonoBehaviour
     public UIPortrait MarkerPortrait;
     public Sprite UnexploredSprite;
     public GameObject Model;
+
+    public Image LocationTypeImage;
+
+    public Sprite TownLocationSprite;
+    public Sprite EncounterLocationSprite;
+    public Sprite DungeonLocationSprite;
+
+    public Image ButtonImage;
+    public Color ColorActive;
+    public Color ColorNormal;
+    public Color ColorUnexplored;
 
     public UnityAction<UIWorldMapLocationButton> OnClicked;
 
@@ -55,20 +66,19 @@ public class UIWorldMapLocationButton : MonoBehaviour
     {
         Data = _locationId;
 
-       // LocationDef = AllLocationsDefinitionSOSet.GetDefinitionById(_locationId) as LocationIdDefinition;
-        //ZoneDef = AllZonesDefinitionSOSet.GetDefinitionById(_zoneId) as ZoneIdDefinition;
-
-
-
-        if (AccountDataSO.CharacterData.IsPositionExplored(Data))
-        {
-            LocationPotrait.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.GetMetadataForLocation(Data).imageId).Image;
-            //    LocationNameText.SetText(Utils.GetMetadataForLocation(LocationDef.Id).title.GetText());
-        }
+        if (AccountDataSO.CharacterData.IsLocationExplored(Data))
+            LocationPotrait.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetLocationsMetadata(Data).descriptionData.imageId).Image;
         else
-        {
             LocationPotrait.sprite = UnexploredSprite;
-            //  LocationNameText.SetText("<color=\"gray\">Unexplored</color>");
+
+        switch (Utils.DescriptionsMetadata.GetLocationsMetadata(Data).locationType)
+        {
+            case Utils.LOCATION_TYPE.DUNGEON: LocationTypeImage.sprite = DungeonLocationSprite; break;
+            case Utils.LOCATION_TYPE.ENCOUNTERS: LocationTypeImage.sprite = EncounterLocationSprite; break;
+            case Utils.LOCATION_TYPE.TOWN: LocationTypeImage.sprite = TownLocationSprite; break;
+
+            default:
+                break;
         }
 
         Refresh();
@@ -91,9 +101,10 @@ public class UIWorldMapLocationButton : MonoBehaviour
                 {
                     if (member.uid != AccountDataSO.CharacterData.uid)
                     {
-                     //   Debug.Log("PartyMembersParent: " + PartyMembersParent.name);
+                        //   Debug.Log("PartyMembersParent: " + PartyMembersParent.name);
                         var portrait = PrefabFactory.CreateGameObject<UIPortrait>(PortraitPrefab, PartyMembersParent);
-                        portrait.SetPortrait(member.characterPortrait);
+                        portrait.SetPortrait(member.characterPortrait, member.characterClass);
+                        portrait.SetName(member.displayName);
                     }
                 }
             }
@@ -103,12 +114,13 @@ public class UIWorldMapLocationButton : MonoBehaviour
     {
 
         RefreshPartyMemberPortraits();
-        this.transform.localPosition = AccountDataSO.ZoneData.GetScreenPositionForLocationId(Data).ToVector2(); //LocationDef.Position;
+        this.transform.localPosition = AccountDataSO.ZoneData.GetDijkstraMapVertexById(Data).screenPosition.ToVector2(); //LocationDef.Position;
 
         // IsPlayerOnThisLocation = AccountDataSO.CharacterData.position.locationId == LocationDef.Id;//&& AccountDataSO.CharacterData.position.zoneId == ZoneDef.Id;
 
         MarkerPortrait.gameObject.SetActive(IsPlayerOnThisLocation());
-        MarkerPortrait.SetPortrait(AccountDataSO.CharacterData.characterPortrait);
+        MarkerPortrait.SetPortrait(AccountDataSO.CharacterData.characterPortrait, AccountDataSO.CharacterData.characterClass);
+        MarkerPortrait.SetName(AccountDataSO.CharacterData.characterName);
     }
 
     public void HoldFinished()
@@ -134,7 +146,10 @@ public class UIWorldMapLocationButton : MonoBehaviour
         if (this == _selectedButton)
         {
             if (_selectedButton.Data != AccountDataSO.CharacterData.position.locationId) //jen pokud to neni lokace na ktere jsem ukazu a buttonu travel time posledni
+            {
                 DisplayButtonAsTravelTimeToThisLocation(_totalTravelTime);
+
+            }
         }
     }
 
@@ -152,24 +167,32 @@ public class UIWorldMapLocationButton : MonoBehaviour
         {
             HoldButton.SetFunctional(false);
             LocationNameText.color = Color.green;
-            LocationNameText.SetText("Enter " + Utils.GetMetadataForLocation(Data).title.GetText());
+            LocationNameText.SetText("Enter " + Utils.DescriptionsMetadata.GetLocationsMetadata(Data).descriptionData.title.GetText());
+            ButtonImage.color = ColorActive;
         }
         else
         {
-            if (AccountDataSO.CharacterData.IsPositionExplored(Data))
+            if (AccountDataSO.CharacterData.IsLocationExplored(Data))
             {
                 HoldButton.SetFunctional(false);
                 LocationNameText.color = Color.white;
-                LocationNameText.SetText(Utils.GetMetadataForLocation(Data).title.GetText());
+                LocationNameText.SetText(Utils.DescriptionsMetadata.GetLocationsMetadata(Data).descriptionData.title.GetText());
+                ButtonImage.color = ColorNormal;
             }
             else
             {
                 HoldButton.SetFunctional(false);
                 LocationNameText.color = Color.gray;
                 LocationNameText.SetText("Unexplored");
+                ButtonImage.color = ColorUnexplored;
             }
         }
 
+    }
+
+    public void ShowLocationLeaderboard()
+    {
+        UIManager.instance.UILeaderboardsPanel.ShowLeaderboard("LOCATION_" + Data);
     }
 
     public UnityEvent OnOpenLocation;

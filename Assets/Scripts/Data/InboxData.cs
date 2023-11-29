@@ -38,6 +38,10 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public string expireDate { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string recipientUid { get; set; }
+
     }
 
 

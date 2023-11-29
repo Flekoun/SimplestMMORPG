@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Auth;
@@ -21,29 +22,29 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     public StringVariable ServerSecret;
     FirebaseFunctions functions;
 
-    public UnityAction OnCloudFunctionInProgress;
+    public UnityAction<bool> OnCloudFunctionInProgress;
     public UnityAction OnCloudFunctionFinished;
 
 
-    public bool UseLocalHost = false;
+    //public bool UseLocalHost = false;
 
 
     public void OnEnable()
     {
         functions = FirebaseFunctions.DefaultInstance;
 
-#if UNITY_EDITOR
-        if (UseLocalHost)
-            functions.UseFunctionsEmulator("localhost:5001");
-#endif
-       
+        //#if UNITY_EDITOR
+        //if (UseLocalHost)
+        //    functions.UseFunctionsEmulator("localhost:5001");
+        //#endif
+
     }
 
 
-    private void CloudFunctionCalled()
+    private void CloudFunctionCalled(bool _hiddenScreenLock = false)
     {
         //  Debug.Log("showing");
-        OnCloudFunctionInProgress.Invoke();
+        OnCloudFunctionInProgress?.Invoke(_hiddenScreenLock);
     }
 
     private void CloudFunctionFinished(string _result)
@@ -56,21 +57,61 @@ public class FirebaseCloudFunctionSO : ScriptableObject
             UIManager.instance.SpawnErrorText(_result);
         }
 
-        OnCloudFunctionFinished.Invoke();
+        OnCloudFunctionFinished?.Invoke();
     }
 
     private void CloudFunctionFinished()
     {
-        OnCloudFunctionFinished.Invoke();
+        OnCloudFunctionFinished?.Invoke();
     }
 
-    private async Task CallCloudFunction(string _cloudFunctionName, Dictionary<string, object> _data)
+    private async Task<CloudFunctionCallResult> CallCloudFunction(string _cloudFunctionName, Dictionary<string, object> _data)
     {
-        string result = await FirebaseFunctions.DefaultInstance.GetHttpsCallable(_cloudFunctionName).CallAsync(_data).ContinueWith(OnCloudFuntionResult);
-        CloudFunctionFinished(result);
+        //string result = await FirebaseFunctions.DefaultInstance.GetHttpsCallable(_cloudFunctionName).CallAsync(_data).ContinueWith(OnCloudFuntionResult);
+        //CloudFunctionFinished(result);
+        try
+        {
+            await CallCloudFunctionNew(_cloudFunctionName, _data);
+            CloudFunctionFinished();
+            return new CloudFunctionCallResult(true);
+        }
+        catch (Exception ex)
+        {
+            Debug.Log($"Cloud Function call failed with {ex.Message}");
+            UIManager.instance.ImportantMessage.ShowMesssage(ex.Message, 4f);
+            CloudFunctionFinished();
+            return new CloudFunctionCallResult(ex.Message);
+        }
     }
 
 
+    private async Task CallCloudFunctionNew(string functionName, Dictionary<string, object> _data)
+    {
+        var function = functions.GetHttpsCallable(functionName);
+        await function.CallAsync(_data);
+    }
+
+
+    public struct CloudFunctionCallResult
+    {
+        public bool Result;
+        public string ErrorMessage;
+
+        public CloudFunctionCallResult(string _errorMessage)
+        {
+            Result = false;
+            ErrorMessage = _errorMessage;
+        }
+        public CloudFunctionCallResult(bool _result)
+        {
+            if (!_result)
+                Debug.LogError("nemuzes to takhle pouzit");
+
+            Result = true;
+            ErrorMessage = "";
+        }
+
+    }
 
 
     public async void Test()
@@ -78,18 +119,280 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
 
-        Debug.Log("gatherables  ... ");
-        await CallCloudFunction("gatherables-test", data);
+        Debug.Log("test  ... ");
+        await CallCloudFunction("utils-test", data);
     }
 
-    public async void CheckForIntegrityOfCharacterData(string _characterUid)
+    public async void CheatTime()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("time cheat  ... ");
+        await CallCloudFunction("utils-cheatTime", data);
+    }
+
+
+    public async Task<CloudFunctionCallResult> ExploreDungeon()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("exploreDungeon ... ");
+        return await CallCloudFunction("encounter-exploreDungeon", data);
+    }
+
+    public async Task<CloudFunctionCallResult> retireCharacter(string _characterUid)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = _characterUid;
+
+        Debug.Log("retire Character ... ");
+        return await CallCloudFunction("retireCharacter", data);
+    }
+
+    //public async Task<CloudFunctionCallResult> ScavengePointsPurchase()
+    //{
+    //    CloudFunctionCalled();
+    //    var data = new Dictionary<string, object>();
+    //    data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+    //    Debug.Log("scavengePointsPurchase  ... ");
+    //    return await CallCloudFunction("scavengePointsPurchase", data);
+    //}
+
+    public async Task<CloudFunctionCallResult> RestDeep(List<string> _foodSuppliesUids, List<int> _foodSuppliesAmounts)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["foodSuppliesUids"] = _foodSuppliesUids.ToArray();
+        data["foodSuppliesAmounts"] = _foodSuppliesAmounts.ToArray();
+
+        Debug.Log("resting deep  ... ");
+        return await CallCloudFunction("restDeep", data);
+    }
+
+
+    public async Task<CloudFunctionCallResult> RetreatFromEncounter(string _encounterId)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["encounterUid"] = _encounterId;
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("retreating from encounter  ... ");
+        return await CallCloudFunction("encounter-retreatFromEncounter", data);
+    }
+
+
+    public async Task<CloudFunctionCallResult> TradeWithVendor(List<string> _itemToBuyUids, List<int> _itemToBuyAmounts, List<string> _itemToSellUids, List<int> _itemToSellAmounts, string _vendorUid)
+    {
+        Debug.Log("itemsToSellUids : " + _itemToSellUids);
+        foreach (var item in _itemToSellUids)
+            Debug.Log(" itemUid : " + item);
+
+        Debug.Log("_itemToSellAmounts : " + _itemToSellAmounts);
+        foreach (var item in _itemToSellAmounts)
+            Debug.Log(" itemAmount : " + item);
+
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["vendorUid"] = _vendorUid;
+        data["vendorItemsToBuyUids"] = _itemToBuyUids.ToArray();
+        data["itemsToSellUids"] = _itemToSellUids.ToArray();
+        data["vendorItemsToBuyAmounts"] = _itemToBuyAmounts.ToArray();
+        data["itemsToSellAmounts"] = _itemToSellAmounts.ToArray();
+
+        Debug.Log("trading items from vendor ... ");
+
+        return await CallCloudFunction("vendor-tradeWithVendor", data);
+
+    }
+
+    public async Task<CloudFunctionCallResult> ChapelRemoveCurses()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("removing curses in chapel  ... ");
+        return await CallCloudFunction("specials-chapelRemoveCurses", data);
+    }
+
+    public async Task<CloudFunctionCallResult> TreasureOpenWithKey()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("opening treasure with magic key  ... ");
+        return await CallCloudFunction("specials-treasureOpenWithKey", data);
+    }
+
+
+    public async Task<CloudFunctionCallResult> TreasureOpenForCurse()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("opening treasure for curse  ... ");
+        return await CallCloudFunction("specials-treasureOpenForCurse", data);
+    }
+
+
+    public async Task<CloudFunctionCallResult> TreasureOpenFree()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("opening treasure for free  ... ");
+        return await CallCloudFunction("specials-treasureOpenFree", data);
+    }
+
+
+    public async Task<CloudFunctionCallResult> ChapelRecieveBless()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("gaining bless in chapel  ... ");
+        return await CallCloudFunction("specials-chapelRecieveBless", data);
+    }
+
+
+    public async Task<CloudFunctionCallResult> ChapelGift()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("gaining gift in chapel  ... ");
+        return await CallCloudFunction("specials-chapelGift", data);
+    }
+
+
+
+    public async Task<CloudFunctionCallResult> InnBind()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("binding in inn  ... ");
+        return await CallCloudFunction("specials-innBind", data);
+    }
+
+
+    public async void InnCarriage()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("taking carriage in inn  ... ");
+        await CallCloudFunction("specials-innCarriage", data);
+    }
+
+    public async void InnHealthRestore()
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("health ressting in inn  ... ");
+        await CallCloudFunction("specials-innHealthRestore", data);
+    }
+
+    //kdyz je perk uid "" - znamena claimnout vsechny perky naraz
+    public async Task<CloudFunctionCallResult> PendingRewardClaim(string _perkUid)
+    {
+
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["perkUid"] = _perkUid;
+
+        Debug.Log("claiming perk ... ");
+        return await CallCloudFunction("perks-pendingRewardClaim", data);
+    }
+
+    public Task CraftRecipe(string _recipeId)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["recipeId"] = _recipeId;
+
+
+
+        Debug.Log("changing character portrait  ... ");
+        return CallCloudFunction("crafting-craftRecipe", data);
+    }
+
+    public async Task<CloudFunctionCallResult> upgradeEquipQuality(string _equipToUpgradeUid)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["equipToUpgradeUid"] = _equipToUpgradeUid;
+
+        Debug.Log("upgrading quality  ... ");
+        return await CallCloudFunction("equip-upgradeEquipQuality", data);
+    }
+
+    public async void ChangeCharacterPortrait(string _portraitId)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["portraitId"] = _portraitId;
+
+        Debug.Log("changing character portrait  ... ");
+        await CallCloudFunction("changeCharacterPortrait", data);
+    }
+
+
+
+    public async void ChooseEncounterPerkOffer(string _encounterUid, string _perOfferUid)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["encounterUid"] = _encounterUid;
+        data["perkOfferUid"] = _perOfferUid;
+
+        Debug.Log("choosin perk offer   ... ");
+        await CallCloudFunction("encounter-chooseEncounterPerkOffer", data);
+    }
+
+
+    public async void DropItem(List<string> _contentUids)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["contentUids"] = _contentUids.ToArray();
+
+        Debug.Log("dropping item  ... ");
+        await CallCloudFunction("dropItem", data);
+    }
+
+    public async Task<CloudFunctionCallResult> CheckForIntegrityOfCharacterData(string _characterUid)
     {
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
         data["characterToCheckUid"] = _characterUid;
 
         Debug.Log("checking integrity of character  ... ");
-        await CallCloudFunction("checkForIntegrityOfCharacterData", data);
+        return await CallCloudFunction("checkForIntegrityOfCharacterData", data);
     }
 
     public async void TrainAtTrainer(string _trainerUid)
@@ -129,27 +432,40 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     }
 
 
-    public async void EnterDungeon(string _dungeonLocationId)
+    public async Task<CloudFunctionCallResult> EnterDungeon()
     {
 
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
         data["callerCharacterUid"] = AccountDataSO.CharacterData.uid;
-        data["dungeonLocationId"] = _dungeonLocationId;
+        //    data["dungeonPointOfInterestId"] = _dungeonPoIId;
 
         Debug.Log("entering dungeon ... ");
-        await CallCloudFunction("party-enterDungeon", data);
+        return await CallCloudFunction("party-enterDungeon", data);
     }
 
-    public async void PutContentOnAuctionHouse(string _contentType, string _contentToSellUid, int _contentSilverAmount, int _buyoutPrice, int _bidPrice)
+
+    public async void ExitDungeon()
     {
+
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["callerCharacterUid"] = AccountDataSO.CharacterData.uid;
+
+        Debug.Log("exiting dungeon ... ");
+        await CallCloudFunction("party-exitDungeon", data);
+    }
+
+    public async void PutContentOnAuctionHouse(string _contentToSellUid, int _buyoutPrice, int _bidPrice, int _amount)
+    {
+
+
         CloudFunctionCalled();
 
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
-        data["contentType"] = _contentType;
         data["contentToSell"] = _contentToSellUid;
-        data["contentSilverAmount"] = _contentSilverAmount;
+        data["amount"] = _amount;
         data["buyoutPrice"] = _buyoutPrice;
         data["bidPrice"] = _bidPrice;
 
@@ -174,7 +490,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         //CloudFunctionFinished();
     }
 
-    public async void ClaimInboxItem(string _inboxItemUid)
+    public async Task<CloudFunctionCallResult> ClaimInboxItem(string _inboxItemUid)
     {
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
@@ -183,7 +499,21 @@ public class FirebaseCloudFunctionSO : ScriptableObject
 
 
         Debug.Log("claiming inbox item  ... ");
-        await CallCloudFunction("inbox-claimInboxItem", data);
+        return await CallCloudFunction("inbox-claimInboxItem", data);
+        //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("inbox-claimInboxItem").CallAsync(data).ContinueWith(OnCloudFuntionResult);
+        //CloudFunctionFinished();
+    }
+
+    public async Task<CloudFunctionCallResult> ClaimPlayerInboxItem(string _inboxItemUid)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["inboxItemUid"] = _inboxItemUid;
+
+
+        Debug.Log("claiming player inbox item  ... ");
+        return await CallCloudFunction("inbox-claimPlayerInboxItem", data);
         //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("inbox-claimInboxItem").CallAsync(data).ContinueWith(OnCloudFuntionResult);
         //CloudFunctionFinished();
     }
@@ -218,29 +548,29 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     }
 
 
-    public async void ClaimTimePool()
+    public async void ClaimNewDay()
     {
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
 
-        Debug.Log("claiming time pool ... ");
+        Debug.Log("claiming new day... ");
 
-        await CallCloudFunction("claimTimePool", data);
+        await CallCloudFunction("claimNewDay", data);
         //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("claimTimePool").CallAsync(data).ContinueWith(OnCloudFuntionResult);
         //CloudFunctionFinished();
     }
 
-    public async void EatFood(string _foodUid)
+    public async Task<CloudFunctionCallResult> ConsumeConsumable(string _foodUid)
     {
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
         data["consumanleUid"] = _foodUid;
 
-        Debug.Log("eating food pool ... ");
+        Debug.Log("consuming consumable ... ");
 
-        await CallCloudFunction("eatFood", data);
+        return await CallCloudFunction("consumeConsumable", data);
         //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("eatFood").CallAsync(data).ContinueWith(OnCloudFuntionResult);
         //  CloudFunctionFinished();
     }
@@ -317,48 +647,51 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     }
 
 
-    public async void SellInventoryItems(List<string> _itemsTSellUids)
-    {
-        CloudFunctionCalled();
-        var data = new Dictionary<string, object>();
-        data["characterUid"] = AccountDataSO.CharacterData.uid;
-        data["inventoryItemsToSellEquipUids"] = _itemsTSellUids.ToArray();
+    //public async void SellInventoryItems(List<string> _itemsTSellUids)
+    //{
+    //    CloudFunctionCalled();
+    //    var data = new Dictionary<string, object>();
+    //    data["characterUid"] = AccountDataSO.CharacterData.uid;
+    //    data["inventoryItemsToSellEquipUids"] = _itemsTSellUids.ToArray();
 
-        Debug.Log("selling bag items ... ");
+    //    Debug.Log("selling bag items ... ");
 
-        await CallCloudFunction("general2-sellInventoryItems", data);
-        //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("general2-sellInventoryItems").CallAsync(data).ContinueWith(OnCloudFuntionResult);
+    //    await CallCloudFunction("sellInventoryItems", data);
+    //    //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("general2-sellInventoryItems").CallAsync(data).ContinueWith(OnCloudFuntionResult);
 
-        //CloudFunctionFinished();
+    //    //CloudFunctionFinished();
 
-    }
-
-
-    public async void BuyVendorItems(List<string> _itemToBuyUids, string _vendorUid)
-    {
-        CloudFunctionCalled();
-        var data = new Dictionary<string, object>();
-        data["characterUid"] = AccountDataSO.CharacterData.uid;
-        data["vendorUid"] = _vendorUid;
-        data["vendorItemsToBuyUids"] = _itemToBuyUids.ToArray();
-
-        Debug.Log("buying items from vendor ... ");
-
-        await CallCloudFunction("vendor-buyVendorItems", data);
-        //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("vendor-buyVendorItems").CallAsync(data).ContinueWith(OnCloudFuntionResult);
-
-        //CloudFunctionFinished();
-
-    }
+    //}
 
 
-    public async void CreateCharacter(string _characterName, string _characterClass)
+    //public async void BuyVendorItems(List<string> _itemToBuyUids, string _vendorUid)
+    //{
+    //    CloudFunctionCalled();
+    //    var data = new Dictionary<string, object>();
+    //    data["characterUid"] = AccountDataSO.CharacterData.uid;
+    //    data["vendorUid"] = _vendorUid;
+    //    data["vendorItemsToBuyUids"] = _itemToBuyUids.ToArray();
+
+    //    Debug.Log("buying items from vendor ... ");
+
+    //    await CallCloudFunction("vendor-buyVendorItems", data);
+    //    //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("vendor-buyVendorItems").CallAsync(data).ContinueWith(OnCloudFuntionResult);
+
+    //    //CloudFunctionFinished();
+
+    //}
+
+
+
+
+    public async void CreateCharacter(string _characterName, string _characterClass, string _characterPortrait)
     {
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
         data["playerUid"] = AccountDataSO.PlayerData.uid;
         data["characterName"] = _characterName;
         data["characterClass"] = _characterClass;
+        data["characterPortrait"] = _characterPortrait;
 
         Debug.Log("Createing Character ... ");
 
@@ -425,91 +758,21 @@ public class FirebaseCloudFunctionSO : ScriptableObject
 
     }
 
-    //public void FightEncounter(string _encounterId)
-    //{
-    //    CloudFunctionCalled();
-    //    var data = new Dictionary<string, string>();
-    //    data["characterUid"] = AccountDataSO.CharacterData.uid;
-    //    data["encounterUid"] = _encounterId;
 
-
-
-
-    //    Debug.Log("started ");
-
-    //    FirebaseFunctions.DefaultInstance.GetHttpsCallable("encounter-fightEncounter").CallAsync(data).ContinueWith((task) =>
-    //    {
-    //        if (task.IsFaulted)
-    //        {
-    //            Debug.Log("fault");
-    //            foreach (var inner in task.Exception.InnerExceptions)
-    //            {
-    //                if (inner is FunctionsException)
-    //                {
-    //                    var e = (FunctionsException)inner;
-    //                    // Function error code, will be INTERNAL if the failure
-    //                    // was not handled properly in the function call.
-    //                    var code = e.ErrorCode;
-    //                    Debug.Log(code);
-    //                }
-    //            }
-    //        }
-    //        else
-    //        {
-    //            //string result = task.Result.ToString();
-    //            //  Debug.Log("RESULT:" + result);
-    //        }
-
-    //        Debug.Log("Fight Encounter RESULT: " + JsonConvert.SerializeObject(task.Result.Data, Formatting.Indented));
-
-    //        return (string)task.Result.Data;
-    //    });
-    //}
-
-    public async void ExplorePointOfInterest(string _pointOfInterestId)
+    public async Task<CloudFunctionCallResult> ExploreMonsters()
     {
 
         CloudFunctionCalled();
-        Debug.Log("Creating your Encouter");
+
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
-        //    data["zoneId"] = AccountDataSO.CharacterData.position.zoneId;//_position.zoneId;
-        //  data["locationId"] = AccountDataSO.CharacterData.position.locationId;//_position.locationId;
-        data["pointOfInterestId"] = _pointOfInterestId;//_position.locationId;
+
+        // data["pointOfInterestId"] = _pointOfInterestId;//_position.locationId;
 
         Debug.Log("CreateEncounter started ");
-        await CallCloudFunction("encounter-explorePointOfInterest", data);
+        return await CallCloudFunction("encounter-exploreMonsters", data);
 
-        //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("encounter-createEncounter").CallAsync(data).ContinueWith(OnCloudFuntionResult);
 
-        //CloudFunctionFinished();
-        //FirebaseFunctions.DefaultInstance.GetHttpsCallable("encounter-createEncounter").CallAsync(data).ContinueWith((task) =>
-        //{
-        //    if (task.IsFaulted)
-        //    {
-        //        Debug.Log("fault");
-        //        foreach (var inner in task.Exception.InnerExceptions)
-        //        {
-        //            if (inner is FunctionsException)
-        //            {
-        //                var e = (FunctionsException)inner;
-        //                // Function error code, will be INTERNAL if the failure
-        //                // was not handled properly in the function call.
-        //                var code = e.ErrorCode;
-        //                Debug.Log(code);
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        //string result = task.Result.ToString();
-        //        //  Debug.Log("RESULT:" + result);
-        //    }
-
-        //    Debug.Log("CreateEncounter : RESULT: " + JsonConvert.SerializeObject(task.Result.Data, Formatting.Indented));
-
-        //    return (string)task.Result.Data;
-        //});
     }
 
     public async void JoinEncounter(string _encounterId)
@@ -525,7 +788,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
 
         //CloudFunctionFinished();
 
-        Debug.Log("CreateEncounter started ");
+        Debug.Log("Join Encounter... ");
         await CallCloudFunction("encounter-joinEncounter", data);
 
     }
@@ -580,47 +843,61 @@ public class FirebaseCloudFunctionSO : ScriptableObject
 
 
 
-    async public void ApplySkillOnEncounter(string _encounterId, int _skillSlotId, string _targetUid)
+    //async public void ApplySkillOnEncounter(string _encounterId, string _uid, string _targetUid)
+    //{
+    //    string task = await ApplySkillOnEncounterTask(_encounterId, _uid, _targetUid);
+
+    //    CloudFunctionFinished(task);
+
+    //    //  CombatLog combatLog = JsonConvert.DeserializeObject<CombatLog>(task);
+    //    //        Debug.Log("Result Cloud call:X " + combatLog.entries[0]);
+    //}
+
+    //public Task<string> ApplySkillOnEncounterTask(string _encounterId, string _uid, string _targetUid)
+    //{
+    //    CloudFunctionCalled();
+    //    var data = new Dictionary<string, object>();
+    //    data["characterUid"] = AccountDataSO.CharacterData.uid;
+    //    data["encounterUid"] = _encounterId;
+    //    data["uid"] = _uid;
+    //    data["targetUid"] = _targetUid;
+
+
+
+    //    Debug.Log("applying skill to  encounter... ");
+
+    //    return FirebaseFunctions.DefaultInstance.GetHttpsCallable("encounter-applySkillOnEncounter").CallAsync(data).ContinueWith((_task) =>
+    //    {
+
+    //        //            Debug.Log("sem tu");
+    //        if (_task.IsFaulted)
+    //        {
+    //            string resultError = "ERROR " + _task.Exception.InnerException.Message;
+    //            return resultError;
+
+    //        }
+    //        string json = JsonConvert.SerializeObject(_task.Result.Data, Formatting.Indented);
+    //        return json;
+    //    });
+
+
+
+    //}
+
+    public async Task<CloudFunctionCallResult> ApplySkillOnEncounter(string _encounterId, string _uid, string _targetUid)
     {
-
-        string task = await ApplySkillOnEncounterTask(_encounterId, _skillSlotId, _targetUid);
-
-        CloudFunctionFinished(task);
-
-        //  CombatLog combatLog = JsonConvert.DeserializeObject<CombatLog>(task);
-        //        Debug.Log("Result Cloud call:X " + combatLog.entries[0]);
-    }
-
-    public Task<string> ApplySkillOnEncounterTask(string _encounterId, int _skillSlotId, string _targetUid)
-    {
-        CloudFunctionCalled();
+        CloudFunctionCalled(true);
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
         data["encounterUid"] = _encounterId;
-        data["skillSlotId"] = _skillSlotId;
+        data["uid"] = _uid;
         data["targetUid"] = _targetUid;
 
-
-
-        Debug.Log("applying skill to  encounter... ");
-
-        return FirebaseFunctions.DefaultInstance.GetHttpsCallable("encounter-applySkillOnEncounter").CallAsync(data).ContinueWith((_task) =>
-        {
-
-            Debug.Log("sem tu");
-            if (_task.IsFaulted)
-            {
-                string resultError = "ERROR " + _task.Exception.InnerException.Message;
-                return resultError;
-
-            }
-            string json = JsonConvert.SerializeObject(_task.Result.Data, Formatting.Indented);
-            return json;
-        });
-
-
-
+        return await CallCloudFunction("encounter-applySkillOnEncounter", data);
     }
+
+
+
 
     public async void ForceRestEncounter(string _encounterId, string _forceRestOnThisCharacterUid)
     {
@@ -647,7 +924,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         data["encounterUid"] = _encounterId;
 
 
-        Debug.Log("Resting ... ");
+        //        Debug.Log("Resting ... ");
 
         await CallCloudFunction("encounter-restEncounter", data);
     }
@@ -667,7 +944,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     }
 
 
-    public async void SendPartyInvite(string _invitedCharacterUid)
+    public async Task<CloudFunctionCallResult> SendPartyInvite(string _invitedCharacterUid)
     {
 
 
@@ -680,11 +957,11 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         data["invitedCharacterUid"] = _invitedCharacterUid;
 
 
-        await CallCloudFunction("party-sendPartyInvite", data);
+        return await CallCloudFunction("party-sendPartyInvite", data);
 
     }
 
-    public async void AcceptPartyInvite(string _partyLeaderUid)
+    public async Task<CloudFunctionCallResult> AcceptPartyInvite(string _partyLeaderUid)
     {
 
 
@@ -696,12 +973,12 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         data["partyLeaderUid"] = _partyLeaderUid;
 
 
-        await CallCloudFunction("party-acceptPartyInvite", data);
+        return await CallCloudFunction("party-acceptPartyInvite", data);
 
     }
 
 
-    public async void DeclinePartyInvite(string _partyLeaderUid)
+    public async Task<CloudFunctionCallResult> DeclinePartyInvite(string _partyLeaderUid)
     {
         Debug.Log("Decline Party Invite");
         CloudFunctionCalled();
@@ -710,7 +987,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         data["partyLeaderUid"] = _partyLeaderUid;
 
 
-        await CallCloudFunction("party-declinePartyInvite", data);
+        return await CallCloudFunction("party-declinePartyInvite", data);
 
     }
 
@@ -913,7 +1190,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         data["characterUid"] = AccountDataSO.CharacterData.uid;
 
 
-        await CallCloudFunction("equip-grantNewEquip", data);
+        await CallCloudFunction("utils-grantNewEquip", data);
     }
 
 
@@ -922,7 +1199,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         //        Debug.Log("sem tu");
         if (_task.IsFaulted)
         {
-            string resultError = "ERROR " + _task.Exception.InnerException.Message;
+            string resultError = _task.Exception.InnerException.Message;//"ERROR " + _task.Exception.InnerException.Message;
             return resultError;
 
         }

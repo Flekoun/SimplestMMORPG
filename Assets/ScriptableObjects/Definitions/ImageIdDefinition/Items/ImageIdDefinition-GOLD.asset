@@ -14,5 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IdPrefix: ITEMS
   ImageId: GOLD
-  Image: {fileID: 21300000, guid: 9bf4ae0c0684149b499b4b78a3eae8fa, type: 3}
+  Image: {fileID: 21300000, guid: 338f9c65da11e4657ba66806aa8dbba4, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

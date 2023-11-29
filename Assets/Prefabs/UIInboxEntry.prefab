@@ -166,10 +166,10 @@ RectTransform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 24.2068}
-  m_SizeDelta: {x: 704.3306, y: 97.1833}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0.0000019073486}
+  m_SizeDelta: {x: 0, y: 97.1833}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1282555364264811859
 MonoBehaviour:
@@ -188,15 +188,18 @@ MonoBehaviour:
   Data:
     <uid>k__BackingField: 
     <content>k__BackingField:
-      <contentType>k__BackingField: 
       <contentEquip>k__BackingField:
         <uid>k__BackingField: 
-        <displayName>k__BackingField: 
+        <itemId>k__BackingField: 
+        <rarity>k__BackingField: 
         <sellPrice>k__BackingField: 0
-        <imageId>k__BackingField: 
         <stackSize>k__BackingField: 0
         <amount>k__BackingField: 0
-        <rarity>k__BackingField: 
+        <customData>k__BackingField:
+          <integers>k__BackingField: []
+          <strings>k__BackingField: []
+          <simpleTally>k__BackingField: []
+        <contentType>k__BackingField: 
         <equipSlotId>k__BackingField: 
         <iLevel>k__BackingField: 0
         <equipSet>k__BackingField: 0
@@ -210,47 +213,31 @@ MonoBehaviour:
           <durability>k__BackingField: 0
         <skill>k__BackingField:
           <skillId>k__BackingField: 
-          <imageId>k__BackingField: 
           <characterClass>k__BackingField: 
           <manaCost>k__BackingField: 0
           <amounts>k__BackingField: []
           <rank>k__BackingField: 0
           <buff>k__BackingField:
-            <uid>k__BackingField: 
             <buffId>k__BackingField: 
-            <turnsLeft>k__BackingField: 0
+            <durationTurns>k__BackingField: 0
             <amounts>k__BackingField: []
             <rank>k__BackingField: 0
-            <imageId>k__BackingField: 
         <level>k__BackingField: 0
-      <contentItem>k__BackingField:
-        <uid>k__BackingField: 
         <displayName>k__BackingField: 
-        <sellPrice>k__BackingField: 0
         <imageId>k__BackingField: 
+        <rareEffects>k__BackingField: []
+      <content>k__BackingField:
+        <uid>k__BackingField: 
+        <itemId>k__BackingField: 
+        <rarity>k__BackingField: 
+        <sellPrice>k__BackingField: 0
         <stackSize>k__BackingField: 0
         <amount>k__BackingField: 0
-        <rarity>k__BackingField: 
-        <level>k__BackingField: 0
-      <contentCurrency>k__BackingField:
-        <uid>k__BackingField: 
-        <displayName>k__BackingField: 
-        <sellPrice>k__BackingField: 0
-        <imageId>k__BackingField: 
-        <stackSize>k__BackingField: 0
-        <amount>k__BackingField: 0
-        <rarity>k__BackingField: 
-        <currencyType>k__BackingField: 
-      <contentFood>k__BackingField:
-        <uid>k__BackingField: 
-        <displayName>k__BackingField: 
-        <sellPrice>k__BackingField: 0
-        <imageId>k__BackingField: 
-        <stackSize>k__BackingField: 0
-        <amount>k__BackingField: 0
-        <rarity>k__BackingField: 
-        <fatigueRecoveryBonus>k__BackingField: 0
-        <timeBonus>k__BackingField: 0
+        <customData>k__BackingField:
+          <integers>k__BackingField: []
+          <strings>k__BackingField: []
+          <simpleTally>k__BackingField: []
+        <contentType>k__BackingField: 
     <messageBody>k__BackingField: 
     <messageTitle>k__BackingField: 
     <expireDate>k__BackingField: 

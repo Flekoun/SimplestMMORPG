@@ -14,5 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IdPrefix: SKILL
   ImageId: SHIELD_WALL
-  Image: {fileID: 21300000, guid: 1274e343c7b6e8543bdaec634937696d, type: 3}
+  Image: {fileID: 21300000, guid: b62cb01534430794f8312234b878cada, type: 3}
+  ProjectileEffectPrefab: {fileID: 339493304534246249, guid: 88e709a3220d64c3e8943877d05ecabf, type: 3}
+  ImpactEffectPrefab: {fileID: 6213619859274339249, guid: 1e20fbff9946843d1adb068370de3350, type: 3}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

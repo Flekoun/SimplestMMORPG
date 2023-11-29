@@ -8,31 +8,116 @@ using UnityEngine.Events;
 
 public class UIContentDetail : MonoBehaviour
 {
+    public AccountDataSO AccountDataSO;
+    public FirebaseCloudFunctionSO FirebaseCloudFunctionSO;
     public ImageIdDefinitionSOSet AllImageIdDefinitionSOSet;
     public TextMeshProUGUI DisplayNameText;
     public TextMeshProUGUI RarityText;
     public TextMeshProUGUI LevelText;
-    public TextMeshProUGUI SellPriceText;
-    public Image PortraitImage;
-    public GameObject Model;
-    public UnityAction OnHideClicked;
-    private Content Data;
+    public TextMeshProUGUI SatoshiumFiatValueText;
+    public UIPriceLabel UIPriceLabel;
+    public TextMeshProUGUI DescriptionText;
+    public GameObject DescriptionGO;
+    public GameObject SellPriceGO;
+    public GameObject SatoshiumFiatValueGO;
 
-    public void Show(Content _data)
+    public Image PortraitImage;
+    public GameObject SupplyCostGO;
+    public TextMeshProUGUI SupplyCostText;
+    public TextMeshProUGUI ExpireDayText;
+
+    public GameObject ConsumeButtonGO;
+    public TextMeshProUGUI ConsumeText;
+    public UIPriceTimeLabel ConsumePrice;
+    public UnityAction OnHideClicked;
+    public UnityAction OnConsumeClicked;
+    private IContentDisplayable Data;
+
+    public void Show(IContentDisplayable _data)
     {
         Data = _data;
-        DisplayNameText.SetText(_data.GetDisplayName());
-        SellPriceText.SetText((_data.amount * _data.sellPrice).ToString());
+        DisplayNameText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(_data.GetDisplayName()));
+        Utils.ShowAllChildren(this.gameObject.transform, true);
+
+        ConsumeButtonGO.gameObject.SetActive(false);
+
+        SatoshiumFiatValueGO.SetActive(false);
+
+
+
+        if (Data.contentType == Utils.CONTENT_TYPE.FOOD || Data.contentType == Utils.CONTENT_TYPE.RECIPE)
+        {
+            Debug.Log("Data.contentType:" + Data.contentType);
+            ConsumeButtonGO.gameObject.SetActive(true);
+
+            int cost = 0;
+            if (Data.customData?.integers?.Count >= 2)
+            {
+                cost = Mathf.RoundToInt(Data.customData.integers[1]);
+            }
+
+            if (Data.contentType == Utils.CONTENT_TYPE.FOOD)
+                SetConsumeButtonText("Consume", cost);
+            else if (Data.contentType == Utils.CONTENT_TYPE.RECIPE)
+                SetConsumeButtonText("Learn", cost);
+        }
+        else
+            Debug.Log("Data.contentType 2:" + Data.contentType);
+        //else
+        //{
+        //    ConsumeButtonGO.gameObject.SetActive(false);
+        //}
+
+        SellPriceGO.SetActive(_data.sellPrice > 0);
+        UIPriceLabel.SetPrice((_data.sellPrice));
+
+        DescriptionGO.SetActive(!string.IsNullOrWhiteSpace(_data.GetDescription()));
+        DescriptionText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(_data.GetDescription()));
         //   LevelText.SetText("Requires level " + Data.level.ToString());
-        RarityText.SetText(Data.rarity);
+        RarityText.gameObject.SetActive(Data.contentType != Utils.CONTENT_TYPE.GENERATED);
+        RarityText.SetText(Utils.DescriptionsMetadata.GetRarities(Data.rarity).title.EN);
         RarityText.color = Utils.GetRarityColor(Data.rarity);
         PortraitImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Data.GetImageId()).Image;
-        Model.gameObject.SetActive(true);
+
+
+        ExpireDayText.gameObject.SetActive(!string.IsNullOrEmpty(Data.expireDate));
+
+        if (!string.IsNullOrEmpty(Data.expireDate))
+        {
+            ExpireDayText.SetText("Expires in " + Utils.ConvertTimestampToTimeLeft(Data.expireDate));
+
+            if (Utils.GetTimeLeftToDateInSeconds(Data.expireDate) <= 0)
+                ExpireDayText.SetText(Utils.ColorizeGivenText("Expired", Color.red));
+        }
+        if (Data.contentType == Utils.CONTENT_TYPE.FOOD_SUPPLY)
+        {
+            SupplyCostGO.SetActive(true);
+            SupplyCostText.SetText(Data.customData.integers[0].ToString());
+            DescriptionText.SetText("Rest effect: " + DescriptionText.text);
+
+        }
+        else
+            SupplyCostGO.SetActive(false);
+
+        if (Data.itemId == "SATOSHIUM")
+        {
+            SatoshiumFiatValueGO.SetActive(true);
+            SellPriceGO.SetActive(false);
+            SatoshiumFiatValueText.SetText(AccountDataSO.GlobalMetadata.GetPriceOfSatoshiumInFiat(Data.amount).ToString());
+        }
+
     }
 
     public void Hide()
     {
-        Model.gameObject.SetActive(false);
+        Utils.ShowAllChildren(this.gameObject.transform, false);
+    }
+
+    public void SetConsumeButtonText(string _title, int _timePrice)
+    {
+        ConsumePrice.gameObject.SetActive(_timePrice > 0);
+        ConsumePrice.SetPrice(_timePrice);
+        ConsumeText.SetText(_title);
     }
 
     public void HideButtonClicked()
@@ -43,15 +128,29 @@ public class UIContentDetail : MonoBehaviour
         Hide();
     }
 
-    // Start is called before the first frame update
-    void Start()
+    public async void ConsumeButtonClicked()
     {
+        OnConsumeClicked?.Invoke();
+
+        if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail protoze nejspis nebude brzy co konzumovat (az se vrati update z DB)
+        {
+            Hide();
+        }
+
+        var result = await FirebaseCloudFunctionSO.ConsumeConsumable(Data.uid);
+
+        if (result.Result)
+        {
+            UIManager.instance.ImportantMessage.ShowMesssage("Item consumed!");
+            if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail 
+            {
+                Hide();
+
+            }
+        }
+
 
     }
 
-    // Update is called once per frame
-    void Update()
-    {
 
-    }
 }

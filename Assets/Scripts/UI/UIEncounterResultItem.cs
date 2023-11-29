@@ -3,15 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using simplestmmorpg.data;
+using UnityEngine.UI;
 
 public class UIEncounterResultItem : MonoBehaviour
 {
+    public ImageIdDefinitionSOSet AllImageIdDefinitionSOSet;
     public TextMeshProUGUI WhoWillHaveThisItem_Text;
     public TextMeshProUGUI WhoWantedThisItem_Text;
     public UIContentItem UIInventoryItem;
     public GameObject ClaimedGO;
     public GameObject NeedInfoGO;
+    public Image EnemyPortraitImage;
+    public GameObject EnemyPotrait;
     public EncounterResultContentLoot Data;
+
     // Start is called before the first frame update
 
 
@@ -21,7 +26,7 @@ public class UIEncounterResultItem : MonoBehaviour
     //}
 
 
-    public void SetData(EncounterResultContentLoot _resultLoot, EncounterResult _encounterResult)
+    public void SetData(EncounterResultContentLoot _resultLoot, EncounterResult _encounterResult, EncounterResultEnemyData _enemy)
     {
         Data = _resultLoot;
 
@@ -37,6 +42,8 @@ public class UIEncounterResultItem : MonoBehaviour
 
         if (WhoWantedThisItem_Text.text != "")
             WhoWantedThisItem_Text.SetText(WhoWantedThisItem_Text.text.Remove(WhoWantedThisItem_Text.text.Length - 2));
+
+
 
         if (!_resultLoot.DoesAnyoneWillHaveThisItem())//_resultLoot.characterWhoWillHaveThis == null )
         {
@@ -60,6 +67,12 @@ public class UIEncounterResultItem : MonoBehaviour
             }
         }
 
+        EnemyPotrait.gameObject.SetActive(_enemy != null);
+        if (_enemy != null)
+        {
+            EnemyPortraitImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(_enemy.id).Image;
+        }
     }
+
 
 }

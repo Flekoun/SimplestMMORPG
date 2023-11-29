@@ -13,8 +13,8 @@ public class UIAuctionOfferEntry : UISelectableEntry
     public TextMeshProUGUI SellerNameText;
     public TextMeshProUGUI HighestBidderNameText;
     public TextMeshProUGUI ExpireDateText;
-    public TextMeshProUGUI BidPriceText;
-    public TextMeshProUGUI BuyoutPriceText;
+    public UIPriceLabel BidPriceText;
+    public UIPriceLabel BuyoutPriceText;
     public UIContentItem UIInventoryItem;
 
     public GameObject BuyoutPriceGO;
@@ -59,12 +59,12 @@ public class UIAuctionOfferEntry : UISelectableEntry
 
         }
 
-        ExpireDateText.SetText(Data.GetTimeLeft());
-        BidPriceText.SetText(Data.nextBidPrice.ToString() );
+        ExpireDateText.SetText(Utils.ConvertTimestampToTimeLeft(Data.expireDate)+ " left");
+        BidPriceText.SetPrice(Data.nextBidPrice);
 
         BuyoutPriceGO.SetActive(Data.hasBuyoutPrice);
         if (Data.hasBuyoutPrice)
-            BuyoutPriceText.SetText(Data.buyoutPrice.ToString());
+            BuyoutPriceText.SetPrice(Data.buyoutPrice);
         else
             BuyoutPriceText.gameObject.SetActive(false);
 

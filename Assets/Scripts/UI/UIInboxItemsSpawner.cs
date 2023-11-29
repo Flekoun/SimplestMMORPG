@@ -6,33 +6,47 @@ using UnityEngine.Events;
 
 public class UIInboxItemsSpawner : MonoBehaviour
 {
-  
+
     public AccountDataSO AccountDataSO;
     public PrefabFactory PrefabFactory;
     public Transform Parent;
     public GameObject UIEntryPrefab;
-    //public UIEncounterResultEntry SelectedEncounter;
+    private List<InboxItem> InboxToShow;
 
     public UnityAction<UIInboxItemEntry> OnUIEntryClicked;
 
- //   public List<UIEncounterResultEntry> UIEntriesList = new List<UIEncounterResultEntry>();
+    //   public List<UIEncounterResultEntry> UIEntriesList = new List<UIEncounterResultEntry>();
 
     public void Awake()
     {
-        AccountDataSO.OnInboxDataChanged += Refresh;
+        AccountDataSO.OnInboxDataCharacterChanged += Refresh;
+        AccountDataSO.OnInboxDataPlayerChanged += Refresh;
     }
 
     public void OnDestroy()
     {
-        AccountDataSO.OnInboxDataChanged -= Refresh;
+        AccountDataSO.OnInboxDataCharacterChanged -= Refresh;
+        AccountDataSO.OnInboxDataPlayerChanged -= Refresh;
     }
 
+    public void Setup(bool _showPlayerInbox)
+    {
+        if (_showPlayerInbox)
+            InboxToShow = AccountDataSO.InboxDataPlayer;
+        else
+            InboxToShow = AccountDataSO.InboxDataCharacter;
+
+        Refresh();
+    }
 
     public void Refresh()
     {
+        if (InboxToShow == null)
+            return;
+
         Utils.DestroyAllChildren(Parent);
 
-        foreach (var inboxItem in AccountDataSO.InboxData)
+        foreach (var inboxItem in InboxToShow)
         {
             var entry = PrefabFactory.CreateGameObject<UIInboxItemEntry>(UIEntryPrefab, Parent);
             entry.SetData(inboxItem);

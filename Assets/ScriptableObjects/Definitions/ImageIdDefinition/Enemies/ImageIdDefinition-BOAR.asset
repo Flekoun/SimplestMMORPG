@@ -14,5 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IdPrefix: ENEMY
   ImageId: BOAR
-  Image: {fileID: 21300000, guid: f035c7094e34f44ff82737683371ac62, type: 3}
+  Image: {fileID: 21300000, guid: 6a91bea18b8e242939855f2da7b9a53f, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

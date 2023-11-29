@@ -34,6 +34,15 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public DungeonProgress dungeonProgress { get; set; }
 
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<SimpleStringDictionary> dungeonEnterConsents { get; set; }
+
+        public bool IsPartyLeader(string _memberUid)
+        {
+            return _memberUid == this.partyLeaderUid;
+        }
         public bool AreAllPartyMembersOnSameLocation(string _locationId)
         {
             foreach (var member in partyMembers)
@@ -45,6 +54,16 @@ namespace simplestmmorpg.data
             return true;
         }
 
+        public int GetNumberOfConsentsToEnterDungeon(string _dungeonId)
+        {
+            var consents = dungeonEnterConsents.Where(entry => entry.string1 == _dungeonId).ToList();
+            return consents.Count;
+        }
+
+        public bool HasPartyMemberGaveConsentToEnterDungeon(string _dungeonId, string _characterUid)
+        {
+            return dungeonEnterConsents.FirstOrDefault(entry => entry.string1 == _dungeonId && entry.string2 == _characterUid) != null;
+        }
 
     }
 
@@ -55,23 +74,52 @@ namespace simplestmmorpg.data
     {
         [field: SerializeField]
         [FirestoreProperty]
-        public string dungeonLocationId { get; set; }
+        public string dungeonId { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]
-        public List<string> exploredPointsOnInterest { get; set; }
+        public int partySize { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int tierReached { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int tiersMax { get; set; }
 
 
-        public bool IsPositionExplored(string _position)
-        {
-            foreach (var item in exploredPointsOnInterest)
-            {
-                if (item == _position)
-                    return true;
-            }
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<ContentContainer> rewards { get; set; }
 
-            return false;
-        }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<RandomEquip> rewardsRandomEquip { get; set; }
+
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<ItemIdWithAmount> rewardsGenerated { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public bool isEndlessDungeon { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public bool isFinalDungeon { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int characterLevelMax { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int characterLevelMin { get; set; }
+
+
     }
 
 
@@ -100,9 +148,9 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public WorldPosition position { get; set; }
 
-        [field: SerializeField]
-        [FirestoreProperty]
-        public bool isPartyLeader { get; set; }
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public bool isPartyLeader { get; set; }
 
 
         [field: SerializeField]
@@ -112,6 +160,8 @@ namespace simplestmmorpg.data
         [field: SerializeField]
         [FirestoreProperty]
         public string characterPortrait { get; set; }
+
+
 
     }
 

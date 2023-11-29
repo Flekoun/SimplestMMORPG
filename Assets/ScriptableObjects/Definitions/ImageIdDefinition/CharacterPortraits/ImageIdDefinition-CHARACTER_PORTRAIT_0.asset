@@ -15,4 +15,6 @@ MonoBehaviour:
   IdPrefix: CHARACTER
   ImageId: CHARACTER_PORTRAIT_0
   Image: {fileID: 21300000, guid: 7b8b2d6e8714d8f4f9d5e168d360ff42, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

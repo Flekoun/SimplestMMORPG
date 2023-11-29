@@ -34,14 +34,25 @@ public class ListenOnZones : MonoBehaviour
         }
     }
 
+    public string getPointOfInterest
+    {
+        get
+        {
+            return getLocation + "/pointsOfInterest/" + AccountDataSO.CharacterData.position.pointOfInterestId;
+        }
+    }
+
     private ListenerRegistration listenerRegistrationZone;
     private ListenerRegistration listenerRegistrationLocation;
+    private ListenerRegistration listenerRegistrationPointOfInterest;
+
 
 
     public void Awake()
     {
         AccountDataSO.OnWorldLocationChanged += StartListeningOnNewLocation;
         AccountDataSO.OnWorldZoneChanged += StartListeningOnNewZone;
+        AccountDataSO.OnWorldPointOfInterestChanged += StartListeningOnNewPointOfInterest;
         AccountDataSO.OnCharacterLoadedFirstTime += AfterCharacterIsLoadedFirstTime;
     }
 
@@ -49,6 +60,7 @@ public class ListenOnZones : MonoBehaviour
     {
         StartListeningOnNewLocation();
         StartListeningOnNewZone();
+        StartListeningOnNewPointOfInterest();
     }
 
     public void StartListeningOnNewLocation()
@@ -58,17 +70,12 @@ public class ListenOnZones : MonoBehaviour
 
         FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
 
-//        Debug.Log("getLocation: " + getLocation);
         listenerRegistrationLocation = db.Document(getLocation).Listen(snapshot =>
         {
 
-  //          Debug.Log("LOCA DATA : " + snapshot.ToDictionary());
-    //        Debug.Log("LOCA DATA : " + JsonConvert.SerializeObject(snapshot.ToDictionary(), Formatting.Indented));
             AccountDataSO.SetLocation(snapshot);
             Debug.Log("Listening on new Location " + AccountDataSO.CharacterData.position.locationId);
-
         });
-
 
     }
 
@@ -90,10 +97,28 @@ public class ListenOnZones : MonoBehaviour
 
     }
 
+
+    public void StartListeningOnNewPointOfInterest()
+    {
+
+        StopListeningOnPointOfInterest();
+
+        FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
+
+        listenerRegistrationLocation = db.Document(getPointOfInterest).Listen(snapshot =>
+        {
+
+            AccountDataSO.SetPointOfInterest(snapshot);
+            Debug.Log("Listening on new PointOfInterest " + AccountDataSO.CharacterData.position.pointOfInterestId);
+        });
+
+    }
+
     public void OnDestroy()
     {
         StopListeningOnZone();
         StopListeningOnLocation();
+        StopListeningOnPointOfInterest();
     }
 
     public void StopListeningOnZone()
@@ -106,6 +131,12 @@ public class ListenOnZones : MonoBehaviour
     {
         if (listenerRegistrationLocation != null)
             listenerRegistrationLocation.Stop();
+    }
+
+    public void StopListeningOnPointOfInterest()
+    {
+        if (listenerRegistrationPointOfInterest != null)
+            listenerRegistrationPointOfInterest.Stop();
     }
 
 

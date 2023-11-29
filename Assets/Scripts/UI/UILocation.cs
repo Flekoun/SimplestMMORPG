@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using simplestmmorpg.data;
+using static UnityEngine.GraphicsBuffer;
 
 public class UILocation : MonoBehaviour
 {
@@ -22,6 +23,8 @@ public class UILocation : MonoBehaviour
     public ContentFitterRefresh ContentFitterRefresh;
     public ListenOnEncounterData ListenOnEncounterData;
 
+    //   public Transform ScrollContent;
+
     public GameObject QuestsPanel;
     public GameObject EncountersPanel;
     public GameObject EncounterRewardsPanel;
@@ -35,122 +38,152 @@ public class UILocation : MonoBehaviour
     public DijkstraMapMaker DijkstraMapMaker;
 
     private UIPointOfInterestButton selectedUIPointOfInterestButton = null;
-
+    // private Coroutine ViewMoveCoroutine = null;
 
     public void Awake()
     {
-        AccountDataSO.OnWorldPointOfInterestChanged += OnWorldPositionChanged;
+
+        AccountDataSO.OnPointOfInterestDataChanged += OnWorldPointOfInterestChanged;
         AccountDataSO.OnLocationDataChanged += OnWorldLocationChanged;
         UIPointsOfInterestSpawner.OnUIEntryClicked += OnPointOfInterestClicked;
-        DijkstraMapMaker.OnVertexReachable += OnVertexReachable;
+
+        // DijkstraMapMaker.OnVertexReachable += OnVertexReachable;
+
         AccountDataSO.OnPartyDataChanged += RefreshMap;  // mam to tu kvuli tomu kdyz parta jde do dungeonu, tak se ulozi do ni ze maji prozkoumanou 1. entrance lokaci, tak musim refreshnout mapu abych ji videl.....
+        AccountDataSO.OnCharacterDataChanged += RefreshMap;
+
+        //tohle sem pridal kvuli AdminTools....at muzu ru
+        //  AccountDataSO.OnLocationDataChanged += RefreshMap;
     }
 
-    private void OnVertexReachable(ScreenPoisitionWihtId _vertexDef)
-    {
-        UIPointsOfInterestSpawner.ShowPointOfInterestButton(_vertexDef);
-    }
+    //private void OnVertexReachable(DijkstraMapVertex _vertexDef)
+    //{
+    //    UIPointsOfInterestSpawner.ShowPointOfInterestButton(_vertexDef);
+    //}
 
     private void RefreshMap()
     {
-        if (AccountDataSO.LocationData.GetScreenPositionsWithIds().Count > 0) //kdyz partdyData changed toto zavola nazacatku tak nejsou jeste ani nactene data lokace a pak je tu error....uf
-            DijkstraMapMaker.Setup(AccountDataSO.LocationData.dijkstraMap, AccountDataSO.LocationData.GetScreenPositionsWithIds());
 
+        //    if (AccountDataSO.LocationData.GetScreenPositionsWithIds().Count > 0) //kdyz partdyData changed toto zavola nazacatku tak nejsou jeste ani nactene data lokace a pak je tu error....uf
+        DijkstraMapMaker.SetupForCurrentLocation();//, AccountDataSO.LocationData.GetScreenPositionsWithIds());
+        Refresh();
     }
 
     private void OnWorldLocationChanged()
     {
-
-      //  ListenOnEncounterData.StartListening();
+        Refresh();
+        DijkstraMapMaker.ClearPlannedTravelPath();
 
     }
 
-    private void OnWorldPositionChanged()
+    private void OnWorldPointOfInterestChanged()
     {
 
 
-        selectedUIPointOfInterestButton = null;
 
-        UIPointsOfInterestSpawner.Refresh();
-        DijkstraMapMaker.Setup(AccountDataSO.LocationData.dijkstraMap, AccountDataSO.LocationData.GetScreenPositionsWithIds());
-
+        Refresh();
         DijkstraMapMaker.ClearPlannedTravelPath();
-        RefreshButtons();
-
-
 
     }
     // Start is called before the first frame update
     public void Show()
     {
+        //Pridal sem to tu kvuli Admin tools, ale proc ne? stejne kdyz ukazuju mapu tak chci aby byla takto nastavena na?
+        DijkstraMapMaker.SetupForCurrentLocation();
 
+        Model.gameObject.SetActive(true);
 
-       // ListenOnEncounterData.StartListening(AccountDataSO.CharacterData.position.locationId, AccountDataSO.CharacterData.position.zoneId, AccountDataSO.CharacterData.position.pointOfInterestId);
-
-        AccountDataSO.OnEncounterDataChanged += Refresh;
-        AccountDataSO.OnEncounterResultsDataChanged += Refresh;
+       
         UIQuestgiverSpawner.OnRefreshed += Refresh;
         UIVendorSpawner.OnRefreshed += Refresh;
         UISpecialsSpawner.OnRefreshed += Refresh;
         UITrainerSpawner.OnRefreshed += Refresh;
-
-        UIPointsOfInterestSpawner.Refresh();
-        Model.gameObject.SetActive(true);
-
-        DijkstraMapMaker.Setup(AccountDataSO.LocationData.dijkstraMap, AccountDataSO.LocationData.GetScreenPositionsWithIds());
-
-        RefreshButtons();
 
         Refresh();
     }
 
     public void Hide()
     {
-        //   ListenOnEncounterData.StopListening();
 
+
+      
         UIQuestgiverSpawner.OnRefreshed -= Refresh;
-        AccountDataSO.OnEncounterDataChanged -= Refresh;
-        AccountDataSO.OnEncounterResultsDataChanged -= Refresh;
+        UIVendorSpawner.OnRefreshed -= Refresh;
+        UISpecialsSpawner.OnRefreshed -= Refresh;
+        UITrainerSpawner.OnRefreshed -= Refresh;
 
         Model.gameObject.SetActive(false);
     }
 
     private void Refresh()
     {
+        UIPointsOfInterestSpawner.Refresh();
 
-        VendorsPanel.SetActive(UIVendorSpawner.HasSpawnedAnyVendors());
-        QuestsPanel.SetActive(UIQuestgiverSpawner.HasSpawnedAnyQuests());
-        SpecialsPanel.SetActive(UISpecialsSpawner.HasSpawnedAnySpecials());
-        EncountersPanel.SetActive(AccountDataSO.EncountersData.Count > 0);
-        EncounterRewardsPanel.SetActive(AccountDataSO.EncounterResultsData.Count > 0);
-        TrainersPanel.SetActive(UITrainerSpawner.HasSpawnedAnyVendors());
+        DijkstraMapMaker.SetupForCurrentLocation();//, AccountDataSO.LocationData.GetScreenPositionsWithIds());
 
-        TryToFixScrollReckGlitches();
+        RefreshButtons();
+
+        //if (UIPointsOfInterestSpawner.GetPointOfInterestButtonAtCharacterPosition() != null)
+        //{
+        //    Vector3 pos1 = UIPointsOfInterestSpawner.GetPointOfInterestButtonAtCharacterPosition().transform.localPosition;
+        //    Vector3 pos2 = new Vector3((-1) * pos1.x, (-1) * pos1.y, pos1.z);
+        //    //   ScrollContent.localPosition = pos2;
+
+        //    if (ViewMoveCoroutine != null)
+        //        StopCoroutine(ViewMoveCoroutine);
+
+        //    ViewMoveCoroutine = StartCoroutine(MoveView(pos2));
+        //}
+        //else
+        //    Debug.LogError("Jaktoze nejsem na zadnem PoI buttonu? Kde sem?");
+
     }
 
+    //    private IEnumerator MoveView(Vector3 targetPosition)
+    //    {
+    //        float startTime = Time.time;
+    //        while (Vector3.Distance(ScrollContent.localPosition, targetPosition) > 10 && (Time.time - startTime) < 1f)
+    //        {
+    ////            Debug.Log(ScrollContent.localPosition);
+    // //           Debug.Log(targetPosition);
+    //            ScrollContent.localPosition = Vector3.Lerp(ScrollContent.localPosition, targetPosition, 2f * Time.deltaTime);
+    //            yield return null;
+    //        }
+    //    }
+
+
+
+    private void OnQuestGiverClicked(UIQuestgiverEntry _entry)
+    {
+
+    }
     private void OnPointOfInterestClicked(UIPointOfInterestButton _entry)
     {
 
-
+        Debug.Log("clicked");
         //pokud PoI na kterou klikam uz je vybrana (tedy klikam po 2.) a neni to moje PoI, jdeme cestovat
-        if (_entry == selectedUIPointOfInterestButton && _entry.Data.id != AccountDataSO.CharacterData.position.pointOfInterestId)
+        if (_entry == selectedUIPointOfInterestButton && _entry.WorldPosition.pointOfInterestId != AccountDataSO.CharacterData.position.pointOfInterestId)
         {
             _entry.TravelToThisPoI();
         }
 
         // pokud je to PoI na ktere jsem, tak do ni jednoduce vlezem
-        if (_entry.Data.id == AccountDataSO.CharacterData.position.pointOfInterestId)
+        if (_entry.WorldPosition.pointOfInterestId == AccountDataSO.CharacterData.position.pointOfInterestId)
         {
 
-            selectedUIPointOfInterestButton = _entry;
+            //      selectedUIPointOfInterestButton = _entry;
             DijkstraMapMaker.ClearPlannedTravelPath();
 
-            FirebaseCloudFunctionSO.ExplorePointOfInterest(selectedUIPointOfInterestButton.Data.id);
+            _entry.ExploreThisPoI();
+            //  await FirebaseCloudFunctionSO.ExplorePointOfInterest(selectedUIPointOfInterestButton.WorldPosition.pointOfInterestId);
+
+            //UIManager.instance.ImportantMessage.ShowMesssage("New location discovered!");
 
         }
         else //jinak ti ukazu kolik by te stala cesta tam
         {
-            DijkstraMapMaker.ShowPlannedTravelPath(AccountDataSO.CharacterData.position.pointOfInterestId, _entry.Data.id, AccountDataSO.LocationData.GetScreenPositionsWithIds());
+            Debug.Log("clicked showing");
+            DijkstraMapMaker.ShowPlannedTravelPath(AccountDataSO.CharacterData.position.pointOfInterestId, _entry.WorldPosition.pointOfInterestId);
 
         }
 
@@ -173,16 +206,16 @@ public class UILocation : MonoBehaviour
     }
 
 
-    private void TryToFixScrollReckGlitches()
-    {
-        // ContentFitterRefresh.RefreshContentFitters();
-        StartCoroutine(Wait());
-    }
+    //private void TryToFixScrollReckGlitches()
+    //{
+    //    // ContentFitterRefresh.RefreshContentFitters();
+    //    StartCoroutine(Wait());
+    //}
 
-    IEnumerator Wait()
-    {
-        yield return new WaitForEndOfFrame();
-        ContentFitterRefresh.RefreshContentFitters();
-    }
+    //IEnumerator Wait()
+    //{
+    //    yield return new WaitForEndOfFrame();
+    //    ContentFitterRefresh.RefreshContentFitters();
+    //}
 
 }

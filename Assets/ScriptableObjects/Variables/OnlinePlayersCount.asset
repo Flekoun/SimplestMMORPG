@@ -26,5 +26,5 @@ MonoBehaviour:
     ConstantValue: 0
     Variable: {fileID: 0}
   StartupValue: 0
-  Value: 1
+  Value: 4
   ChangeEvent: {fileID: 11400000, guid: 3009638cf808745a3b9908d0966b2cd5, type: 2}

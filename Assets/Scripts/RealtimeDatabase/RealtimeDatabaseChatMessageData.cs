@@ -9,6 +9,7 @@ namespace simplestmmorpg.realtimeDatabaseData
         ZONE,
         LOCATION,
         PARTY,
+     
 
     }
 

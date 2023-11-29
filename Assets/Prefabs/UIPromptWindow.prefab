@@ -91,6 +91,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DescriptionText: {fileID: 1305488914139247883}
   TitleText: {fileID: 1080784710407890861}
+  AcceptButtonGO: {fileID: 7747392792375571330}
   DeclineButtonGO: {fileID: 5318863787253287075}
   DeclineButtonText: {fileID: 5318863787077153691}
   AcceptButtonText: {fileID: 7747392791997597882}
@@ -874,6 +875,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &7747392792375571330 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3161078928740709200, guid: 9139990cb009442bbb18db2f01ad3f7f, type: 3}
+  m_PrefabInstance: {fileID: 4637067402045571282}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &7747392792375571333 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3161078928740709207, guid: 9139990cb009442bbb18db2f01ad3f7f, type: 3}

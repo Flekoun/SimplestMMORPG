@@ -15,13 +15,20 @@ public class UICombatMember : UICombatEntity
     public GameObject ForceRestButton;
     public UnityAction<UICombatMember> OnForceRestClicked;
 
-    public override void SetData(CombatEntity _data, EncounterData _encounter)
+    public override void SetData(CombatEntity _data, EncounterData _encounter, bool _initSetup)
     {
-        base.SetData(_data, _encounter);
+        base.SetData(_data, _encounter, _initSetup);
 
         NameText.color = Utils.GetClassColor((Data as CombatMember).characterClass);
 
-        ManaProgress.SetValues(Data.stats.manaMax, Data.stats.mana);
+
+
+        if (_initSetup) //zmenil se entity, takze nejaky novy, inicializuju ho poprve
+        {
+            ManaProgress.SetValues(Data.stats.manaMax, Data.stats.mana,0, true);
+        }
+        else
+            ManaProgress.SetValues(Data.stats.manaMax, Data.stats.mana);
 
         if ((Data as CombatMember).hasRested)
         {
@@ -33,7 +40,7 @@ public class UICombatMember : UICombatEntity
 
         if (OldData is CombatMember && Data is CombatMember)
         {
-            if (!( (OldData as CombatMember).hasRested  ) && (Data as CombatMember).hasRested)
+            if (!((OldData as CombatMember).hasRested) && (Data as CombatMember).hasRested)
             {
                 FloatingTextSpawner.Spawn("Resting...", Color.yellow, FloatingTextsParent);
             }

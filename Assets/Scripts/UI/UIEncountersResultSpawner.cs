@@ -4,6 +4,8 @@ using simplestmmorpg.data;
 using UnityEngine;
 using UnityEngine.Events;
 
+
+//TODO : NEPOUZIVANE?
 public class UIEncountersResultSpawner : UISelectableSpawner
 {
     public AccountDataSO AccountDataSO;
@@ -68,10 +70,12 @@ public class UIEncountersResultSpawner : UISelectableSpawner
         Utils.DestroyAllChildren(Parent, 1);
         for (int i = 0; i < AccountDataSO.EncounterResultsData.Count; i++)
         {
-            UIEncounterResultEntry encounterUI = PrefabFactory.CreateGameObject<UIEncounterResultEntry>(UIEncouterDetailPrefab, Parent);
-            encounterUI.SetEncounter(AccountDataSO.EncounterResultsData[i], this);
-            encounterUI.OnClicked += OnEntryClicked;
-            UIEntriesList.Add(encounterUI);
+            //UIEncounterResultEntry encounterUI = PrefabFactory.CreateGameObject<UIEncounterResultEntry>(UIEncouterDetailPrefab, Parent);
+            //encounterUI.SetEncounter(AccountDataSO.EncounterResultsData[i], this);
+            //encounterUI.OnClicked += OnEntryClicked;
+            //UIEntriesList.Add(encounterUI);
+
+            UIManager.instance.UIEncounterResultDetailPanel.Show(AccountDataSO.EncounterResultsData[i]);
         }
 
     }

@@ -32,7 +32,7 @@ public class ListenOnEncounterData : MonoBehaviour
     {
         AccountDataSO.OnWorldPointOfInterestChanged += StartListening;
         AccountDataSO.OnCharacterLoadedFirstTime += StartListening;
-        
+
     }
 
     public void StartListening()
@@ -45,16 +45,16 @@ public class ListenOnEncounterData : MonoBehaviour
 
         FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
 
-        listenerRegistration = db.Collection("encounters").WhereArrayContains("watchersList", AccountDataSO.CharacterData.uid).WhereEqualTo("position.locationId", AccountDataSO.CharacterData.position.locationId).WhereEqualTo("position.zoneId", AccountDataSO.CharacterData.position.zoneId).WhereEqualTo("position.pointOfInterestId", AccountDataSO.CharacterData.position.pointOfInterestId).Listen(snapshot =>
-        // ListenerRegistration listenerRegistration = db.Collection("encounters").WhereArrayContains("combatantList", AccountDataSO.CharacterData.uid).Listen(snapshot =>
+        //  listenerRegistration = db.Collection("encounters").WhereArrayContains("watchersList", AccountDataSO.CharacterData.uid).WhereEqualTo("position.locationId", AccountDataSO.CharacterData.position.locationId).WhereEqualTo("position.zoneId", AccountDataSO.CharacterData.position.zoneId).WhereEqualTo("position.pointOfInterestId", AccountDataSO.CharacterData.position.pointOfInterestId).Listen(snapshot =>
+        listenerRegistration = db.Collection("encounters").WhereArrayContains("watchersList", AccountDataSO.CharacterData.uid).WhereEqualTo("position.locationId", AccountDataSO.CharacterData.position.locationId).WhereEqualTo("position.zoneId", AccountDataSO.CharacterData.position.zoneId).Listen(snapshot =>
 
-                {
-                    AccountDataSO.SetEncounterData(snapshot);
-                    Debug.Log("Listener recieved new ENCOUNTERS data ");
-                    //            Debug.Log("Count: " + AccountDataSO.EncountersData.Count.ToString());
-                    OnListenerStarted.Invoke();
+        {
+            AccountDataSO.SetEncounterData(snapshot);
+            Debug.Log("Listener recieved new ENCOUNTERS data ");
+            //            Debug.Log("Count: " + AccountDataSO.EncountersData.Count.ToString());
+            OnListenerStarted.Invoke();
 
-                });
+        });
         Debug.Log("Starting to listen on Encounters...");
 
         //oldLocation = _locationId;

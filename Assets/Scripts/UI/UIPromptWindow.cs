@@ -8,6 +8,7 @@ public class UIPromptWindow : MonoBehaviour
 {
     public TextMeshProUGUI DescriptionText;
     public TextMeshProUGUI TitleText;
+    public GameObject AcceptButtonGO;
     public GameObject DeclineButtonGO;
     public TextMeshProUGUI DeclineButtonText;
     public TextMeshProUGUI AcceptButtonText;
@@ -34,6 +35,11 @@ public class UIPromptWindow : MonoBehaviour
     public void HideDeclineButton()
     {
         DeclineButtonGO.gameObject.SetActive(false);
+    }
+
+    public void HideAcceptButton()
+    {
+        AcceptButtonGO.gameObject.SetActive(false);
     }
 
     public void SetDeclineButtonText(string _text)

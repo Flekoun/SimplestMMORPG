@@ -2,9 +2,9 @@
 // [START import]
 import * as functions from "firebase-functions";
 
-import { CharacterDocument, characterDocumentConverter, getCurrentDateTime, getCurrentDateTimeInMillis, ContentContainer, CONTENT_TYPE, CURRENCY_ID } from ".";
-import { ContentCurrency, RARITY } from "./equip";
-import { firestoreAutoId } from "./general2";
+import { CharacterDocument, characterDocumentConverter, getCurrentDateTime, getCurrentDateTimeInMillis, ContentContainer, generateContentContainer, CONTENT_TYPE, validateCallerBulletProof } from ".";
+import { Equip, generateContent, ITEMS } from "./equip";
+
 import { InboxItem } from "./inbox";
 
 const admin = require('firebase-admin');
@@ -21,16 +21,11 @@ const admin = require('firebase-admin');
 
 export class AuctionOffer {
   constructor(
-
     public uid: string,
     public sellerDisplayName: string,
     public sellerUid: string,
 
     public content: ContentContainer,
-    // public contentType: string,// ITEM, EQUIP, CURRENCY....?
-    // public contentItem: InventoryItemSimple | undefined,
-    // public contentEquip: Equip | undefined,
-    // public contentCurrencySilver: number,
 
     public lastBidPrice: number,
     public nextBidPrice: number,
@@ -43,10 +38,7 @@ export class AuctionOffer {
     public expireDate: string
 
   ) { }
-
 }
-
-
 
 exports.putContentOnAuctionHouse = functions.https.onCall(async (data, context) => {
 
@@ -57,6 +49,7 @@ exports.putContentOnAuctionHouse = functions.https.onCall(async (data, context) 
   // const contentSilverAmount = data.contentSilverAmount;
   const buyoutPrice = data.buyoutPrice;
   const bidPrice = data.bidPrice;
+  const amountToSell = data.amount;
 
   //const encounterResultDb = admin.firestore().collection('encountersResults').doc(encounterRewardUid);//.withConverter(encounterDocumentConverter);
   const sellerCharacterDb = admin.firestore().collection('characters').doc(sellerCharacterUid).withConverter(characterDocumentConverter);
@@ -67,21 +60,38 @@ exports.putContentOnAuctionHouse = functions.https.onCall(async (data, context) 
 
       const sellerCharacterDoc = await t.get(sellerCharacterDb);
       let sellerCharacterData: CharacterDocument = sellerCharacterDoc.data();
+      validateCallerBulletProof(sellerCharacterData, context);
 
       const expireDate = getCurrentDateTime(24);
 
       const itemToSell = sellerCharacterData.getInventoryContent(contentToSellUid);
 
+      if (itemToSell.getItem().amount < amountToSell)
+        throw ("Not enough items. You have only " + itemToSell.getItem().amount + " but want to sell " + amountToSell);
 
-     // console.log("item to sell amount : " + itemToSell.contentFood?.amount);
-      const newAuction = new AuctionOffer(auctionHouseDb.id, sellerCharacterData.characterName, sellerCharacterData.uid, new ContentContainer(itemToSell.contentType, itemToSell.contentItem, itemToSell.contentEquip, itemToSell.contentCurrency, itemToSell.contentFood), bidPrice, bidPrice, buyoutPrice > 0, buyoutPrice, "", "", expireDate);
-     // console.log("newAuction amount : " + newAuction.content.contentFood?.amount);
+      if (itemToSell.getItem().contentType == CONTENT_TYPE.EQUIP) {
+        if ((itemToSell.getItem() as Equip).neverEquiped == false)
+          throw ("Cant sell used equip");
+
+      }
+
+
+
+      //Nastavim itemu tolik kolik jich chci prodat a vytvorim zaznam na aukci...ale potom...
+      let oldamount = itemToSell.getItem().amount;
+      itemToSell.getItem().amount = amountToSell;
+
+      // console.log("item to sell amount : " + itemToSell.contentFood?.amount);
+      const newAuction = new AuctionOffer(auctionHouseDb.id, sellerCharacterData.characterName, sellerCharacterData.uid, new ContentContainer(itemToSell.content, itemToSell.contentEquip), bidPrice, bidPrice, buyoutPrice > 0, buyoutPrice, "", "", expireDate);
+      // console.log("newAuction amount : " + newAuction.content.contentFood?.amount);
 
       t.set(auctionHouseDb, JSON.parse(JSON.stringify(newAuction)));
 
-       //BACHA TADY SI TO DRZI REFERENCI, KDYZ ZMENIS NECO TADY TAK PAK SE TO ZMENI I VSUDE JINDE CHAPES? , proto odebiram content az tady po tom co to vlozim na aukci
+      //...potom chci amount zase vratit jak byl.... a pak potom rucne odebrat prodane mnostvi...
+      itemToSell.getItem().amount = oldamount;
+      //BACHA TADY SI TO DRZI REFERENCI, KDYZ ZMENIS NECO TADY TAK PAK SE TO ZMENI I VSUDE JINDE CHAPES? , proto odebiram content az tady po tom co to vlozim na aukci
       //remove the item from seller
-      sellerCharacterData.removeContentFromInventory(contentToSellUid, itemToSell.getItem().amount);
+      sellerCharacterData.removeContentFromInventory(contentToSellUid, amountToSell);//itemToSell.getItem().amount);
 
       t.set(sellerCharacterDb, JSON.parse(JSON.stringify(sellerCharacterData)), { merge: true });
 
@@ -117,6 +127,7 @@ exports.bidContentOnAuctionHouse = functions.https.onCall(async (data, context) 
 
       const callerCharacterDoc = await t.get(callerCharacterDb);
       let callerCharacterData: CharacterDocument = callerCharacterDoc.data();
+      validateCallerBulletProof(callerCharacterData, context);
 
       const offerDoc = await t.get(offerDb);
       let offerData: AuctionOffer = offerDoc.data();
@@ -159,12 +170,16 @@ exports.bidContentOnAuctionHouse = functions.https.onCall(async (data, context) 
       //pokid mame nejakeho highest biddera, vratime mu goldy do inboxu
       if (hasHighestBidder) {
 
-        offerData.content = new ContentContainer(offerData.content.contentType, offerData.content.contentItem, offerData.content.contentEquip, offerData.content.contentCurrency, offerData.content.contentFood); //kvuli tomu ze nemam withConverter...
+
+        offerData.content = new ContentContainer(offerData.content.content, offerData.content.contentEquip);//kvuli tomu ze nemam withConverter...
+        offerData.content = generateContentContainer(offerData.content.getItem());
+        //new ContentContainer(offerData.content.contentType, offerData.content.contentItem, offerData.content.contentEquip, offerData.content.contentCurrency, offerData.content.contentFood); //kvuli tomu ze nemam withConverter...
 
         const inboxDb = admin.firestore().collection('inbox').doc();
         console.log("sending inbox refund to old bidder, with this amount of gold :  " + offerData.lastBidPrice);
-        const newContentCurrency = new ContentCurrency(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.lastBidPrice, RARITY.COMMON);
-        const newContent = new ContentContainer(CONTENT_TYPE.CURRENCY, undefined, undefined, newContentCurrency, undefined);
+        // const newContentCurrency = new ContentCurrency(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.lastBidPrice, RARITY.COMMON);
+        // const newContent = new ContentContainer(CONTENT_TYPE.CURRENCY, undefined, undefined, newContentCurrency, undefined);
+        const newContent = generateContentContainer(generateContent(ITEMS.GOLD, offerData.lastBidPrice))
         const newInbox = new InboxItem(inboxDb.id, offerData.highestBidderUid, newContent, "Auction House : You were outbid!", "Here is your gold refund for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color> you were oudbid on", getCurrentDateTime(480));
 
         t.set(inboxDb, JSON.parse(JSON.stringify(newInbox)));
@@ -216,10 +231,11 @@ exports.buyoutContentOnAuctionHouse = functions.https.onCall(async (data, contex
 
       const offerDoc = await t.get(offerDb);
       let offerData: AuctionOffer = offerDoc.data();
-      offerData.content = new ContentContainer(offerData.content.contentType, offerData.content.contentItem, offerData.content.contentEquip, offerData.content.contentCurrency, offerData.content.contentFood); //kvuli tomu ze nemam withConverter...
 
+      offerData.content = new ContentContainer(offerData.content.content, offerData.content.contentEquip);//kvuli tomu ze nemam withConverter...
+      // offerData.content = new ContentContainer(offerData.content.contentType, offerData.content.contentItem, offerData.content.contentEquip, offerData.content.contentCurrency, offerData.content.contentFood); //kvuli tomu ze nemam withConverter...
       if (offerData.sellerUid == callerCharacterUid)
-         throw ("Cant buyout your own auction!");
+        throw ("Cant buyout your own auction!");
 
       const hasHighestBidder = offerData.highestBidderUid != "";
 
@@ -245,8 +261,8 @@ exports.buyoutContentOnAuctionHouse = functions.https.onCall(async (data, contex
       const inboxDbSeller = admin.firestore().collection('inbox').doc();
       // offerData.content = new ContentContainer(offerData.content.contentType, offerData.content.contentItem, offerData.content.contentEquip, offerData.content.contentCurrency, offerData.content.contentFood); //kvuli tomu ze nemam withConverter...
       console.log("sending gold to seller inbox :  " + offerData.buyoutPrice);
-      const newContentCurrency = new ContentCurrency(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.buyoutPrice, RARITY.COMMON );
-      const newContent = new ContentContainer(CONTENT_TYPE.CURRENCY, undefined, undefined, newContentCurrency, undefined);
+      const newContent = generateContentContainer(generateContent(ITEMS.GOLD, offerData.buyoutPrice)); //new Content(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.buyoutPrice, RARITY.COMMON );
+      //const newContent = new ContentContainer(newContentCurrency, undefined);
       newInboxSeller = new InboxItem(inboxDbSeller.id, offerData.sellerUid, newContent, "Auction House : Your Auction offer was sold!", "Here is your gold for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color>", getCurrentDateTime(480));
 
 
@@ -256,8 +272,10 @@ exports.buyoutContentOnAuctionHouse = functions.https.onCall(async (data, contex
       if (hasHighestBidder) {
         // offerData.content = new ContentContainer(offerData.content.contentType, offerData.content.contentItem, offerData.content.contentEquip, offerData.content.contentCurrency, offerData.content.contentFood); //kvuli tomu ze nemam withConverter...
         console.log("sending inbox refund to old bidder, with this amount of gold :  " + offerData.lastBidPrice);
-        const newContentCurrency = new ContentCurrency(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.lastBidPrice, RARITY.COMMON );
-        const newContent = new ContentContainer(CONTENT_TYPE.CURRENCY, undefined, undefined, newContentCurrency, undefined);
+
+        const newContent = generateContentContainer(generateContent(ITEMS.GOLD, offerData.lastBidPrice))
+        //  const newContentCurrency = new ContentCurrency(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.lastBidPrice, RARITY.COMMON);
+        // const newContent = new ContentContainer(CONTENT_TYPE.CURRENCY, undefined, undefined, newContentCurrency, undefined);
         newInboxHighestBidder = new InboxItem(inboxDbHasHighestBidder.id, offerData.highestBidderUid, newContent, "Auction House : You were outbought!", "Here is your gold refund for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color> you were outbought on", getCurrentDateTime(480));
       }
 
@@ -270,34 +288,6 @@ exports.buyoutContentOnAuctionHouse = functions.https.onCall(async (data, contex
 
       await t.set(inboxDbBuyer, JSON.parse(JSON.stringify(newInboxBuyer)));
       await t.set(inboxDbSeller, JSON.parse(JSON.stringify(newInboxSeller)));
-
-      // if (hasHighestBidder)
-      //   t.set(inboxDb, JSON.parse(JSON.stringify(newInboxHighestBidder)));
-
-      // await t.set(inboxDb, JSON.parse(JSON.stringify(newInboxBuyer)));
-      // await t.set(inboxDb, JSON.parse(JSON.stringify(newInboxSeller)));
-
-
-
-
-
-      // Set the value of 'NYC'
-      // var nycRef = db.collection("cities").doc("NYC");
-      // batch.set(nycRef, { name: "New York City" });
-
-      // // Update the population of 'SF'
-      // var sfRef = db.collection("cities").doc("SF");
-      // batch.update(sfRef, { "population": 1000000 });
-
-      // // Delete the city 'LA'
-      // var laRef = db.collection("cities").doc("LA");
-      // batch.delete(laRef);
-
-      // // Commit the batch
-      // batch.commit().then(() => {
-      //   // ...
-      // });
-
 
 
       //  await t.set(sellerCharacterDb, JSON.parse(JSON.stringify(sellerCharacterData)), { merge: true });
@@ -347,7 +337,7 @@ exports.collectMyUnsoldContentOnAuctionHouse = functions.https.onCall(async (dat
         throw ("Offer was sold to someone! You cannot collect it!");
 
 
-      callerCharacterData.addContentToInventory(offerData.content, true,false);
+      callerCharacterData.addContentToInventory(offerData.content, true, false);
 
 
 
@@ -450,7 +440,7 @@ exports.collectContentForMyWonAuctionOnAuctionHouse = functions.https.onCall(asy
         throw ("Auction is still in progress! You cannot collect reward for it!");
 
 
-      callerCharacterData.addContentToInventory(offerData.content, true,false);
+      callerCharacterData.addContentToInventory(offerData.content, true, false);
 
 
       offerData.highestBidderUid = "";
@@ -474,4 +464,4 @@ exports.collectContentForMyWonAuctionOnAuctionHouse = functions.https.onCall(asy
 });
 
 
-  // [END allAdd]
+// [END allAdd]

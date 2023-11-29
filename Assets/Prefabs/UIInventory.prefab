@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 12740668444773276}
   - component: {fileID: 12740668444773251}
   - component: {fileID: 12740668444773250}
+  - component: {fileID: 4536891360975266038}
   m_Layer: 5
   m_Name: BagParent
   m_TagString: Untagged
@@ -36,7 +37,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -0.00036621094}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &12740668444773276
@@ -54,8 +55,8 @@ MonoBehaviour:
   m_Padding:
     m_Left: 0
     m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
+    m_Top: 20
+    m_Bottom: 20
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
@@ -84,8 +85,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.15686275, g: 0.15294118, b: 0.098039225, a: 1}
-  m_RaycastTarget: 1
+  m_Color: {r: 0.08235294, g: 0.10196079, b: 0.10196079, a: 1}
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -101,6 +102,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4536891360975266038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 12740668444773248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &12740668977688880
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,6 +302,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UseItemSelectFeature: 0
   MultiSelect: 1
+  CanDeselectSelectedItem: 1
   SelectedItems: []
   Filter: 0
   AccountDataSO: {fileID: 11400000, guid: 55905d11d69c645c98d632ec3cb9745b, type: 2}
@@ -331,8 +347,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 2.2940674}
-  m_SizeDelta: {x: -76.7249, y: -73.8083}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -68.2, y: -71.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6696625524383091452
 MonoBehaviour:
@@ -347,7 +363,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 12740668444773249}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -377,7 +393,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding: {x: 0, y: 0, z: 0, w: 0}
-  m_Softness: {x: 38, y: 48}
+  m_Softness: {x: 38, y: 50}
 --- !u!222 &3403327869063602011
 CanvasRenderer:
   m_ObjectHideFlags: 0

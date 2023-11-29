@@ -92,43 +92,43 @@ namespace simplestmmorpg.data
         }
 
 
-        public string GetTimeLeft()
-        {
-            double ExpireMilis = double.Parse(expireDate);
-            double NowInMilis = Utils.GetNowInMillis();
+        //public string GetTimeLeft()
+        //{
+        //    double ExpireMilis = double.Parse(expireDate);
+        //    double NowInMilis = Utils.GetNowInMillis();
 
-            //Debug.Log("expire milis from server: "+ expireDate);
-            //     Debug.Log("New milis on client: " + NowInMilis);
+        //    //Debug.Log("expire milis from server: "+ expireDate);
+        //    //     Debug.Log("New milis on client: " + NowInMilis);
 
-            double durationLeft = ExpireMilis - NowInMilis;
+        //    double durationLeft = ExpireMilis - NowInMilis;
 
-            //    Debug.Log("durationLeft : " + durationLeft);
-            double minutesLeft = durationLeft / 60000;
-            double hoursLeft = durationLeft / 3600000;
-
-
-            //    Debug.Log("minutesLeft: " + minutesLeft + "hoursLeft: " + hoursLeft);
-
-            if (minutesLeft < 0)
-                return "Expired";
-            if (minutesLeft < 2)
-                return "Less 2 minutes left";
-            if (minutesLeft < 10)
-                return "Less 10 minutes left";
-            else if (minutesLeft < 30)
-                return "Less 30 minutes left";
-            else if (minutesLeft < 60)
-                return "Less than hour left";
-            else
-                return "Less than " + Mathf.Ceil((float)hoursLeft) + " hours left";
+        //    //    Debug.Log("durationLeft : " + durationLeft);
+        //    double minutesLeft = durationLeft / 60000;
+        //    double hoursLeft = durationLeft / 3600000;
 
 
+        //    //    Debug.Log("minutesLeft: " + minutesLeft + "hoursLeft: " + hoursLeft);
+
+        //    if (minutesLeft < 0)
+        //        return "Expired";
+        //    if (minutesLeft < 2)
+        //        return "Less 2 minutes left";
+        //    if (minutesLeft < 10)
+        //        return "Less 10 minutes left";
+        //    else if (minutesLeft < 30)
+        //        return "Less 30 minutes left";
+        //    else if (minutesLeft < 60)
+        //        return "Less than hour left";
+        //    else
+        //        return "Less than " + Mathf.Ceil((float)hoursLeft) + " hours left";
 
 
-            // Return the time converted into UTC
-            //    return DateTime.Parse(expireDate);
-            // return DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(expireDate.ToString())).UtcDateTime;
-        }
+
+
+        //    // Return the time converted into UTC
+        //    //    return DateTime.Parse(expireDate);
+        //    // return DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(expireDate.ToString())).UtcDateTime;
+        //}
 
         //public ItemSimple GetItem()
         //{

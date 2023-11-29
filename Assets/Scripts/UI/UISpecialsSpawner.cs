@@ -47,7 +47,7 @@ public class UISpecialsSpawner : MonoBehaviour
         UIEntriesList.Clear();
 
 
-        foreach (var special in AccountDataSO.GetCurrentPointOfInterest().specials)
+        foreach (var special in AccountDataSO.PointOfInterestData.specials)
         {
             switch (special)
             {

@@ -1,9 +1,11 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { ContentContainer, CharacterDocument, characterDocumentConverter, SimpleTally, WorldPosition, CONTENT_TYPE, CHARACTER_CLASS } from ".";
-import { generateEquip } from "./equip";
-import { LocationConverter, MapLocation } from "./worldMap";
+import { ContentContainer, CharacterDocument, characterDocumentConverter, SimpleTally, CHARACTER_CLASS, generateContentContainer, PlayerData } from ".";
+import { generateContent, generateEquip, ItemIdWithAmount, QuerryForSkillDefinitions } from "./equip";
+
+import { PointOfInterest, PointOfInterestConverter } from "./worldMap";
+import { setMyCharacterLevelLeaderboards } from "./leaderboards";
 const admin = require('firebase-admin');
 // // [END import]
 
@@ -11,21 +13,26 @@ export class Questgiver {
   constructor(
 
     public id: string,
-    public position: WorldPosition,
+    // public position: WorldPosition,
     public minLevel: number, //slouzi k limitaci zobrazeni/splneni questu
-    public qLevel: number, //slouzi k definici jakeho levelu maji byt random itemy co generuje
+    public qLevel: number, //slouzi k definici jakeho levelu maji byt random itemy co generuje a kolik expu dostane
     public killsRequired: SimpleTally[],
-    public rewards: QuestgiverRewardsMeta[],
+    public rewards: RewardClassSpecific[],
     public hasExpireDate: boolean,
     public expireDate: string,
     public itemsRequired: SimpleTally[],
-    public rewardsRandomEquip: QuestgiverRewardRandomEquipsMeta[],
-    public prereqQuests: string[]
+    public rewardsRandomEquip: RandomEquip[],
+    public prereqQuests: string[],
+    public expRewardPerLevel: number,
+    public rewardsGenerated: ItemIdWithAmount[] | undefined
+    //TODO: jeste pridat QuestfiverRewardItemDropDefinition  - pro itemy obyc co nejsou ani konkretni equip, ani random equip ale proste jen item jako jabko nebo lahvicka?
   ) { }
 
 }
 
-export class QuestgiverRewardsMeta {
+
+
+export class RewardClassSpecific {
   constructor(
     public characterClassIds: string[],
     public content: ContentContainer,
@@ -33,10 +40,11 @@ export class QuestgiverRewardsMeta {
 
 }
 
-export class QuestgiverRewardRandomEquipsMeta {
+export class RandomEquip {
   constructor(
     public rarity: string,
     public equipSlotId: string,
+    public mLevel: number
 
   ) { }
 
@@ -57,19 +65,20 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
       const callerCharacterDoc = await t.get(callerCharacterDb);
       let callerCharacterData: CharacterDocument = callerCharacterDoc.data();
 
-      const locationDb = admin.firestore().collection('_metadata_zones').doc(callerCharacterData.position.zoneId).collection("locations").doc(callerCharacterData.position.locationId).withConverter(LocationConverter);//.doc(questgiverUid);
+      const pointOfInterestDb = admin.firestore().collection('_metadata_zones').doc(callerCharacterData.position.zoneId).collection("locations").doc(callerCharacterData.position.locationId).collection("pointsOfInterest").doc(callerCharacterData.position.pointOfInterestId).withConverter(PointOfInterestConverter);//.doc(questgiverUid);
 
-      const locationDoc = await t.get(locationDb);
-      let locationData: MapLocation = locationDoc.data();
+      const pointOfInterestDoc = await t.get(pointOfInterestDb);
+      let pointOfInterestData: PointOfInterest = pointOfInterestDoc.data();
 
-      
-   //   const questgiverDoc = await t.get(questgiverDb);
-      const questgiverData = locationData.getPointOfInterestById(callerCharacterData.position.pointOfInterestId).getQuestgiverById(questgiverUid);// questgiverDoc.data();
+      console.log("poi: " + pointOfInterestData.id);
+      //   const questgiverDoc = await t.get(questgiverDb);
+      //  const poi = locationData.getPointOfInterestById(callerCharacterData.position.pointOfInterestId);
+      const questgiverData = pointOfInterestData.getQuestgiverById(questgiverUid);// questgiverDoc.data();
 
 
-      //zkontroluju jestli jste ve stejne lokaci
-      if (!callerCharacterData.isOnSameWorldPosition(questgiverData.position))
-        throw ("Questgiver : " + questgiverData.id + " is not at same location as you are! Cannot claim rewards!");
+      //zkontroluju jestli jste ve stejne lokaci...ziskavam data lokace na ktere je hrac, timpadem nemuzu ziskat jine QG nez ty co jsou na lokaci hrace....
+      // if (!callerCharacterData.isOnSameWorldPosition(  questgiverData.position))
+      //   throw ("Questgiver : " + questgiverData.id + " is not at same location as you are! Cannot claim rewards!");
 
       //zkontroluju jesttli jsi uz neclaimnul reward od tohodle questgivera
       if (callerCharacterData.questgiversClaimed.includes(questgiverData.id))
@@ -102,6 +111,31 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
           throw "You dont have enought items in inventory to fullfill the quest requirements!"
       });
 
+      //dam expy hraci
+      var gainedNewLevel = callerCharacterData.giveExp(questgiverData.qLevel * questgiverData.expRewardPerLevel);
+
+
+
+      //pokud sem dostal level, ta ho chci updatnout i v CharacterPreview 
+      let playerData: PlayerData | undefined;
+      const playerDb = admin.firestore().collection('players').doc(callerCharacterData.userUid);
+
+      if (gainedNewLevel) {
+        console.log("dostal se level, upatuju preview!");
+        const playerDoc = await t.get(playerDb);
+        playerData = playerDoc.data();
+        if (playerData != undefined) {
+          playerData.characters.forEach(characterPreview => {
+            if (characterPreview.characterUid == callerCharacterData.uid) {
+              characterPreview.level = callerCharacterData.stats.level;
+              console.log("nasel sem preview " + characterPreview.characterUid + "level : " + characterPreview.level);
+            }
+          });
+        }
+      }
+
+
+
       //dam reward hraci
       for (const reward of questgiverData.rewards) {
         // console.log("reward_A : " + reward.content.getItem().itemId);
@@ -112,15 +146,31 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
         }
       }
       //...a jeste rando equip reward dam jestli nejaky je
-      for (const reward of questgiverData.rewardsRandomEquip) {
-        callerCharacterData.addContentToInventory(new ContentContainer(CONTENT_TYPE.EQUIP, undefined, generateEquip(questgiverData.qLevel, reward.rarity, reward.equipSlotId, callerCharacterData.characterClass), undefined, undefined), true, false);
+      if (questgiverData.rewardsRandomEquip.length > 0) {
+        let skillDefinitions = await QuerryForSkillDefinitions(t);
+        for (const reward of questgiverData.rewardsRandomEquip) {
+          callerCharacterData.addContentToInventory(generateContentContainer(generateEquip(reward.mLevel, reward.rarity, reward.equipSlotId, callerCharacterData.characterClass, skillDefinitions)), true, false);
+        }
       }
-
+      //...a jeste rando equip reward dam jestli nejaky je NEMEL BY BYT!
+      if (questgiverData.rewardsGenerated != undefined) {
+        for (const reward of questgiverData.rewardsGenerated) {
+          callerCharacterData.addContentToInventory(generateContentContainer(generateContent(reward.itemId, reward.amount)), true, false);
+        }
+      }
       //ulozim si ze sem questgivera claimul
       callerCharacterData.questgiversClaimed.push(questgiverData.id);
 
-      t.set(callerCharacterDb, JSON.parse(JSON.stringify(callerCharacterData)), { merge: true });
+      //pokud si dostal level ulozim do CHARACTER LEVEL leaderboards
+      if (gainedNewLevel) {
+        let result = await setMyCharacterLevelLeaderboards(t, callerCharacterData);
+        t.set(result.docRef, result.data, result.options);
+      }
 
+      if (playerData != undefined)
+        t.set(playerDb, JSON.parse(JSON.stringify(playerData)), { merge: true });
+
+      t.set(callerCharacterDb, JSON.parse(JSON.stringify(callerCharacterData)), { merge: true });
     });
 
     console.log('Transaction success', result);
@@ -135,4 +185,4 @@ exports.claimQuestgiverReward = functions.https.onCall(async (data, context) => 
 
 
 
-  // [END allAdd]
+// [END allAdd]

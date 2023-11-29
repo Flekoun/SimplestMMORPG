@@ -15,4 +15,6 @@ MonoBehaviour:
   IdPrefix: ENEMY
   ImageId: MALAKA_DUNGEON_SUMMONER
   Image: {fileID: 21300000, guid: ff91bb5d3e1d57940aa378d52b93b97e, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

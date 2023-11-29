@@ -4,6 +4,7 @@ using simplestmmorpg.data;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Events;
 
 public class UIBuff : MonoBehaviour
 {
@@ -11,12 +12,19 @@ public class UIBuff : MonoBehaviour
     public Image Portrait;
     public TextMeshProUGUI TurnLeftText;
     public CombatBuff Data;
-
+    public TooltipSpawner TooltipSpawner;
+    public UnityAction<UIBuff> OnClicked;
 
     public void Setup(CombatBuff _data)
     {
         Data = _data;
-        Portrait.sprite = ImageIdDefinitionSOSet.GetDefinitionById(Utils.GetMetadataForSkill(Data.buffId).imageId).Image;
-        TurnLeftText.SetText(Data.durationTurns.ToString());
+        Portrait.sprite = ImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetSkillMetadata(Data.buffId).imageId).Image;
+        TurnLeftText.SetText(Data.turnsLeft.ToString());
+        TooltipSpawner.SetCombatBuff(Data);
+    }
+
+    public void Clicked()
+    {
+        OnClicked?.Invoke(this);
     }
 }

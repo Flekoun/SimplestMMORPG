@@ -10,7 +10,7 @@ public class FloatingTextSpawner : MonoBehaviour
 
     public void Spawn(string _text, Color _color, Transform _spawnPoint)
     {
-        Debug.Log("SPawnuju floating text :" + _text + "jsem : " + this.gameObject.name);
+//        Debug.Log("SPawnuju floating text :" + _text + "jsem : " + this.gameObject.name);
         var floatingText = PrefabFactory.CreateGameObject<FloatingText>(FloatingTextPrefab, _spawnPoint);
         floatingText.Text.color = _color;
         floatingText.Show(_text);

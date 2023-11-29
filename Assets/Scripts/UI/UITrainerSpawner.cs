@@ -44,13 +44,13 @@ public class UITrainerSpawner : MonoBehaviour
     {
         Utils.DestroyAllChildren(Parent, 1);
         UIEntriesList.Clear();
-        foreach (var trainer in AccountDataSO.GetCurrentPointOfInterest().trainers)
-        {
-            var trainerUI = PrefabFactory.CreateGameObject<UITrainerEntry>(UIPrefab, Parent);
-            trainerUI.SetData(trainer);
-            UIEntriesList.Add(trainerUI);
-            trainerUI.OnClicked += EntryClicked;
-        }
+        //foreach (var trainer in AccountDataSO.PointOfInterestData.trainers)
+        //{
+        //    var trainerUI = PrefabFactory.CreateGameObject<UITrainerEntry>(UIPrefab, Parent);
+        //    trainerUI.SetData(trainer);
+        //    UIEntriesList.Add(trainerUI);
+        //    trainerUI.OnClicked += EntryClicked;
+        //}
 
         if (OnRefreshed != null)
             OnRefreshed.Invoke();

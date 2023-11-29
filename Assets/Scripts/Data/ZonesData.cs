@@ -47,42 +47,69 @@ namespace simplestmmorpg.data
 
 
 
-    [Serializable]
-    [FirestoreData]
-    public class ScreenPoisitionWihtId
-    {
-        [field: SerializeField]
-        [FirestoreProperty]
-        public string id { get; set; }
+    //[Serializable]
+    //[FirestoreData]
+    //public class ScreenPoisitionWihtId
+    //{
+    //    [field: SerializeField]
+    //    [FirestoreProperty]
+    //    public string id { get; set; }
 
-        [field: SerializeField]
-        [FirestoreProperty]
-        public ScreenPosition screenPosition { get; set; }
-    }
+    //    [field: SerializeField]
+    //    [FirestoreProperty]
+    //    public ScreenPosition screenPosition { get; set; }
+    //}
+
+
+
 
     [Serializable]
     [FirestoreData]
     public class Zone
     {
-        [field: SerializeField]
-        [FirestoreProperty]
-        public List<DijkstraMapVertex> dijkstraMap { get; set; }
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public List<DijkstraMapVertex> dijkstraMap { get; set; }
+
 
         [field: SerializeField]
         [FirestoreProperty]
-        public List<ScreenPoisitionWihtId> locationScreenPositions { get; set; }
+        public DijkstraMap dijkstraMap { get; set; }
 
-        public ScreenPosition GetScreenPositionForLocationId(string _locationId)
+
+        public DijkstraMapVertex GetDijkstraMapVertexById(string _id)
         {
-            foreach (var item in locationScreenPositions)
+            foreach (var item in dijkstraMap.exportMap)
             {
-                if (item.id == _locationId)
-                    return item.screenPosition;
+                if (item.id == _id)
+                    return item;
             }
 
+            Debug.LogWarning("SPATNE NASTAVENA DIJKSTRA ASI : " + _id);
             return null;
         }
+
+        //public ScreenPosition GetScreenPositionForLocationId(string _locationId)
+        //{
+        //    foreach (var item in locationScreenPositions)
+        //    {
+        //        if (item.id == _locationId)
+        //            return item.screenPosition;
+        //    }
+
+        //    return null;
+        //}
     }
+
+    [Serializable]
+    [FirestoreData]
+    public class DijkstraMap
+    {
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<DijkstraMapVertex> exportMap { get; set; }
+    }
+
 
     [Serializable]
     [FirestoreData]
@@ -96,53 +123,162 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public string locationType { get; set; }
 
-        [field: SerializeField]
-        [FirestoreProperty]
-        public List<PointOfInterest> pointsOfInterest { get; set; }
+
 
         [field: SerializeField]
         [FirestoreProperty]
-        public List<DijkstraMapVertex> dijkstraMap { get; set; }
+        public DijkstraMap dijkstraMap { get; set; }
+        // public List<DijkstraMapVertex> dijkstraMap { get; set; }
+
+
+
 
         [field: SerializeField]
         [FirestoreProperty]
-        public ScreenPosition screenPosition { get; set; }
+        public string graveyard { get; set; }
 
-        public PointOfInterest GetPointOfInterestById(string _id)
+        //public PointOfInterest GetPointOfInterestById(string _id)
+        //{
+        //    foreach (var item in pointsOfInterest)
+        //    {
+        //        if (item.id == _id)
+        //            return item;
+        //    }
+
+        //    Debug.LogError("No point of interesst with ID exists : " + _id);
+        //    return null;
+        //}
+
+        public DijkstraMapVertex GetDijkstraMapVertexById(string _id)
         {
-            foreach (var item in pointsOfInterest)
+            //            Debug.LogWarning("GetDijkstraMapVertexById : " + _id);
+            foreach (var item in dijkstraMap.exportMap)
             {
                 if (item.id == _id)
                     return item;
             }
 
-            Debug.LogError("No point of interesst with ID exists : " + _id);
+            //            Debug.LogWarning("SPATNE NASTAVENA DIJKSTRA ASI : " + _id);
             return null;
         }
 
 
+        //public Vector2 GetScreenPosition()
+        //{
+        //    return screenPosition.ToVector2();
+        //}
 
-        public Vector2 GetScreenPosition()
-        {
-            return screenPosition.ToVector2();
-        }
+        //public List<ScreenPoisitionWihtId> GetScreenPositionsWithIds()
+        //{
+        //    List<ScreenPoisitionWihtId> posList = new List<ScreenPoisitionWihtId>();
 
-        public List<ScreenPoisitionWihtId> GetScreenPositionsWithIds()
-        {
-            List<ScreenPoisitionWihtId> posList = new List<ScreenPoisitionWihtId>();
+        //    foreach (var poi in pointsOfInterest)
+        //    {
+        //        var pos = new ScreenPoisitionWihtId();
+        //        pos.id = poi.id;
+        //        pos.screenPosition = poi.screenPosition;
+        //        posList.Add(pos);
+        //    }
 
-            foreach (var poi in pointsOfInterest)
-            {
-                var pos = new ScreenPoisitionWihtId();
-                pos.id = poi.id;
-                pos.screenPosition = poi.screenPosition;
-                posList.Add(pos);
-            }
+        //    return posList;
 
-            return posList;
-
-        }
+        //}
     }
+
+
+    //[Serializable]
+    //[FirestoreData]
+    //public class RewardRecurring
+    //{
+
+    //    [field: SerializeField]
+    //    [FirestoreProperty]
+    //    public int recurrenceInGameDays { get; set; }
+
+    //    [field: SerializeField]
+    //    [FirestoreProperty]
+    //    public List<ContentContainer> rewards { get; set; }
+
+    //    [field: SerializeField]
+    //    [FirestoreProperty]
+    //    public int charges { get; set; }
+
+    //    [field: SerializeField]
+    //    [FirestoreProperty]
+    //    public int rewardAtSpecificGameDay { get; set; }
+
+    //}
+
+
+    [Serializable]
+    [FirestoreData]
+    public class DungeonDefinitionPublic
+    {
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int partySize { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int entryPrice { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<ContentContainer> rewards { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<RandomEquip> rewardsRandomEquip { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<ItemIdWithAmount> rewardsGenerated { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public bool isEndlessDungeon { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public bool isFinalDungeon { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int characterLevelMax { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int characterLevelMin { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int floorsTotal { get; set; }
+
+
+    }
+
+    [Serializable]
+    [FirestoreData]
+    public class MonstersDefinitionPublic
+    {
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int partySize { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int entryTimePrice { get; set; }
+
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int tiersTotal { get; set; }
+
+
+    }
+
 
 
     [Serializable]
@@ -154,43 +290,123 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public string id { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<IdWithChance> enemies { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string typeId { get; set; }
+
         //[field: SerializeField]
         //[FirestoreProperty]
-        //public ??? enemies { get; set; }
+        //public int tiersCount { get; set; }
 
-
-        [field: SerializeField]
-        [FirestoreProperty]
-        public int exploreTimePrice { get; set; }
-
-        [field: SerializeField]
-        [FirestoreProperty]
-        public string pointOfInterestType { get; set; }
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public int exploreTimePrice { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]
-        public List<QuestgiverMeta> questgivers { get; set; }
+        public int pointOfInterestType { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<Questgiver> questgivers { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]
         public List<Vendor> vendors { get; set; }
 
-
-        [field: SerializeField]
-        [FirestoreProperty]
-        public List<Trainer> trainers { get; set; }
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public List<Trainer> trainers { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]
         public List<string> specials { get; set; }
 
+        //[field: SerializeField]
+        //[FirestoreProperty]
+        //public int maxCombatants { get; set; }
+
         [field: SerializeField]
         [FirestoreProperty]
-        public ScreenPosition screenPosition { get; set; }
+        public int floorNumber { get; set; }
 
-        public Vector2 GetScreenPosition()
+        [field: SerializeField]
+        [FirestoreProperty]
+        public DungeonDefinitionPublic dungeon { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public MonstersDefinitionPublic monsters { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string roomType { get; set; }
+
+        public List<Questgiver> GetValidQuestGivers(CharacterData _characterData)
         {
-            return screenPosition.ToVector2();
+            //TADY SE FILTRUJOU QUEST GIVERI...DOBRE MISTO?!!
+
+            //vyfiltruju questgivery ktere jsem uz splnil pryc.....
+            var tempListToBeFiltered = new List<Questgiver>(questgivers);
+
+            for (int i = tempListToBeFiltered.Count - 1; i >= 0; i--)
+            {
+                if (_characterData.questgiversClaimed.Contains(tempListToBeFiltered[i].id))
+                    tempListToBeFiltered.RemoveAt(i);
+            }
+
+
+            //vyfiltruju questgivery podle prereQestu.....
+            for (int i = tempListToBeFiltered.Count - 1; i >= 0; i--)
+            {
+                int prereqsFound = 0;
+
+                foreach (var item in tempListToBeFiltered[i].prereqQuests)
+                {
+                    if (_characterData.questgiversClaimed.Contains(item))
+                        prereqsFound++;
+                }
+
+                if (prereqsFound < tempListToBeFiltered[i].prereqQuests.Count)
+                {
+                    //    Debug.Log("Fillteriung out : " + tempListToBeFiltered[i].uid + " prereqsQuestsFound:  " + prereqsFound + " needed : " + tempListToBeFiltered[i].prereqQuests.Count);
+                    tempListToBeFiltered.RemoveAt(i);
+                }
+            }
+
+
+            //vyfiltruju questgivery podle prereqPoI.....
+            //for (int i = tempListToBeFiltered.Count - 1; i >= 0; i--)
+            //{
+            //    int prereqsFound = 0;
+
+            //    foreach (var item in tempListToBeFiltered[i].prereqExploredPointsOfInterest)
+            //    {
+            //        if (_characterData.exploredPositions.pointsOfInterest.Contains(item))
+            //            prereqsFound++;
+            //    }
+
+            //    if (prereqsFound < tempListToBeFiltered[i].prereqExploredPointsOfInterest.Count)
+            //    {
+            //        //       Debug.Log("Fillteriung out : " + tempListToBeFiltered[i].uid + " prereqsPoIFound:  " + prereqsFound + " needed : " + tempListToBeFiltered[i].prereqExploredPointsOfInterest.Count);
+            //        tempListToBeFiltered.RemoveAt(i);
+            //    }
+            //}
+
+            //vyfiltruju questgivery podle levelu.....
+            //for (int i = tempListToBeFiltered.Count - 1; i >= 0; i--)
+            //{
+            //    if (tempListToBeFiltered[i].minLevel > _characterData.stats.level)
+            //    {
+            //        tempListToBeFiltered.RemoveAt(i);
+            //    }
+            //}
+
+            return tempListToBeFiltered;
         }
     }
 
@@ -209,6 +425,18 @@ namespace simplestmmorpg.data
         [field: SerializeField]
         [FirestoreProperty]
         public List<DijkstraMapNode> nodes { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public Coordinates2DCartesian screenPosition { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public Coordinates2DCartesian mapPosition { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int type { get; set; }
 
 
     }
@@ -229,22 +457,21 @@ namespace simplestmmorpg.data
     }
     [Serializable]
     [FirestoreData]
-    public class ScreenPosition
+    public class Coordinates2DCartesian
     {
         [field: SerializeField]
         [FirestoreProperty]
-        public float x { get; set; }
+        public int x { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]
-        public float y { get; set; }
+        public int y { get; set; }
 
 
         public Vector2 ToVector2()
         {
             return new Vector2(x, y);
         }
-
     }
 
 

@@ -15,4 +15,6 @@ MonoBehaviour:
   IdPrefix: ENEMY
   ImageId: SCORPID_CORRUPTED
   Image: {fileID: 21300000, guid: e4ac7b424ecdf4e7ba9825e5cedf64e3, type: 3}
+  ProjectileEffectPrefab: {fileID: 0}
+  ImpactEffectPrefab: {fileID: 0}
   ImageIdDefinitionSOSet: {fileID: 11400000, guid: d1671093ab9d14b0797476d6c04f2f2b, type: 2}

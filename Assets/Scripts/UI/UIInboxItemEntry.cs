@@ -25,7 +25,7 @@ public class UIInboxItemEntry : MonoBehaviour
 
     public void Clicked()
     {
-        if(OnClicked!=null)
+        if (OnClicked != null)
         {
             OnClicked.Invoke(this);
         }

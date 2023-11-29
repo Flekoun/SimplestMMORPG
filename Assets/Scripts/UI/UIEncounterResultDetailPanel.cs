@@ -5,6 +5,7 @@ using TMPro;
 using simplestmmorpg.data;
 using UnityEngine.UI;
 using System;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class UIEncounterResultDetailPanel : UISelectableSpawner
 {
@@ -27,28 +28,41 @@ public class UIEncounterResultDetailPanel : UISelectableSpawner
     public GameObject ChooseItemGO;
     public GameObject ChooseItemHintGO;
 
-    public TextMeshProUGUI SilverText;
+    public UIPriceLabel GoldReward;
     public TextMeshProUGUI XPText;
 
     public Transform EquipLootParent;
     public GameObject UIEquipPrefab;
 
-
+    private bool IsShowing = false;
     public void Awake()
     {
-        UIEncounterResultSpawner.OnUIEntryClicked += Show;
+        //  UIEncounterResultSpawner.OnUIEntryClicked += Show;
         UIContentContainerDetail.OnHideClicked += HideContentDetailClicked;
         UIContentContainerDetail.OnActionButtonClicked += OnActionButtonClicked;
+        AccountDataSO.OnEncounterResultsDataChanged += ForceShowResult;
     }
 
-    public void OnDestroy()
+    private void ForceShowResult()
     {
-        UIEncounterResultSpawner.OnUIEntryClicked -= Show;
+        if (IsShowing)
+            return;
 
+        for (int i = 0; i < AccountDataSO.EncounterResultsData.Count; i++)
+        {
+            Show(AccountDataSO.EncounterResultsData[i]);
+        }
     }
-    public void Show(UIEncounterResultEntry _entry)
+
+    //public void OnDestroy()
+    //{
+    //    UIEncounterResultSpawner.OnUIEntryClicked -= Show;
+
+    //}
+    public void Show(EncounterResult _data)
     {
-        Data = _entry.Data;
+        IsShowing = true;
+        Data = _data;
 
         AccountDataSO.OnEncounterResultsDataChanged += Refresh;
         Refresh();
@@ -58,6 +72,7 @@ public class UIEncounterResultDetailPanel : UISelectableSpawner
 
     public void Close()
     {
+        IsShowing = false;
         AccountDataSO.OnEncounterResultsDataChanged -= Refresh;
         UIContentContainerDetail.Hide();
         Model.SetActive(false);
@@ -86,9 +101,19 @@ public class UIEncounterResultDetailPanel : UISelectableSpawner
             Close();
         }
 
-        SilverText.SetText(Data.silver.ToString());
+        GoldReward.SetPrice(Data.silver);
         XPText.SetText(Data.GetCombatantResultForUid(AccountDataSO.CharacterData.uid).expGainedEstimate.ToString());
-        FatiguePenaltyText.SetText("You suffered " + Data.turnsNumber + "% Fatigue during fight");
+
+        int deckShuffleCount = Data.GetCombatantResultForUid(AccountDataSO.CharacterData.uid).deckShuffleCount;
+
+        FatiguePenaltyText.gameObject.SetActive(false);
+
+        //  FatiguePenaltyText.SetText("You have suffered 1% Fatigue during fight");
+
+        //if (deckShuffleCount == 0)
+        //    FatiguePenaltyText.SetText("You have suffered no Fatigue during fight");
+        //else
+        //    FatiguePenaltyText.SetText("You have suffered " + deckShuffleCount  + "% Fatigue during fight ("+ deckShuffleCount+"x deck shuffled )");
 
         Utils.DestroyAllChildren(EquipLootParent);
 
@@ -99,7 +124,7 @@ public class UIEncounterResultDetailPanel : UISelectableSpawner
             foreach (var equip in enemy.contentLoot)
             {
                 var item = Factory.CreateGameObject<UIEncounterResultItem>(UIEquipPrefab, EquipLootParent);
-                item.SetData(equip, Data);
+                item.SetData(equip, Data, enemy);
                 // if (Data.combatantsList.Count > 1) //vybirat jde jen kdyz nejsi sam 
                 item.UIInventoryItem.OnClicked += OnResultItemClicked;
 
@@ -108,6 +133,24 @@ public class UIEncounterResultDetailPanel : UISelectableSpawner
 
             }
         }
+
+        foreach (var bonusloot in Data.bonusLoot)
+        {
+            var item2 = Factory.CreateGameObject<UIEncounterResultItem>(UIEquipPrefab, EquipLootParent);
+            item2.SetData(bonusloot, Data, null);
+            item2.UIInventoryItem.OnClicked += OnResultItemClicked;
+            hasAnyItemDropped = true;
+        }
+
+        foreach (var bonusloot in Data.dungeonLoot)
+        {
+            var item2 = Factory.CreateGameObject<UIEncounterResultItem>(UIEquipPrefab, EquipLootParent);
+            item2.SetData(bonusloot, Data, null);
+            item2.UIInventoryItem.OnClicked += OnResultItemClicked;
+            hasAnyItemDropped = true;
+        }
+
+
 
         NoItemDropGO.SetActive(!hasAnyItemDropped);
 

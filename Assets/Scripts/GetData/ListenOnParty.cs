@@ -27,13 +27,17 @@ public class ListenOnParty : MonoBehaviour
 
     public void StartListening()
     {
+        Debug.Log("Starting to listen on Party ...");
+
         FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
         ListenerRegistration listenerRegistration = db.Collection("parties").WhereArrayContains("partyMembersUidList", AccountDataSO.CharacterData.uid).Listen(snapshot =>
 
      {
 
+         Debug.Log("New data from Listener recieved : " + this.gameObject.name);
+
          if (snapshot.Count > 1)
-            Debug.LogError("You are in more than 1 party! How is this possible?!");
+             Debug.LogError("You are in more than 1 party! How is this possible?!");
 
          if (snapshot.Count == 0)
              AccountDataSO.SetPartyData(null);
@@ -43,11 +47,10 @@ public class ListenOnParty : MonoBehaviour
              AccountDataSO.SetPartyData(item);
          }
 
-//         Debug.Log("New data on PARTY  recieved : " + snapshot .Count + " -- "+ JsonConvert.SerializeObject(AccountDataSO.PartyInviteData, Formatting.Indented));
+         //         Debug.Log("New data on PARTY  recieved : " + snapshot .Count + " -- "+ JsonConvert.SerializeObject(AccountDataSO.PartyInviteData, Formatting.Indented));
          // OnListenerStarted.Invoke();
 
      });
-        Debug.Log("Starting to listen on Party ...");
 
     }
 

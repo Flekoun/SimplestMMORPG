@@ -17,6 +17,7 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
 
     public FloatReference HoldDuration;
     public Image HoldProgressImage;
+    //   public bool RiseClickEventOnButtonWhenHoldIsFinished = false;
 
     private Button _button;
     private float currentHoldTime = 0f;
@@ -26,6 +27,8 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
     float currentValue = 0;
     float currentValueSlow = 0;
     float t = 0;
+
+
 
     public void SetFunctional(bool _functional)
     {
@@ -57,8 +60,13 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
 
             yield return new WaitForSecondsRealtime(0.05f);
         }
-
+        //        Debug.Log("HOLD FINISHED!");
         onHoldFinished.Invoke();
+
+        //if (RiseClickEventOnButtonWhenHoldIsFinished)
+        //{
+        //    _button.onClick.Invoke();
+        //}
     }
 
     //private void Pressed()
@@ -82,10 +90,11 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
 
     public void OnPointerUp(PointerEventData eventData)
     {
+        StopAllCoroutines();
+
         currentHoldTime = 0;
         RefreshProgress();
 
-        StopAllCoroutines();
         //  onPointerUp?.Invoke();
     }
 
@@ -101,9 +110,9 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
     private void RefreshProgress()
     {
         //  HoldProgressImage.fillAmount = currentHoldTime / HoldDuration;
-      //  currentValueSlow = currentValue;
-        currentValue =currentHoldTime / HoldDuration;
-      
+        //  currentValueSlow = currentValue;
+        currentValue = currentHoldTime / HoldDuration;
+
     }
 
     void Update()
@@ -122,10 +131,10 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
             //resetting interpolator
         }
 
-       
+
         //Setting fill amount
-     //   barFast.fillAmount = currHP / maxHP;
-       // barSlow.fillAmount = currHPSlow / maxHP;
+        //   barFast.fillAmount = currHP / maxHP;
+        // barSlow.fillAmount = currHPSlow / maxHP;
     }
 
     // Afaik needed so Pointer exit works .. doing nothing further

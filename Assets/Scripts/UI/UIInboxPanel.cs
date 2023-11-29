@@ -8,10 +8,10 @@ public class UIInboxPanel : MonoBehaviour
     public GameObject Model;
 
 
-    public void Show()
+    public void Show(bool _asPlayerInbox)
     {
         Model.SetActive(true);
-        UIInboxItemsSpawner.Refresh();
+        UIInboxItemsSpawner.Setup(_asPlayerInbox);
     }
 
 
@@ -19,5 +19,5 @@ public class UIInboxPanel : MonoBehaviour
     {
         Model.SetActive(false);
     }
-  
+
 }
