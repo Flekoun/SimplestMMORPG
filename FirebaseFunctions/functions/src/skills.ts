@@ -143,10 +143,16 @@ export const enum SKILL {
   //CORRUPTION - one time spell, velka DOT? co kazdym kolem dava vic dmg?
 
   //Cruses
-  CURSE_BROKEN_LEG = "CURSE_BROKEN_LEG",
-  CURSE_DECAY = "CURSE_DECAY",
-  CURSE_MANA_COST_INCREASE = "CURSE_MANA_COST_INCREASE", //neimplementovana
-  CURSE_UNPREPARED = "CURSE_UNPREPARED" // curse za kazdy equip co ti chybi na sobe
+  CURSE_BROKEN_LEG = "CURSE_BROKEN_LEG", //dmg kdy zahrajes tu kartu, jinak zabira misto
+  CURSE_DECAY = "CURSE_DECAY", // dmg na konci kola
+  CURSE_MANA_COST_INCREASE = "CURSE_MANA_COST_INCREASE", //zvedne mana cost nahodnemu skillu v ruce
+  CURSE_UNPREPARED = "CURSE_UNPREPARED", // curse za kazdy equip co ti chybi na sobe
+  CURSE_ACID_BLISTER = "CURSE_ACID_BLISTER" // lower defense value of all skills in hand by 5
+
+  //neco jako kdyz je ta curse v ruce tak jakykoliv skill co zahraes ma sanci zpusobit ti zraneni 
+  //NECO -if is not played, deal huge damage to random ally?
+  //must be played jinak umres, 0 many, dela nejakou sracky ally
+  //ne konci tveho kola udela ti sracku pokud ji nezakouzlis, neco jako i buff blby nebo lower your mana regen by 1 (1 by melo byt minimum nekde v kodu natvrdo)
 }
 
 // [Skill]
@@ -413,7 +419,7 @@ export class Combatskill {
     }
   }
 
-  addDmgPower(_dmgPower: number) {
+  addDmgPower(_dmgPower: number, _applyAlsoToImmediateValue = false) {
     switch (this.skillGroupId) {
       case SKILL_GROUP.SLAM:
       case SKILL_GROUP.PUNCH:
@@ -423,9 +429,16 @@ export class Combatskill {
       case SKILL_GROUP.MORTAL_STRIKE:
 
         console.log("this.skillGroupId:" + this.skillGroupId + "adding:" + this.originalStats.amountsSkill[0] + " power : " + _dmgPower);
-
         this.originalStats.amountsSkill[0] += _dmgPower;
+        if (this.originalStats.amountsSkill[0] < 1) this.originalStats.amountsSkill[0] = 1;
+
+        if (_applyAlsoToImmediateValue) {
+          this.amounts[0] += _dmgPower;
+          if (this.amounts[0] < 1) this.amounts[0] = 1;
+        }
+
         break;
+
 
 
       default:
@@ -433,7 +446,7 @@ export class Combatskill {
     }
   }
 
-  addHealingPower(_amount: number) {
+  addHealingPower(_amount: number, _applyAlsoToImmediateValue = false) {
     switch (this.skillId) {
       // case SKILL.FIRST_AID:
       // case SKILL.HEALING_WAVE:
@@ -454,6 +467,12 @@ export class Combatskill {
         case BUFF.REJUVENATION_BUFF_2:
         case BUFF.REJUVENATION_BUFF_3:
           this.originalStats.amountsSkill[0] += _amount;
+          if (this.originalStats.amountsSkill[0] < 1) this.originalStats.amountsSkill[0] = 1;
+
+          if (_applyAlsoToImmediateValue) {
+            this.amounts[0] += _amount;
+            if (this.amounts[0] < 1) this.amounts[0] = 1;
+          }
           break;
 
         default:
@@ -462,14 +481,20 @@ export class Combatskill {
     }
   }
 
-  addDefense(_amount: number) {
+  addDefense(_amount: number, _applyAlsoToImmediateValue = false) {
     switch (this.skillGroupId) {
       case SKILL_GROUP.BLOCK:
       case SKILL_GROUP.BUCKLER:
       case SKILL_GROUP.TAUNT:
       case SKILL_GROUP.BARRIER_STRIKE:
-
         this.originalStats.amountsSkill[0] += _amount;
+        // console.log(" this.originalStats.amountsSkill[0]:" + this.originalStats.amountsSkill[0] + " amount " + _amount);
+        if (this.originalStats.amountsSkill[0] < 1) this.originalStats.amountsSkill[0] = 1;
+
+        if (_applyAlsoToImmediateValue) {
+          this.amounts[0] += _amount;
+          if (this.amounts[0] < 1) this.amounts[0] = 1;
+        }
         break;
 
 

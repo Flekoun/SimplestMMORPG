@@ -2,21 +2,21 @@
 
 
 import * as functions from "firebase-functions";
-import { Equip, EQUIP_SLOT_ID, RARITY, Content, ITEMS, RARE_EFFECT, generateContent, ItemIdWithAmount, IHasChanceToSpawn, SkillBonusEffect, QuerryForSkillDefinitions, generateEquip, BuffBonusEffect, FOOD_EFFECT } from "./equip";
+import { Equip, EQUIP_SLOT_ID, RARITY, Content, ITEMS, RARE_EFFECT, generateContent, ItemIdWithAmount, IHasChanceToSpawn, SkillBonusEffect, QuerryForSkillDefinitions, generateEquip, BuffBonusEffect, FOOD_EFFECT, generateDropFromDropTable } from "./equip";
 import { firestoreAutoId } from "./general2";
 //import * as firebase from 'firebase-admin';
 import { Combatskill, SKILL, ConvertSkillToCombatSkill, SKILL_GROUP, CombatSkillOriginalStats, SkillDefinitions } from "./skills";
-import { CombatStats, EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT } from "./encounter";
+import { CombatStats, EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT, DropTablesData } from "./encounter";
 import { EncounterResult, EncounterResultEnemy } from "./encounterResult";
-import { LOC, POI, PointOfInterest, POI_SPECIALS, ZONE, LocationConverter, MapLocation } from "./worldMap";
+import { LOC, POI, PointOfInterest, POI_SPECIALS, ZONE, LocationConverter, MapLocation, PointOfInterestConverter } from "./worldMap";
 import { Party, PartyConverter } from "./party";
 import { PROFESSION } from "./crafting";
 import { updateMyPortraitAtAllLeaderboards } from "./leaderboards";
 import { PendingReward, PerkOfferDefinition } from "./perks";
 import { BLESS } from "./specials";
-import { InboxItem } from "./utils";
 
 import { Timestamp } from 'firebase-admin/firestore' //WORKAROUND...timestamp je jinak null a nejde ziskavat cas...predtim mu to fcahcalo a nemusel sem tu mit toto
+import { InboxItem } from "./inbox";
 
 
 //import { Equip, EquipAttributes, EQUIP_SLOT_ID, RARITY } from "./equip";
@@ -43,13 +43,13 @@ export const TIME_BONUS_PER_LEVEL_UP = 8;
 
 //kolik se maximalne casu muze novy charakter mit
 export const TIME_MAX = 24;
-export const TRAVEL_POINTS_MAX = 99;
+export const TRAVEL_POINTS_MAX = 30;
 export const SCAVENGE_POINTS_MAX = 12;
 
 //kolik se maximalne casu muze novy charakter mit
 export const TIME_STARTING = 12;
 export const TRAVEL_POINTS_STARTING = 8;
-export const SCAVENGE_POINTS_STARTING = 1;
+export const SCAVENGE_POINTS_STARTING = 6;
 
 //kolil travel pointu a craft pointu regeneruje restovani
 export const TRAVEL_POINTS_PER_REST = 0;
@@ -59,10 +59,10 @@ export const TRAVEL_POINTS_PER_REST = 0;
 export const TIME_PER_TRAVEL_POINT = 1;
 
 // kolik time stoji restnuti
-export const REST_TIME_COST = 12;
+export const REST_TIME_COST = 8;
 
-// kolik food supplies stoji deep rest na levelu 1
-export const REST_FOOD_SUPPLIES_LIMIT = 3;
+// kolik food supplies ma kazdy na zacatku 
+//export const REST_FOOD_SUPPLIES_LIMIT_STARTING = 3;
 
 // kolik food supplies stoji deep rest
 export const REST_FOOD_SUPPLIES_LIMIT_INCREMENT_PER_LEVEL = 0;
@@ -71,17 +71,17 @@ export const REST_FOOD_SUPPLIES_LIMIT_INCREMENT_PER_LEVEL = 0;
 
 //kolik se dostane kazdy hrac Time za hodinu
 export const TIME_INCREMENT_PER_SCHEDULED = 1;
-export const TRAVEL_POINTS_INCREMENT_PER_SCHEDULED = 0;//UNUSED
-export const SCAVENGE_POINTS_INCREMENT_PER_SCHEDULED = 1;
+//export const TRAVEL_POINTS_INCREMENT_PER_SCHEDULED = 0;//UNUSED
+//export const SCAVENGE_POINTS_INCREMENT_PER_SCHEDULED = 1;
 
 //kolik fatigue bere kazde zamichani baliku
 export const DECK_SHUFFLE_FATIGUE_PENALTY = 0;
 
-//extra fatigue penalty za to kdyz uteces z boje 
-export const FLEE_FATIGUE_PENALTY = 3;
+//extra fatigue penalty za to kdyz uteces z boje v procentech decimalnich
+export const FLEE_FATIGUE_PENALTY = 5;
 
-//extra fatigue penalty za to kdyz uteces z boje 
-export const HIGH_LEVEL_POI_FATIGUE_PENALTY = 3;
+//extra fatigue penalty za to prozkoumavas high levelPoI
+export const HIGH_LEVEL_POI_FATIGUE_PENALTY = 15;
 
 //jaka je sance ze kdyz prozkoumavam novy tier dostanu do perku i rare perk z nabidky daneho PoI (1 = 100%)
 export const CHANCE_OF_DRAWING_RARE_PERK_OFFER = 0.25;
@@ -89,8 +89,8 @@ export const CHANCE_OF_DRAWING_RARE_PERK_OFFER = 0.25;
 //kolik % HP vezme shuffle deck (tato hodnota se vynasobi poctem kol)
 export const DECK_SHUFFLE_MAX_HP_PENALTY = 0.00;
 
-//sance pri explore encounter aby se spawnul i nejaky rare boss (1 = 100%)
-export const RARE_BOSS_SPAWN_CHANCE = 0.08;
+//sance pri explore encounter aby se spawnul i nejaky rare encounter (1 = 100%)
+export const RARE_BOSS_SPAWN_CHANCE = 0.03;
 
 //Instantni zabiti nepratel v encounterech
 export const INSTAKILL = false;
@@ -101,10 +101,13 @@ export const INGORE_LOOT_SPOT_RESTRICTIONS = false;
 //cheaty
 export const CHEATS_ENABLED = true;
 
-export const SCAVENGE_CLAIM_COST = 1;
-export const SCAVENGE_CLAIM_ALL_COST = 3; //Unused
-export const SCAVENGE_CLAIM_COST_TIME = 4;
-export const SCAVENGE_CLAIM_ALL_COST_TIME = 12; //Unused
+//kolik time stoji explore encounteru
+export const TIME_COST_TO_EXPLORE_POI = 3;
+
+//export const SCAVENGE_CLAIM_COST = 1;
+//export const SCAVENGE_CLAIM_ALL_COST = 3; //Unused
+//export const SCAVENGE_CLAIM_COST_TIME = 4;
+//export const SCAVENGE_CLAIM_ALL_COST_TIME = 12; //Unused
 
 export const SATOSHIUM_LEADERBOARDS_COEFICIENT = 0.1 // Koeficient kterym se vynasobi satoshim v leaderboardech aby se dalo snadno menit dynamicky.
 
@@ -473,7 +476,7 @@ async function createCharacter(_transaction: any, _characterUid: string, _userUi
 
 
   console.log("Creating character - uid :" + _characterUid + " userUid: " + _userUid + " characterName: " + characterName + " class: " + _characterClass);
-  let stats = new CharacterStats(0, 0, 400, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  let stats = new CharacterStats(0, 0, 400, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 
   const worldPosition: WorldPosition = new WorldPosition(ZONE.DUNOTAR, LOC.SEASON_TEST, POI.POI_START);
@@ -485,11 +488,11 @@ async function createCharacter(_transaction: any, _characterUid: string, _userUi
   let bags: InventoryBag[] = [];
   bags.push(new InventoryBag(firestoreAutoId(), "STARTING_BAG", 16));
   const inventory = new Inventory(bags, 16, 16, []);
-  inventory.content.push(generateContentContainer(generateContent(ITEMS.ROTTEN_APPLE, 3)));
+  inventory.content.push(generateContentContainer(generateContent(ITEMS.ROTTEN_APPLE, 1)));
 
   //inventory.content.push(generateContentContainer(generateContent(ITEMS.TOWN_PORTAL, 1)));
   //inventory.content.push(generateContentContainer(generateContent(ITEMS.MINOR_HEALTH_POTION, 3)));
-  const currency = new Currency(10, TIME_STARTING, TIME_MAX, 50, TRAVEL_POINTS_STARTING, TRAVEL_POINTS_MAX, SCAVENGE_POINTS_STARTING, SCAVENGE_POINTS_MAX, 0);
+  const currency = new Currency(10, TIME_STARTING, TIME_MAX, TRAVEL_POINTS_STARTING, TRAVEL_POINTS_MAX, SCAVENGE_POINTS_STARTING, SCAVENGE_POINTS_MAX, 0);
   const creationDate = getCurrentDateTime(0);
 
 
@@ -517,8 +520,10 @@ async function createCharacter(_transaction: any, _characterUid: string, _userUi
     stats.baseHealth = 90;
     stats.currentHealth = 90;
     stats.baseCritChance = 5;
+    stats.healthBlockedByFatigue = 30;
 
     stats.skillDrawCount = 5;
+    stats.restFoodLimit = 5;
 
   }
   else if (_characterClass == CHARACTER_CLASS.WARRIOR) {
@@ -531,10 +536,12 @@ async function createCharacter(_transaction: any, _characterUid: string, _userUi
     stats.baseMana = 4;
     stats.baseManaRegen = 4;
     stats.baseCritChance = 5;
-    stats.baseHealth = 120;
-    stats.currentHealth = 120;
+    stats.baseHealth = 90;
+    stats.currentHealth = 90;
+    stats.healthBlockedByFatigue = 30;
     //stats.healthBlockedByFatigue = 60;
     stats.skillDrawCount = 5;
+    stats.restFoodLimit = 5;
   }
   else if (_characterClass == CHARACTER_CLASS.SHAMAN) {
     startingSkill_1 = SKILL.LIGHTNING_1;
@@ -545,28 +552,16 @@ async function createCharacter(_transaction: any, _characterUid: string, _userUi
     stats.baseCritChance = 5;
     stats.baseHealth = 100;
     stats.currentHealth = 100;
+    stats.healthBlockedByFatigue = 30;
     // stats.healthBlockedByFatigue = 50;
     stats.skillDrawCount = 5;
+    stats.restFoodLimit = 5;
   }
 
 
-  // stats.totalMaxHealth = stats.baseHealth;
-  // stats.totalMaxMana = stats.baseMana;
-  // stats.totalManaRegen = stats.baseManaRegen;
-  // stats.currentHealth = stats.baseHealth;
-
-
-  // let ulockedPortraits: string[] = [];
-  // ulockedPortraits.push(characterPortrait);
-  // ulockedPortraits.push(characterPortrait2);
-
   let characteEquip: Equip[] = [];
 
-  // let upgradeMatList: ItemIdWithAmount[] = [];
-  // upgradeMatList.push(new ItemIdWithAmount(ITEMS.WOOD, 1));
-  // let qualityUpgradeMaterialsRank1: QualityUpgradeMaterials = new QualityUpgradeMaterials(upgradeMatList);
-  // let qualityUpgradeMats: QualityUpgradeMaterials[] = [];
-  // qualityUpgradeMats.push(qualityUpgradeMaterialsRank1);
+
 
   let skillDefinitions = await QuerryForSkillDefinitions(_transaction);
   const startingBody = generateEquip(1, RARITY.COMMON, EQUIP_SLOT_ID.BODY, _characterClass, skillDefinitions, startingSkill_3, "Apprentice Shirt"); //    new Equip(firestoreAutoId(), "EQUIP", "Apprentice Shirt", "BODY_1", sellPrice, CONTENT_TYPE.EQUIP, EQUIP_SLOT_ID.BODY, RARITY.COMMON, 1, 1, startingSkill_3, [], 0, 5, genericEquip.qualityUpgradeMaterials, false, [], []);
@@ -656,16 +651,11 @@ export function validateCaller(_data: any, _context: functions.https.CallableCon
 
 export function validateCallerBulletProof(_characterData: CharacterDocument, _context: functions.https.CallableContext) {
 
-  // const userUid = _characterData.userUid;
 
-  // if (userUid == undefined) {
-  //   console.log("player add UserUid to the client when calling CloudFucntion so I can check for validity of user! ");
-  //   return;
-  // }
 
-  console.log("player s uid :" + _context.auth?.uid + " vola metodu a tvrdi ze vlastni charakter : " + _characterData.userUid);
-  if (_characterData.userUid != _context.auth?.uid)
-    throw "User caller mismatach! You dont own this character!!!";
+  // console.log("player s uid :" + _context.auth?.uid + " vola metodu a tvrdi ze vlastni charakter : " + _characterData.userUid);
+  // if (_characterData.userUid != _context.auth?.uid)
+  //   throw "User caller mismatach! You dont own this character!!!";
 
   if (_characterData.isRetired)
     throw "This character is retired. You cant do anything with it!";
@@ -730,6 +720,7 @@ export const enum CONTENT_TYPE {
   FOOD = "FOOD",
   RECIPE = "RECIPE",
   FOOD_SUPPLY = "FOOD_SUPPLY",
+  CHEST = "CHEST",
 }
 
 
@@ -1154,8 +1145,26 @@ export class CharacterDocument {
 
       if (_blessId == BLESS.BEHEMOND) {
         this.stats.baseHealth += 30;
-        this.stats.totalMaxHealth += 30;
+        this.recalculateCharacterStats();
       }
+      else if (_blessId == BLESS.GLASS_CANNON) {
+        this.stats.baseHealth -= 60;
+        //        this.stats.baseResistence = -5;
+        this.stats.baseManaRegen += 1;
+        this.stats.baseMana += 1;
+        this.recalculateCharacterStats();
+      }
+      else if (_blessId == BLESS.FOOD_LIMIT_INCREASE) {
+        this.stats.restFoodLimit++;
+      }
+      else if (_blessId == BLESS.ASSASSIN) {
+        this.stats.baseHealth -= 30;
+        this.stats.baseCritChance = 5;
+        this.recalculateCharacterStats();
+      }
+
+
+
     }
     else
       throw "You already have " + _blessId + " bless!";
@@ -1167,6 +1176,7 @@ export class CharacterDocument {
 
 
   hasCurse(_curseId: string): boolean {
+    throw ("WTF toto je kravina ne?");
     return (this.curses.find(curse => curse.skillId == SKILL.CURSE_MANA_COST_INCREASE) != undefined)
   }
 
@@ -1491,7 +1501,7 @@ export class CharacterDocument {
 
     //prepocitam kolik HP je blokovano fatigue
     // console.log("this.stats.totalMaxHealth:" + this.stats.totalMaxHealth);
-    this.stats.healthBlockedByFatigue = this.stats.totalMaxHealth - Math.round(this.stats.totalMaxHealth * ((100 - this.currency.fatigue) / 100));
+    // this.stats.healthBlockedByFatigue = this.stats.totalMaxHealth - Math.round(this.stats.totalMaxHealth * ((100 - this.currency.fatigue) / 100));
     //console.log("healthBlockedByFatigue:" + this.stats.healthBlockedByFatigue);
 
     //musim snizit currentHealth pokud je vetsi nez kolik dovoli nve fatigue limit
@@ -1807,11 +1817,14 @@ export class CharacterDocument {
   }
 
   addCurrency(_currencyType: string, _amount: number) {
+    if (_amount == undefined) {
+      throw "Data error! currency amount is null! Try again later!";
+    }
     switch (_currencyType) {
       case CURRENCY_ID.GOLD: this.addGold(_amount); break;
       case CURRENCY_ID.MONSTER_ESSENCE: this.addMonsterEssence(_amount); break;
       case CURRENCY_ID.TIME: this.addTime(_amount); break;
-      case CURRENCY_ID.FATIGUE: this.addFatigue(_amount); break;
+      case CURRENCY_ID.FATIGUE: this.addFatigueFlat(_amount); break;
       case CURRENCY_ID.TRAVEL_POINTS: this.addTravelPoints(_amount); break;
       case CURRENCY_ID.SCAVENGE_POINTS: this.addScavengePoints(_amount); break;
       default:
@@ -1820,11 +1833,14 @@ export class CharacterDocument {
   }
 
   subCurrency(_currencyType: string, _amount: number) {
+    if (_amount == undefined) {
+      throw "Data error! currency amount is null! Try again later!";
+    }
     switch (_currencyType) {
       case CURRENCY_ID.GOLD: this.subGold(_amount); break;
       case CURRENCY_ID.MONSTER_ESSENCE: this.subMonsterEssence(_amount); break;
       case CURRENCY_ID.TIME: this.subTime(_amount); break;
-      case CURRENCY_ID.FATIGUE: this.subFatigue(_amount); break;
+      case CURRENCY_ID.FATIGUE: this.subFatigueFlat(_amount); break;
       case CURRENCY_ID.TRAVEL_POINTS: this.subTravelPoints(_amount); break;
       case CURRENCY_ID.SCAVENGE_POINTS: this.subScavengePoints(_amount); break;
 
@@ -1883,38 +1899,68 @@ export class CharacterDocument {
       throw "Not enough Scavenge Points! You have " + this.currency.scavengePoints + " but want to subsctract " + _amount;
   }
 
-  subFatigue(_amount: number) {
+
+  subFatiguePercentage(_percentageInDecimalFormat: number) {
     // if (this.currency.fatigue >= _amount)
-    this.currency.fatigue -= _amount;
+    let amountToTake = Math.round(this.stats.totalMaxHealth * ((_percentageInDecimalFormat) / 100));
+    this.subFatigueFlat(amountToTake);
 
-    if (this.currency.fatigue < 0)
-      this.currency.fatigue = 0;
+  }
 
-    this.stats.healthBlockedByFatigue = this.stats.totalMaxHealth - Math.round(this.stats.totalMaxHealth * ((100 - this.currency.fatigue) / 100));
+  subFatigueFlat(_amount: number) {
+    // if (this.currency.fatigue >= _amount)
+    this.stats.healthBlockedByFatigue -= _amount;
+
+
+    if (this.stats.healthBlockedByFatigue < 0)
+      this.stats.healthBlockedByFatigue = 0;
+
+    // this.stats.healthBlockedByFatigue = this.stats.totalMaxHealth - Math.round(this.stats.totalMaxHealth * ((100 - this.currency.fatigue) / 100));
 
     //throw "Not enough Time! You have " + this.currency.time + " but want to subsctract " + _amount;
   }
 
 
-  addFatigue(_amount: number) {
-    console.log("pridavas " + _amount + "/ fatigue");
-    if (_amount + this.currency.fatigue > MAX_FATIGUE)
-      this.currency.fatigue = MAX_FATIGUE;
-    else
-      this.currency.fatigue += _amount;
+  addFatiguePercentage(_percentageInDecimalFormat: number) {
+    this.addFatigueFlat(Math.round(this.stats.totalMaxHealth * ((_percentageInDecimalFormat) / 100)));
 
-    this.stats.healthBlockedByFatigue = this.stats.totalMaxHealth - Math.round(this.stats.totalMaxHealth * ((100 - this.currency.fatigue) / 100));
-    console.log("fatigue ted blokuje " + this.stats.healthBlockedByFatigue + " healtu");
+    // this.stats.healthBlockedByFatigue = this.stats.totalMaxHealth - Math.round(this.stats.totalMaxHealth * ((100 - this.currency.fatigue) / 100));
+    // console.log("fatigue ted blokuje " + this.stats.healthBlockedByFatigue + " healtu");
 
 
     //musim snizit currentHealth pokud je vetsi nez kolik dovoli nve fatigue limit
-    const maxHpWithFatiguePenalty = this.stats.totalMaxHealth - this.stats.healthBlockedByFatigue;
-    console.log("max healthu kdyz odectu fatiguje je teda " + maxHpWithFatiguePenalty);
-    if (this.stats.currentHealth > maxHpWithFatiguePenalty) {
-      console.log("a tyy mas vic current health : " + this.stats.currentHealth + " nez kolik je prave max healthu s fatigue dovolebych, tak curent helath nastavim na to max hp s fatigue penalty");
-      this.stats.currentHealth = maxHpWithFatiguePenalty;
-    }
+    // const maxHpWithFatiguePenalty = this.stats.totalMaxHealth - this.stats.healthBlockedByFatigue;
+    // console.log("max healthu kdyz odectu fatiguje je teda " + maxHpWithFatiguePenalty);
+    // if (this.stats.currentHealth > maxHpWithFatiguePenalty) {
+    //   console.log("a tyy mas vic current health : " + this.stats.currentHealth + " nez kolik je prave max healthu s fatigue dovolebych, tak curent helath nastavim na to max hp s fatigue penalty");
+    //   this.stats.currentHealth = maxHpWithFatiguePenalty;
+    // }
 
+  }
+
+  addFatigueFlat(_amount: number) {
+    console.log("pridavas " + _amount + "/ fatigue");
+    if (_amount + this.stats.healthBlockedByFatigue >= this.stats.totalMaxHealth)
+      this.stats.healthBlockedByFatigue = this.stats.totalMaxHealth - 1;
+    else
+      this.stats.healthBlockedByFatigue += _amount;
+
+    // this.stats.healthBlockedByFatigue = this.stats.totalMaxHealth - Math.round(this.stats.totalMaxHealth * ((100 - this.currency.fatigue) / 100));
+    // console.log("fatigue ted blokuje " + this.stats.healthBlockedByFatigue + " healtu");
+
+
+    //musim snizit currentHealth pokud je vetsi nez kolik dovoli nve fatigue limit
+    // const maxHpWithFatiguePenalty = this.stats.totalMaxHealth - this.stats.healthBlockedByFatigue;
+    // console.log("max healthu kdyz odectu fatiguje je teda " + maxHpWithFatiguePenalty);
+    // if (this.stats.currentHealth > maxHpWithFatiguePenalty) {
+    //   console.log("a tyy mas vic current health : " + this.stats.currentHealth + " nez kolik je prave max healthu s fatigue dovolebych, tak curent helath nastavim na to max hp s fatigue penalty");
+    //   this.stats.currentHealth = maxHpWithFatiguePenalty;
+    // }
+
+  }
+
+  getMaxHealthWithFatigueBlocked(): number {
+    return this.stats.totalMaxHealth - this.stats.healthBlockedByFatigue;
   }
 
   addScavengePoints(_amount: number) {
@@ -2078,19 +2124,19 @@ export class CharacterDocument {
     // console.log(summedBonusSkillEffects.length + " summedBonusSkillEffects lengt");
     // console.log(summedBonusSkillEffects); // this will print the new array with summed amounts
 
-    let maxHealth = this.stats.totalMaxHealth;
-    let maxHealthAfterFatiguePenalty = Math.round((maxHealth / 100) * (100 - this.currency.fatigue));
+    //let maxHealth = this.stats.totalMaxHealth;
+    //  let maxHealthAfterFatiguePenalty = Math.round((maxHealth / 100) * (100 - this.currency.fatigue));
 
     let currentHealth = this.stats.currentHealth;
 
-    if (currentHealth > maxHealthAfterFatiguePenalty)
-      currentHealth = maxHealthAfterFatiguePenalty;
+    // if (currentHealth > maxHealthAfterFatiguePenalty)
+    //    currentHealth = maxHealthAfterFatiguePenalty;
 
     let startingMana = this.stats.totalManaRegen;
     if (startingMana > this.stats.totalMaxMana)
       startingMana = this.stats.totalMaxMana;
 
-    return new CombatStats(this.stats.totalMaxMana, startingMana, maxHealthAfterFatiguePenalty, currentHealth, currentHealth, maxHealth - maxHealthAfterFatiguePenalty, 0, this.stats.totalHealthRegen, this.stats.totalCritChance, this.stats.totalDamagePower, this.stats.totalResistence, this.stats.totalDefense, 0, summedBonusSkillEffects, this.stats.skillDrawCount, summedBonusBuffEffects, this.stats.totalManaRegen);
+    return new CombatStats(this.stats.totalMaxMana, startingMana, this.getMaxHealthWithFatigueBlocked(), currentHealth, currentHealth, this.stats.healthBlockedByFatigue, 0, this.stats.totalHealthRegen, this.stats.totalCritChance, this.stats.totalDamagePower, this.stats.totalResistence, this.stats.totalDefense, 0, summedBonusSkillEffects, this.stats.skillDrawCount, summedBonusBuffEffects, this.stats.totalManaRegen);
   }
 
 
@@ -2205,8 +2251,8 @@ export class CharacterStats {
     //aktualni mnostvi zivota charakteru
     public currentHealth: number,
     public healthBlockedByFatigue: number,
-
     public skillDrawCount: number,
+    public restFoodLimit: number,
 
 
     //equip bonus
@@ -2261,7 +2307,7 @@ export class Currency {
     // public food: number,
     public time: number,
     public timeMax: number,
-    public fatigue: number,
+    //public fatigue: number,
     public travelPoints: number,
     public travelPointsMax: number,
     public scavengePoints: number,
@@ -2369,7 +2415,8 @@ export class PlayerData {
     public heirloomUnlocks: string[],
     public characters: CharacterPreview[],
     public inventory: Inventory,
-    public portraitsUnlocked: string[]
+    public portraitsUnlocked: string[],
+    public creationDate: string
 
 
   ) { }
@@ -2531,7 +2578,8 @@ export const PlayerDataConverter = {
       heirloomUnlocks: playerData.heirloomUnlocks,
       characters: playerData.characters,
       inventory: playerData.inventory,
-      portraitsUnlocked: playerData.portraitsUnlocked
+      portraitsUnlocked: playerData.portraitsUnlocked,
+      creationDate: playerData.creationDate
     };
   },
 
@@ -2552,7 +2600,7 @@ export const PlayerDataConverter = {
 
     let inventoryRemade = new Inventory(bagsRemade, data.inventory.capacityMax, data.inventory.capacityLeft, contentRemade);
 
-    return new PlayerData(data.uid, data.playerName, data.country, data.satoshi, data.fiatSpent, data.reputation, data.medals, data.heroUpgrades, data.heirloomUnlocks, data.characters, inventoryRemade, data.portraitsUnlocked);
+    return new PlayerData(data.uid, data.playerName, data.country, data.satoshi, data.fiatSpent, data.reputation, data.medals, data.heroUpgrades, data.heirloomUnlocks, data.characters, inventoryRemade, data.portraitsUnlocked, data.creationDate);
   }
 }
 
@@ -2730,7 +2778,7 @@ exports.createPlayer = functions.auth.user().onCreate(async (user) => {
   const playeref = admin.firestore().collection("players").doc(userUid);
 
   let inventory = new Inventory([], 99, 99, []);
-  inventory.content.push(generateContentContainer(generateContent(ITEMS.TRAINING_TOKEN, 5)));
+  inventory.content.push(generateContentContainer(generateContent(ITEMS.TRAINING_TOKEN, 3)));
 
   let ulockedPortraits: string[] = [];
   ulockedPortraits.push("CHARACTER_PORTRAIT_DEFAULT");
@@ -2749,7 +2797,7 @@ exports.createPlayer = functions.auth.user().onCreate(async (user) => {
   // ulockedPortraits.push("CHARACTER_PORTRAIT_WARRIOR_DEFAULT_1");
   // ulockedPortraits.push("CHARACTER_PORTRAIT_SHAMAN_DEFAULT_1");
 
-  let player: PlayerData = new PlayerData(playeref.id, userUid, "UNKNOWN", 0, 0, 0, [], [], [], [], inventory, ulockedPortraits);
+  let player: PlayerData = new PlayerData(playeref.id, userUid, "UNKNOWN", 0, 0, 0, [], [], [], [], inventory, ulockedPortraits, getCurrentDateTime(0));
 
   return playeref.set(JSON.parse(JSON.stringify(player)));
 });
@@ -2806,7 +2854,6 @@ exports.createCharacter = functions.https.onCall(async (data, context) => {
       const newCharacter = await createCharacter(t, characterUid, callerPlayerUid, characterName, characterClass, characterPortrait);
 
 
-
       //dam nahodny scavenge point
       let skillDefinitions = await QuerryForSkillDefinitions(t);
       const locationDb = admin.firestore().collection('_metadata_zones').doc(newCharacter.position.zoneId).collection("locations").doc(newCharacter.position.locationId);
@@ -2837,7 +2884,7 @@ exports.createCharacter = functions.https.onCall(async (data, context) => {
 
         const characterNameEntry = new CharacterNameEntry(playerdata.uid);
 
-        newCharacter.lastClaimedGameDay = globalData.gameDay;
+        newCharacter.lastClaimedGameDay = -1;// globalData.gameDay;
 
 
         t.set(characterNamesDb.doc(newCharacter.characterName), JSON.parse(JSON.stringify(characterNameEntry)));
@@ -2948,7 +2995,9 @@ exports.restDeep = functions.https.onCall(async (data, context) => {
                 characterData.giveHealth(currentItem.customData!.integers![1] * foodSuppliesAmounts[i]);
                 break;
               case ITEMS.APPLE:
-                characterData.subFatigue(currentItem.customData!.integers![1] * foodSuppliesAmounts[i]);
+                if (characterData.hasBless(BLESS.FOOD_LIMIT_INCREASE))
+                  throw "The mere scent of the organs almost made you vomit"
+                characterData.subFatigueFlat(currentItem.customData!.integers![1] * foodSuppliesAmounts[i]);
                 break;
               case ITEMS.BERRY:
                 characterData.addScavengePoints(currentItem.customData!.integers![1] * foodSuppliesAmounts[i]);
@@ -2967,14 +3016,16 @@ exports.restDeep = functions.https.onCall(async (data, context) => {
                 characterData.addScavengePoints(currentItem.customData!.integers![1] * foodSuppliesAmounts[i]);
                 break;
               case ITEMS.APPLE_PIE:
-                characterData.subFatigue(currentItem.customData!.integers![1] * foodSuppliesAmounts[i]);
+                if (characterData.hasBless(BLESS.FOOD_LIMIT_INCREASE))
+                  throw "The mere scent of the organs almost made you vomit"
+                characterData.subFatigueFlat(currentItem.customData!.integers![1] * foodSuppliesAmounts[i]);
 
                 break;
               case ITEMS.CURSE_REMOVE_MEAL:
                 characterData.removeRandomCurse(currentItem.customData!.integers![1] * foodSuppliesAmounts[i]);
                 break;
               // case ITEMS.FATIGUE_MEAL:
-              //   characterData.removeRandomCurse(currentItem.customData!.integers![1]);
+              //   characterData.removeRafndomCurse(currentItem.customData!.integers![1]);
               //   break;
               // case ITEMS.RIBEYE:
               //   break;
@@ -3005,7 +3056,7 @@ exports.restDeep = functions.https.onCall(async (data, context) => {
 
       //   console.log("Total food supplies: " + totalFoodSupplies);
 
-      const suppliesCost = REST_FOOD_SUPPLIES_LIMIT + ((characterData.stats.level - 1) * REST_FOOD_SUPPLIES_LIMIT_INCREMENT_PER_LEVEL);
+      const suppliesCost = characterData.stats.restFoodLimit + ((characterData.stats.level - 1) * REST_FOOD_SUPPLIES_LIMIT_INCREMENT_PER_LEVEL);
       if (totalFoodSupplies > suppliesCost)
         throw "Too many supplies. You want to eat :" + totalFoodSupplies + " but you can eat only up to :" + suppliesCost + "!";
 
@@ -3126,15 +3177,16 @@ exports.consumeConsumable = functions.https.onCall(async (data, context) => {
           //     // }
           //     break;
           //   }
-          // case ITEMS.FATIGUE_MEAL:
-          //   {
-          //     myEncounter = await QuerryForCharactersCombatEncounter(t, callerCharacterUid);
-          //     if (myEncounter != undefined)
-          //       throw ("This cannot be consumed during combat!");
-          //     characterData.subCurrency(CURRENCY_ID.FATIGUE, itemToConsume.customData.integers![0]);
-          //     characterData.subCurrency(CURRENCY_ID.TIME, itemToConsume.customData.integers![1]);
-          //     break;
-          //   }
+          case ITEMS.FATIGUE_PILL:
+            {
+              myEncounter = await QuerryForCharactersCombatEncounter(t, callerCharacterUid);
+              if (myEncounter != undefined)
+                throw ("This cannot be consumed during combat!");
+              characterData.subCurrency(CURRENCY_ID.FATIGUE, itemToConsume.customData.integers![0]);
+              characterData.stats.baseHealth -= itemToConsume.customData.integers![1]
+              characterData.recalculateCharacterStats();
+              break;
+            }
           case ITEMS.HEALTH_POTION:
           case ITEMS.MINOR_HEALTH_POTION:
           case ITEMS.MAJOR_HEALTH_POTION:
@@ -3152,6 +3204,9 @@ exports.consumeConsumable = functions.https.onCall(async (data, context) => {
               characterData.subCurrency(CURRENCY_ID.TIME, itemToConsume.customData.integers![1]);
               myEncounter.addEntryToCombatLog("<b>" + myCombatEntry.displayName + "</b> drinked <b>{" + itemToConsume.itemId + "}</b>");
               myEncounter.giveHealthToCombatEntity(myCombatEntry, myCombatEntry, itemToConsume.customData.integers![0], itemToConsume.itemId);
+
+              //myCombatEntry.stats.leastHealth+=itemToConsume.customData.integers![0];
+
               t.set(admin.firestore().collection("encounters").doc(myEncounter.uid), JSON.parse(JSON.stringify(myEncounter)), { merge: true });
 
               break;
@@ -3167,6 +3222,8 @@ exports.consumeConsumable = functions.https.onCall(async (data, context) => {
               let myCombatEntry = myEncounter.getCombatMemberByUid(callerCharacterUid);
               if (myCombatEntry == null)
                 throw "Cant find you in combat! ";
+
+              myCombatEntry.addPotionUsed(itemToConsume.itemId);
 
               myEncounter.addEntryToCombatLog("<b>" + myCombatEntry.displayName + "</b> drinked <b>{" + itemToConsume.itemId + "}</b>");
               // myEncounter.getCombatMemberByUid(callerCharacterUid).stats.damagePowerTotal += itemToConsume.customData.integers![0];
@@ -3213,16 +3270,16 @@ exports.consumeConsumable = functions.https.onCall(async (data, context) => {
 
               break;
             }
-          case ITEMS.TOWN_PORTAL:
-            {
-              myEncounter = await QuerryForCharactersCombatEncounter(t, callerCharacterUid);
-              if (myEncounter != undefined)
-                throw ("This cannot be consumed during combat!");
+          // case ITEMS.TOWN_PORTAL:
+          //   {
+          //     myEncounter = await QuerryForCharactersCombatEncounter(t, callerCharacterUid);
+          //     if (myEncounter != undefined)
+          //       throw ("This cannot be consumed during combat!");
 
-              characterData.position = characterData.homeInn;
+          //     characterData.position = characterData.homeInn;
 
-              break;
-            }
+          //     break;
+          //   }
 
           default:
             throw ("There is no definition of effect for consumable item : " + itemToConsume.itemId);
@@ -3233,6 +3290,28 @@ exports.consumeConsumable = functions.https.onCall(async (data, context) => {
           characterData.subCurrency(CURRENCY_ID.TIME, itemToConsume.customData.integers![1]);
 
         characterData.learnRecipe(itemToConsume);
+      }
+      else if (itemToConsume.contentType == CONTENT_TYPE.CHEST) {
+
+        if (itemToConsume.itemId == ITEMS.CHEST_RUBY) {
+          //remove key 
+          characterData.removeContentFromInventoryById(ITEMS.MAGIC_KEY, 1);
+        }
+
+        const dropTablesDb = admin.firestore().collection('_metadata_dropTables').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId);
+        const dropTablesDoc = await t.get(dropTablesDb);
+        let dropTablesData: DropTablesData = dropTablesDoc.data();
+
+        var dropTableForChest = dropTablesData.chestDropTables.find(dropTableGroup => dropTableGroup.id == itemToConsume.itemId);
+        if (!dropTableForChest)
+          throw "Cant find a drop table for chest : " + itemToConsume.itemId;
+
+        let skillDefinitions = await QuerryForSkillDefinitions(t);
+
+        let drop = generateDropFromDropTable(dropTableForChest.dropTables, characterData.stats.level, skillDefinitions, characterData.characterClass);
+        drop.forEach(content => {
+          characterData.addContentToInventory(content, true, true);
+        });
       }
       else
         throw ("Item does not exist as consumable item: " + itemToConsume.itemId);
@@ -3568,7 +3647,7 @@ exports.retireCharacter = functions.https.onCall(async (data, context) => {
           if (!inventoryItem.content)
             continue;
           const inboxDb = admin.firestore().collection('inboxPlayer').doc();
-          const inboxEntry = new InboxItem(inboxDb.id, characterData.userUid, generateContentContainer(generateContent(inventoryItem.content.itemId, inventoryItem.content.amount)), "Retired hero belongings", "Here are belongings of your retired hero " + characterData.characterName, getCurrentDateTime(480));
+          const inboxEntry = new InboxItem(inboxDb.id, characterData.userUid, generateContentContainer(generateContent(inventoryItem.content.itemId, inventoryItem.content.amount)), undefined, "Retired hero belongings", "Here are belongings of your retired hero " + characterData.characterName, getCurrentDateTime(480));
           batch.set(inboxDb, JSON.parse(JSON.stringify(inboxEntry))); // Update the document in batch
 
           //aspon nastavim amout na 0 kdyby nahodou se neco stalo a ten charakter byl pristupny at neduplikuju veci....lepsi by to bylo uplne smazat ale to se mi ted nechce kodovat
@@ -3618,5 +3697,53 @@ exports.retireCharacter = functions.https.onCall(async (data, context) => {
 });
 
 
+
+exports.useTeleportScroll = functions.https.onCall(async (data, context) => {
+
+  const callerCharacterUid = data.characterUid;
+  const targetPoI = data.targetPoI;
+  const teleportScrollUid = data.teleportScrollUid;
+  const characterDb = await admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
+
+  try {
+    const result = await admin.firestore().runTransaction(async (t: any) => {
+
+      const characterDoc = await t.get(characterDb);
+      let characterData: CharacterDocument = characterDoc.data();
+
+      const itemToConsume = characterData.getInventoryContent(teleportScrollUid).getItem();
+
+      const destinationPoIDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId).collection("pointsOfInterest").doc(targetPoI);
+      const destinationPoIDoc = await t.get(destinationPoIDb.withConverter(PointOfInterestConverter));
+      let destinationPoIData: PointOfInterest = destinationPoIDoc.data();
+
+      if (compareWorldPosition(destinationPoIData.worldPosition, characterData.position))
+        throw ("You are already at this location!");
+
+
+      if (!characterData.hasExploredPosition(destinationPoIData.worldPosition))
+        throw ("You must first explore this position!");
+
+      let myEncounter = await QuerryForCharactersCombatEncounter(t, callerCharacterUid);
+      if (myEncounter)
+        throw ("This cannot teleport during combat!");
+
+      characterData.addFatiguePercentage(itemToConsume.customData!.integers![0]);
+      characterData.removeContentFromInventory(itemToConsume.uid, 1);
+
+      characterData.position = destinationPoIData.worldPosition;
+
+      t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
+
+      return "OK";
+    });
+
+    console.log('Transaction success', result);
+    return result;
+  } catch (e) {
+    console.log('Transaction failure:', e);
+    throw new functions.https.HttpsError("aborted", "Error : " + e);
+  }
+});
 
 // [END allAdd]

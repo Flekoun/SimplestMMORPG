@@ -47,7 +47,10 @@ public class UILeaderboards : MonoBehaviour
     {
         LeaderboardBaseData = await QueryData.GetLeaderboardBaseData(LeaderboardId);
 
-        TitleText.SetText(Utils.DescriptionsMetadata.GetLeaderboardScoreTypeMetadata(LeaderboardBaseData.scoreType).title.GetText());
+        if (Utils.DescriptionsMetadata.GetLeaderboardScoreTypeMetadata(LeaderboardBaseData.scoreType) != null)
+            TitleText.SetText(Utils.DescriptionsMetadata.GetLeaderboardScoreTypeMetadata(LeaderboardBaseData.scoreType).title.GetText());
+        else
+            TitleText.SetText("UNKNOWN TITLE");
 
         if (LeaderboardBaseData == null)
             return;
@@ -179,6 +182,8 @@ public class UILeaderboards : MonoBehaviour
         {
             while (true)
             {
+                Debug.Log("LeaderboardBaseData.timestampNextReset:" + LeaderboardBaseData.timestampNextReset);
+
                 TimeToResetText.SetText("resets in " + Utils.ConvertTimestampToReadableString(LeaderboardBaseData.timestampNextReset));
                 yield return new WaitForSecondsRealtime(1);
             }

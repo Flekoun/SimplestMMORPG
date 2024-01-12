@@ -37,12 +37,16 @@ public class CombatFlowEffectSpawner : MonoBehaviour
             CombatFlowEntry nextFlowToShow = Data.Data.combatFlow[i];
             UICombatEntity target = Data.GetUICombatEntityByUid(nextFlowToShow.target);
             UICombatEntity caster = Data.GetUICombatEntityByUid(nextFlowToShow.caster);
+
+            if (caster == null) continue;
+            if (target == null) continue;
+
             Vector3 targetPos = new Vector3(target.transform.position.x, target.transform.position.y, 0);
             Vector3 casterPos = new Vector3(caster.transform.position.x, caster.transform.position.y, 0);
 
             if (target != null && caster != null)
             {
-                Debug.Log("nextFlowToShow.effectId: " + nextFlowToShow.effectId);
+                //                Debug.Log("nextFlowToShow.effectId: " + nextFlowToShow.effectId);
                 var projectile = PrefabFactory.CreateGameObject<Transform>(AllImageIdDefinitionSOSet.GetDefinitionById(nextFlowToShow.effectId).ProjectileEffectPrefab, Parent.transform, casterPos);
 
                 var tween = projectile.transform.DOMove(targetPos, 1f).SetEase(Ease.InOutExpo);
@@ -54,7 +58,7 @@ public class CombatFlowEffectSpawner : MonoBehaviour
 
                 PrefabFactory.CreateGameObject<Transform>(AllImageIdDefinitionSOSet.GetDefinitionById(nextFlowToShow.effectId).ImpactEffectPrefab, Parent.transform, targetPos);
                 target.SpawnFloatingTexts(nextFlowToShow);
-            //    caster.SpawnFloatingTexts();
+                //    caster.SpawnFloatingTexts();
                 target.ShowHitEffect();
 
             });

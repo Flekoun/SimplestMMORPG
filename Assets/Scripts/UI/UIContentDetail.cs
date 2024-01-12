@@ -45,7 +45,7 @@ public class UIContentDetail : MonoBehaviour
 
 
 
-        if (Data.contentType == Utils.CONTENT_TYPE.FOOD || Data.contentType == Utils.CONTENT_TYPE.RECIPE)
+        if (Data.contentType == Utils.CONTENT_TYPE.FOOD || Data.contentType == Utils.CONTENT_TYPE.RECIPE || Data.contentType == Utils.CONTENT_TYPE.CHEST)
         {
             Debug.Log("Data.contentType:" + Data.contentType);
             ConsumeButtonGO.gameObject.SetActive(true);
@@ -60,6 +60,8 @@ public class UIContentDetail : MonoBehaviour
                 SetConsumeButtonText("Consume", cost);
             else if (Data.contentType == Utils.CONTENT_TYPE.RECIPE)
                 SetConsumeButtonText("Learn", cost);
+            else if (Data.contentType == Utils.CONTENT_TYPE.CHEST)
+                SetConsumeButtonText("Open", cost);
         }
         else
             Debug.Log("Data.contentType 2:" + Data.contentType);
@@ -128,29 +130,59 @@ public class UIContentDetail : MonoBehaviour
         Hide();
     }
 
+    public async void PoIForTeleportScrollChoosen(string _poiId)
+    {
+        var result = await FirebaseCloudFunctionSO.UseTeleportScroll(_poiId, Data.uid);
+
+        if (result.Result)
+        {
+            UIManager.instance.ImportantMessage.ShowMesssage("Teleport successful!");
+
+            //if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail 
+            //    Hide();
+        }
+    }
+
     public async void ConsumeButtonClicked()
     {
         OnConsumeClicked?.Invoke();
 
-        if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail protoze nejspis nebude brzy co konzumovat (az se vrati update z DB)
+        //if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail protoze nejspis nebude brzy co konzumovat (az se vrati update z DB)
+        //{
+        //    Hide();
+        //}
+
+        if (Data.itemId == "TOWN_PORTAL")
         {
+            //var result = await FirebaseCloudFunctionSO.UseTeleportScroll(, Data.uid);
+
+            //if (result.Result)
+            //{
+            //    UIManager.instance.ImportantMessage.ShowMesssage("You were teleported!");
+
+            //    if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail 
+            //        Hide();
+            //}
+            UIManager.instance.ShowPoIChooser(PoIForTeleportScrollChoosen, "Choose teleport location");
+
             Hide();
+
+            UIManager.instance.ContextInfoPanel.HideContentContainerDetail();
+
         }
-
-        var result = await FirebaseCloudFunctionSO.ConsumeConsumable(Data.uid);
-
-        if (result.Result)
+        else
         {
-            UIManager.instance.ImportantMessage.ShowMesssage("Item consumed!");
-            if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail 
-            {
-                Hide();
+            var result = await FirebaseCloudFunctionSO.ConsumeConsumable(Data.uid);
 
+            if (result.Result)
+            {
+                UIManager.instance.ImportantMessage.ShowMesssage("Item consumed!");
+
+                if (Data.amount == 1) //klikl sem na consume posledniho zradla tak hidnu ten detail 
+                    Hide();
             }
         }
 
-
     }
-
 
 }

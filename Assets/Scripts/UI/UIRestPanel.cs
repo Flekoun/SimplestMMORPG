@@ -42,9 +42,9 @@ public class UIRestPanel : MonoBehaviour
         LightRestTimePriceLabel.SetPrice(12);
         DeepRestTimePriceLabel.SetPrice(8);
 
-        var cost = AccountDataSO.OtherMetadataData.constants.restSupplyLimitBase + ((AccountDataSO.CharacterData.stats.level - 1) * AccountDataSO.OtherMetadataData.constants.restSupplyLimitIncrement);
+        var cost = AccountDataSO.CharacterData.stats.restFoodLimit + ((AccountDataSO.CharacterData.stats.level - 1) * AccountDataSO.OtherMetadataData.constants.restSupplyLimitIncrement);
         DeepRestSupplyCostText.SetText(cost.ToString());
-       
+
     }
 
     public void DeepRestClicked()

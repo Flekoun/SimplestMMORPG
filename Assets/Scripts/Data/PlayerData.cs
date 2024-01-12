@@ -59,6 +59,10 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public List<string> portraitsUnlocked { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string creationDate { get; set; }
+
     }
 
 

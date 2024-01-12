@@ -1482,6 +1482,7 @@ MonoBehaviour:
   stringId: 
   OffsetY: -200
   IsFunctional: 1
+  SpawnAtBottom: 1
 --- !u!1 &6709789313712577670
 GameObject:
   m_ObjectHideFlags: 0

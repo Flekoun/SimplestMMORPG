@@ -76,9 +76,6 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public int timePerTravelPoint { get; set; }
 
-        [field: SerializeField]
-        [FirestoreProperty]
-        public int restSupplyLimitBase { get; set; }
 
         [field: SerializeField]
         [FirestoreProperty]
@@ -112,6 +109,16 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public int DECK_SHUFFLE_FATIGUE_PENALTY { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int HIGH_LEVEL_POI_FATIGUE_PENALTY { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int TIME_COST_TO_EXPLORE_POI { get; set; }
+
+
+        
     }
 
 

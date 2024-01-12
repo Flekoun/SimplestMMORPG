@@ -103,7 +103,7 @@ public class UIPendingReward : MonoBehaviour
         bool enoughtTime = AccountDataSO.CharacterData.currency.time >= AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_COST_TIME;
 
 
-
+        ClaimButton.gameObject.SetActive(false);
         ClaimButton.interactable = (enoughtTime || enoughtScavengePoints);
         UIPriceScavengePointsLabel.gameObject.SetActive(enoughtScavengePoints);
         UIPriceScavengeTimePrice.gameObject.SetActive(!enoughtScavengePoints);

@@ -27,8 +27,8 @@ public class UIBottomPanel : MonoBehaviour
 
         PerksGO.SetActive(AccountDataSO.CharacterData.pendingRewards.Count > 0);
         // int perksToClaim = AccountDataSO.CharacterData.GetUnclaimedPerksCount(AccountDataSO.GlobalMetadata.gameDay);
-        PerkMarkGO.SetActive(AccountDataSO.CharacterData.currency.scavengePoints > 0);
-        PerkMarkText.SetText(AccountDataSO.CharacterData.currency.scavengePoints.ToString());
+        PerkMarkGO.SetActive(AccountDataSO.CharacterData.lastClaimedGameDay < AccountDataSO.GlobalMetadata.gameDay);
+        PerkMarkText.SetText(AccountDataSO.CharacterData.pendingRewards.Count.ToString());
 
         if (AccountDataSO.CharacterData.professions.Count > 0)
             ProfessionText.SetText(Utils.DescriptionsMetadata.GetProfessionMetadata(AccountDataSO.CharacterData.professions[0].id).title.GetText());

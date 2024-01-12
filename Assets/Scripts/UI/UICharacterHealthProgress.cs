@@ -18,7 +18,7 @@ public class UICharacterHealthProgress : MonoBehaviour
    
     public void Refresh()
     {
-        Debug.Log("Health progress zaregistroval zmenu character data :" + this.name);
+//        Debug.Log("Health progress zaregistroval zmenu character data :" + this.name);
         UIHealthProgress.SetValues(AccountDataSO.CharacterData.GetTotalHealth(true) - AccountDataSO.CharacterData.GetHealthTakenByFatiguePenalty(), AccountDataSO.CharacterData.stats.currentHealth, AccountDataSO.CharacterData.GetHealthTakenByFatiguePenalty());
     }
 

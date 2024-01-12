@@ -17,15 +17,15 @@ public class UIDropTableEnemy : MonoBehaviour
     public Transform Parent;
 
     private List<UIDropTable> List = new List<UIDropTable>();
-    private EnemyDropTable Data;
+    private DropTableGroup Data;
 
 
     // Start is called before the first frame update
-    public void Setup(EnemyDropTable _item)
+    public void Setup(DropTableGroup _item)
     {
         Data = _item;
-        EnemyIdText.SetText(Utils.DescriptionsMetadata.GetEnemyMetadata(_item.enemyId).title.EN);
-        EnemyPortrait.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetEnemyMetadata(_item.enemyId).imageId).Image;
+        EnemyIdText.SetText(Utils.DescriptionsMetadata.GetDescriptionMetadataForId(_item.id).title.EN);
+        EnemyPortrait.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetDescriptionMetadataForId(_item.id).imageId).Image;
 
         Utils.DestroyAllChildren(Parent);
         List.Clear();

@@ -6,6 +6,7 @@ using TMPro;
 using static UnityEngine.EventSystems.EventTrigger;
 using UnityEngine.UI;
 using System;
+using UnityEngine.Events;
 
 public class UIInnPanel : MonoBehaviour
 {
@@ -24,7 +25,7 @@ public class UIInnPanel : MonoBehaviour
     public TextMeshProUGUI BindButtonDescriptionText;
     public TextMeshProUGUI HealthRestButtonDescriptionText;
     public TextMeshProUGUI CarriageButtonDescriptionText;
-   // public TextMeshProUGUI ScavengePointsDescriptionText;
+    // public TextMeshProUGUI ScavengePointsDescriptionText;
     public GameObject Model;
 
     private UIPortrait lastlyClickedEntry;
@@ -47,44 +48,49 @@ public class UIInnPanel : MonoBehaviour
 
     private void Refresh()
     {
-        bool isThisYourHomeInn = Utils.ArePositionsSame(AccountDataSO.CharacterData.position, AccountDataSO.CharacterData.homeInn);
+        //  bool isThisYourHomeInn = Utils.ArePositionsSame(AccountDataSO.CharacterData.position, AccountDataSO.CharacterData.homeInn);
 
         double result;
-        if ((AccountDataSO.CharacterData.stats.level + 1) > 20)
-            result = Math.Pow(Math.E, (30 * Math.Log(100000) / 20));
-        else
-            result = Math.Pow(Math.E, ((AccountDataSO.CharacterData.innHealhRestsCount + 1) * Math.Log(100000) / 20));
+        //if ((AccountDataSO.CharacterData.stats.level + 1) > 20)
+        //    result = Math.Pow(Math.E, (20 * Math.Log(100000) / 15));
+        //else
+        //    result = Math.Pow(Math.E, ((AccountDataSO.CharacterData.innHealhRestsCount + 1) * Math.Log(100000) / 15));
+
+        result = Math.Pow(AccountDataSO.CharacterData.stats.level, 4);
 
         int carriagePrice = (int)Math.Round(result);
 
-        CarriageButton.interactable = AccountDataSO.CharacterData.currency.gold >= carriagePrice && !isThisYourHomeInn;
+        CarriageButton.interactable = AccountDataSO.CharacterData.currency.gold >= carriagePrice;
         CarriagePrice.SetPrice(carriagePrice);
 
 
-        if (isThisYourHomeInn)
-            CarriageButtonDescriptionText.SetText("This is your home tavern");
-        else
-            CarriageButtonDescriptionText.SetText("Fast travel to your home tavern for a fee");
+        //  if (isThisYourHomeInn)
+        //      CarriageButtonDescriptionText.SetText("This is your home tavern");
+        //   else
+        CarriageButtonDescriptionText.SetText("Fast travel to other tavern for a fee");
 
 
 
-        if ((AccountDataSO.CharacterData.innHealhRestsCount + 1) > 10)
-            result = Math.Pow(Math.E, (30 * Math.Log(100000) / 10));
-        else
-            result = Math.Pow(Math.E, ((AccountDataSO.CharacterData.innHealhRestsCount + 1) * Math.Log(100000) / 10));
+        //if ((AccountDataSO.CharacterData.innHealhRestsCount + 1) > 10)
+        //    result = Math.Pow(Math.E, (30 * Math.Log(100000) / 10));
+        //else
+        //    result = Math.Pow(Math.E, ((AccountDataSO.CharacterData.innHealhRestsCount + 1) * Math.Log(100000) / 10));
 
-        int healthRestorePrice = (int)Math.Round(result);
+        //int healthRestorePrice = (int)Math.Round(result);
 
-        bool hasGold = AccountDataSO.CharacterData.currency.gold >= healthRestorePrice;
+        //bool hasGold = AccountDataSO.CharacterData.currency.gold >= healthRestorePrice;
         bool hasWounds = AccountDataSO.CharacterData.stats.currentHealth < AccountDataSO.CharacterData.stats.totalMaxHealth - AccountDataSO.CharacterData.stats.healthBlockedByFatigue;
+        bool hasFatigue = AccountDataSO.CharacterData.stats.healthBlockedByFatigue > 0;
 
-        HealthRestoreButton.interactable = hasGold && hasWounds;
-        HealthRestorePrice.SetPrice(healthRestorePrice);
+        //HealthRestoreButton.interactable = hasGold && hasWounds;
+        //HealthRestorePrice.SetPrice(healthRestorePrice);
 
-        if (!hasWounds)
-            HealthRestButtonDescriptionText.SetText("You are at full health");
+        HealthRestoreButton.interactable = hasWounds || hasFatigue;
+
+        if (!hasWounds && !hasFatigue)
+            HealthRestButtonDescriptionText.SetText("You feel fit!");
         else
-            HealthRestButtonDescriptionText.SetText("Restores 20 Health");
+            HealthRestButtonDescriptionText.SetText("Replenish your body to its prime, but at the cost of your soul's silent torment.");
 
 
 
@@ -92,7 +98,7 @@ public class UIInnPanel : MonoBehaviour
         //BindButton.interactable = AccountDataSO.CharacterData.currency.gold > bidPrice;
         //  BindPrice.SetPrice(bidPrice);
 
-        int bindPrice = (int)Math.Round(Math.Pow(Math.E, ((AccountDataSO.CharacterData.stats.level) * Math.Log(10000) / 20)));
+        int bindPrice = (int)Math.Round(Math.Pow(AccountDataSO.CharacterData.stats.level, 3));//(int)Math.Round(Math.Pow(Math.E, ((AccountDataSO.CharacterData.stats.level) * Math.Log(10000) / 20)));
 
         BindPrice.SetPrice(bindPrice);
 
@@ -105,7 +111,7 @@ public class UIInnPanel : MonoBehaviour
         else
         {
             BindButton.interactable = true;
-            BindButtonDescriptionText.SetText("Fast travel & Revive at this Tavern");
+            BindButtonDescriptionText.SetText("Forge a bond with this place, ensuring safe return in times of peril.");
 
         }
 
@@ -115,10 +121,13 @@ public class UIInnPanel : MonoBehaviour
         //ScavengePointsDescriptionText.SetText("Gain <color=\"yellow\">" + AccountDataSO.OtherMetadataData.constants.SCAVENGE_POINT_PURCHASE_AMOUNT + "</color> Scavenge points");
     }
 
-    public void BindClicked()
+    public async void BindClicked()
     {
-        FirebaseCloudFunctionSO.InnBind();
-
+        var result = await FirebaseCloudFunctionSO.InnBind();
+        if (result.Result)
+        {
+            UIManager.instance.ImportantMessage.ShowMesssage("Enjoy your stay, traveler!", 3);
+        }
     }
 
     //public async void ScavengePurchaseClicked()
@@ -132,7 +141,8 @@ public class UIInnPanel : MonoBehaviour
 
     public void CarrigeClicked()
     {
-        FirebaseCloudFunctionSO.InnCarriage();
+        UIManager.instance.ShowPoIChooser(OnPoIChooserFinished, "Choose destination tavern");
+        Hide();
     }
 
     public void RestHealthClicked()
@@ -140,5 +150,13 @@ public class UIInnPanel : MonoBehaviour
         FirebaseCloudFunctionSO.InnHealthRestore();
     }
 
+    public async void OnPoIChooserFinished(string _poIdId)
+    {
+        var result = await FirebaseCloudFunctionSO.InnCarriage(_poIdId);
+        if (result.Result)
+        {
+            UIManager.instance.ImportantMessage.ShowMesssage("Carriage arrived!", 3);
+        }
+    }
 
 }

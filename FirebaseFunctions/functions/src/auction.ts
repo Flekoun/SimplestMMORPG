@@ -4,8 +4,8 @@ import * as functions from "firebase-functions";
 
 import { CharacterDocument, characterDocumentConverter, getCurrentDateTime, getCurrentDateTimeInMillis, ContentContainer, generateContentContainer, CONTENT_TYPE, validateCallerBulletProof } from ".";
 import { Equip, generateContent, ITEMS } from "./equip";
-
 import { InboxItem } from "./inbox";
+
 
 const admin = require('firebase-admin');
 //const { Firestore } = require("@google-cloud/firestore");
@@ -180,7 +180,7 @@ exports.bidContentOnAuctionHouse = functions.https.onCall(async (data, context) 
         // const newContentCurrency = new ContentCurrency(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.lastBidPrice, RARITY.COMMON);
         // const newContent = new ContentContainer(CONTENT_TYPE.CURRENCY, undefined, undefined, newContentCurrency, undefined);
         const newContent = generateContentContainer(generateContent(ITEMS.GOLD, offerData.lastBidPrice))
-        const newInbox = new InboxItem(inboxDb.id, offerData.highestBidderUid, newContent, "Auction House : You were outbid!", "Here is your gold refund for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color> you were oudbid on", getCurrentDateTime(480));
+        const newInbox = new InboxItem(inboxDb.id, offerData.highestBidderUid, newContent, undefined, "Auction House : You were outbid!", "Here is your gold refund for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color> you were oudbid on", getCurrentDateTime(480));
 
         t.set(inboxDb, JSON.parse(JSON.stringify(newInbox)));
 
@@ -252,7 +252,7 @@ exports.buyoutContentOnAuctionHouse = functions.https.onCall(async (data, contex
       console.log("sending item to seller inbox :  ");
       // const newContentCurrency = new ContentCurrency(firestoreAutoId(), "CURRENCY_GOLD", "Gold", 100, "GOLD", 1000000000, offerData.buyoutPrice, RARITY.COMMON, CURRENCY_TYPE.GOLD);
       // const newContent = new ContentContainer(CONTENT_TYPE.CURRENCY, undefined, undefined, newContentCurrency, undefined);
-      newInboxBuyer = new InboxItem(inboxDbBuyer.id, callerCharacterData.uid, offerData.content, "Auction House : Your won and Auction!", "Here is an offer you won on Auction House  <color=\"orange\">" + offerData.content.getItem().itemId + "</color>", getCurrentDateTime(480));
+      newInboxBuyer = new InboxItem(inboxDbBuyer.id, callerCharacterData.uid, offerData.content, undefined, "Auction House : Your won and Auction!", "Here is an offer you won on Auction House  <color=\"orange\">" + offerData.content.getItem().itemId + "</color>", getCurrentDateTime(480));
 
 
 
@@ -263,7 +263,7 @@ exports.buyoutContentOnAuctionHouse = functions.https.onCall(async (data, contex
       console.log("sending gold to seller inbox :  " + offerData.buyoutPrice);
       const newContent = generateContentContainer(generateContent(ITEMS.GOLD, offerData.buyoutPrice)); //new Content(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.buyoutPrice, RARITY.COMMON );
       //const newContent = new ContentContainer(newContentCurrency, undefined);
-      newInboxSeller = new InboxItem(inboxDbSeller.id, offerData.sellerUid, newContent, "Auction House : Your Auction offer was sold!", "Here is your gold for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color>", getCurrentDateTime(480));
+      newInboxSeller = new InboxItem(inboxDbSeller.id, offerData.sellerUid, newContent, undefined, "Auction House : Your Auction offer was sold!", "Here is your gold for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color>", getCurrentDateTime(480));
 
 
       //pokid mame nejakeho highest biddera, vratime mu goldy do inboxu
@@ -276,7 +276,7 @@ exports.buyoutContentOnAuctionHouse = functions.https.onCall(async (data, contex
         const newContent = generateContentContainer(generateContent(ITEMS.GOLD, offerData.lastBidPrice))
         //  const newContentCurrency = new ContentCurrency(firestoreAutoId(), CURRENCY_ID.GOLD, 100, 1000000000, offerData.lastBidPrice, RARITY.COMMON);
         // const newContent = new ContentContainer(CONTENT_TYPE.CURRENCY, undefined, undefined, newContentCurrency, undefined);
-        newInboxHighestBidder = new InboxItem(inboxDbHasHighestBidder.id, offerData.highestBidderUid, newContent, "Auction House : You were outbought!", "Here is your gold refund for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color> you were outbought on", getCurrentDateTime(480));
+        newInboxHighestBidder = new InboxItem(inboxDbHasHighestBidder.id, offerData.highestBidderUid, newContent, undefined, "Auction House : You were outbought!", "Here is your gold refund for offer <color=\"orange\">" + offerData.content.getItem().itemId + "</color> you were outbought on", getCurrentDateTime(480));
       }
 
 

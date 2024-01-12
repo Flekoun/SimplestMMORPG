@@ -184,6 +184,7 @@ MonoBehaviour:
   EnemyMainPortait: {fileID: 4121764619181438517}
   CombatMembersParent: {fileID: 6255274583406148673}
   RareEnemyGO: {fileID: 179645552220562757}
+  HighlightAnimation: {fileID: 429307952463549853}
   Data:
     <uid>k__BackingField: 
     <foundByCharacterUid>k__BackingField: 
@@ -193,6 +194,7 @@ MonoBehaviour:
     <combatantList>k__BackingField: []
     <watchersList>k__BackingField: []
     <isFull>k__BackingField: 0
+    <encounterContext>k__BackingField: 
     <foundByName>k__BackingField: 
     <combatLog>k__BackingField: 
     <randomIndex>k__BackingField: 0
@@ -210,6 +212,9 @@ MonoBehaviour:
     <perksOffersRare>k__BackingField: []
     <perkChoices>k__BackingField: []
     <joinPrice>k__BackingField: 0
+    <forbiddenCharacterUids>k__BackingField: []
+    <typeOfOrigin>k__BackingField: 
+    <tier>k__BackingField: 0
 --- !u!114 &429307952463549853
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -288,7 +293,7 @@ MonoBehaviour:
   isRelative: 1
   isFrom: 0
   isIndependentUpdate: 0
-  autoKill: 1
+  autoKill: 0
   autoGenerate: 1
   isActive: 1
   isValid: 1

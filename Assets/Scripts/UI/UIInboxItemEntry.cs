@@ -18,7 +18,15 @@ public class UIInboxItemEntry : MonoBehaviour
     public void SetData(InboxItem _data)
     {
         Data = _data;
-        UIContentItem.SetData(Data.content.GetContent());
+        //  UIContentItem.SetData(Data.content.GetContent());
+
+        if (Data.content != null)
+            UIContentItem.SetData(Data.content.GetContent());
+        else if (Data.perkOffer != null)
+        {
+            UIContentItem.SetData(Data.perkOffer.rewards[0].GetContent());
+        }
+
         TitleText.SetText(Data.messageTitle);
 
     }

@@ -44,10 +44,11 @@ public class UIContentItem : UISelectableEntry
 
         AmountText.SetText(Data.amount.ToString());//+"/"+ Data.stackSize.ToString());
         PriceText.SetText((Data.amount * Data.sellPrice).ToString());
-
         RarityImage.color = Utils.GetRarityColor(Data.rarity);
-        PortratImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Data.GetImageId()).Image;
-
+        string imageID = Data.GetImageId();
+    //    Debug.Log(AllImageIdDefinitionSOSet == null);
+        ImageIdDefinition imageDef = AllImageIdDefinitionSOSet.GetDefinitionById(imageID);
+        PortratImage.sprite = imageDef.Image;
         if (ExpiredGO != null)
         {
             if (!string.IsNullOrEmpty(Data.expireDate))
@@ -55,10 +56,8 @@ public class UIContentItem : UISelectableEntry
             else
                 ExpiredGO.SetActive(false);
         }
-
         //   Debug.Log("Eh2?" + Data.amount);
         AmountText.gameObject.SetActive(Data.amount != 1);
-
 
         if (Data is Equip)
         {
@@ -92,7 +91,6 @@ public class UIContentItem : UISelectableEntry
 
         TooltipSpawner.IsFunctional = _enableTooltip;
         TooltipSpawner.SetContentCointainer(Data);
-
     }
 
 

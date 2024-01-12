@@ -109,7 +109,7 @@ public class UIEncounterDetailPanel_DungeonView : MonoBehaviour, IEncounterDetai
 
         bool IAmComabatantInThisEncounter = Data.IsParticipatingInCombat(AccountDataSO.CharacterData.uid);
         bool IAmFounderOfThisEncounter = Data.foundByCharacterUid == AccountDataSO.CharacterData.uid;
-        bool PerkChoiceFinished = (Data.PendingPerksChoicesAmount() == 0);
+        bool PerkChoiceFinished = true;// (Data.PendingPerksChoicesAmount() == 0);
 
 
         UIEncounterEntry.SetEncounter(Data, _initRefresh);

@@ -133,16 +133,63 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public string expireDate { get; set; }
 
-        //TODO : Ano muze mit jest CustomData, ale clientovi je to k nicemu imo, bere info z descriptions....stejne by to nemohl pouzit napr pro jabko od vendora
 
         public virtual string GetDescription()
         {
 
-            //if (Utils.DescriptionsMetadata.GetItemsMetadata(this.itemId) != null)
-            //    return Utils.GetMetadataForItem(this.itemId).description.GetText();
-            if (Utils.DescriptionsMetadata.DoesDescriptionMetadataForIdExist(this.itemId))
-                return Utils.DescriptionsMetadata.GetDescriptionMetadataForId(this.itemId).description.GetText();
-            return string.Empty;
+
+
+            string result = "Unknown description";
+            if (Utils.DescriptionsMetadata.GetDescriptionMetadataForId(itemId) != null)
+            {
+
+                var replacements = new List<(string key, string value)> { };
+
+                int i = 0;
+
+                if (customData != null && customData.integers != null)
+                {
+                    foreach (var value in customData.integers)
+                    {
+                        //                    Debug.Log("quality : " + _equipQuality);
+                        replacements.Add((i.ToString(), value.ToString()));
+                        i++;
+                    }
+
+                    StringBuilder templateBuild = new StringBuilder(Utils.DescriptionsMetadata.GetDescriptionMetadataForId(itemId).description.EN);
+
+                    result = replacements.Aggregate(templateBuild, (s, t) => s.Replace($"{{{t.key}}}%", "<color=\"yellow\">" + (((float.Parse(t.value)) * 100f).ToString()) + "%</color>")).ToString();
+                    result = replacements.Aggregate(templateBuild, (s, t) => s.Replace($"{{{t.key}}}", "<color=\"yellow\">" + t.value + "</color>")).ToString();
+
+                }
+
+                else if (Utils.DescriptionsMetadata.DoesDescriptionMetadataForIdExist(this.itemId))
+                    return Utils.DescriptionsMetadata.GetDescriptionMetadataForId(this.itemId).description.GetText();
+                else
+                    return string.Empty;
+
+                //if (contentType == Utils.CONTENT_TYPE.FOOD_SUPPLY)
+                //    result = "<color=\"yellow\">" + "Rest effect: " + "</color>" + result;
+                //else if (contentType == Utils.CONTENT_TYPE.RECIPE)
+                //    result = "<color=\"yellow\">" + "Use: " + "</color>" + result;
+            }
+
+            result = Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(result);
+            return result;
+
+
+            //public string GetTitle()
+            //{
+            //    if (Utils.DescriptionsMetadata.GetSkillMetadata(skillId) != null)
+            //        return Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(Utils.DescriptionsMetadata.GetSkillMetadata(skillId).title.EN);
+            //    else
+            //        return skillId;
+
+            //}
+
+            //if (Utils.DescriptionsMetadata.DoesDescriptionMetadataForIdExist(this.itemId))
+            //    return Utils.DescriptionsMetadata.GetDescriptionMetadataForId(this.itemId).description.GetText();
+            //return string.Empty;
 
         }
 

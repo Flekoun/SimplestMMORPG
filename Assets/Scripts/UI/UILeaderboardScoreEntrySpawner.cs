@@ -41,11 +41,13 @@ public class UILeaderboardScoreEntrySpawner : MonoBehaviour
 
             if (LastRewardForRankShown_Max < rank)
             {
-                var rankReward = PrefabFactory.CreateGameObject<UILeaderboardRankRewardEntry>(RankRewardEntryPrefab, Parent);
                 LeaderboardReward reward = _baseData.GetRewardForRank(rank);
-                LastRewardForRankShown_Max = reward.rankMax;
-                rankReward.SetData(reward);
-
+                if (reward != null)
+                {
+                    var rankReward = PrefabFactory.CreateGameObject<UILeaderboardRankRewardEntry>(RankRewardEntryPrefab, Parent);
+                    LastRewardForRankShown_Max = reward.rankMax;
+                    rankReward.SetData(reward);
+                }
             }
 
             var charPrev = PrefabFactory.CreateGameObject<UILeaderboardScoreEntry>(CharacterListEntryPrefab, Parent);

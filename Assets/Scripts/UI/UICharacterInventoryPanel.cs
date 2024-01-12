@@ -50,7 +50,7 @@ public class UICharacterInventoryPanel : MonoBehaviour
 
     private void RestartToAsNothingIsSelected()
     {
-        UIManager.instance.ContextInfoPanel.HideContentContainerDetail();
+        //     UIManager.instance.ContextInfoPanel.HideContentContainerDetail();
         SelectedItem = null;
         DropButton.gameObject.SetActive(false);
         SetDropMode(false);

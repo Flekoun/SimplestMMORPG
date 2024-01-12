@@ -4,12 +4,12 @@ import * as functions from "firebase-functions";
 import { CharacterDocument, characterDocumentConverter, ContentContainer, CURRENCY_ID, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, millisToSeconds, PlayerData, randomIntFromInterval, WorldPosition } from ".";
 
 
-import { setScoreToLeaderboard, setMyCharacterLevelLeaderboards, updateMyMonsterKillsAndDamageDoneLeaderboards_GET_SET } from "./leaderboards";
+import { setScoreToLeaderboard, setMyCharacterLevelLeaderboards, updateMyMonsterKillsAndDamageDoneLeaderboards_GET, incrementScoreToLeaderboard_GET } from "./leaderboards";
 import { PerkOfferDefinition } from "./perks";
 import { Combatskill } from "./skills";
 import { LocationConverter, MapLocation, PointOfInterest, PointOfInterestServerDataDefinitions, PointOfInterestServerDataDefinitionsConverter } from "./worldMap";
 import { SetOperation } from "./utils";
-import { QuerryForSkillDefinitions } from "./equip";
+
 import { PerkChoiceParticipant } from "./encounter";
 
 
@@ -41,7 +41,8 @@ export class EncounterResult {
     //  public perkOffersRare: PerkOfferDefinition[],
     public foundBy: string,
     public dungeonData: DungeonData | null, //pokud origin encounter z ktereho result vznikl byl dungeon, tady se predaji nejake zajimave data
-    public tier: number // tier dokonceneho monster encounteru......pridat monsterData? stejne jako ma dungeon?
+    public tier: number,// tier dokonceneho monster encounteru......pridat monsterData? stejne jako ma dungeon?
+    public typeOfOrigin: string, //z ktereho typeId daneho point of interestu byl encounter vytvoren....tedy defakto ID te internal definice
 
   ) { }
 }
@@ -89,8 +90,7 @@ export class EncounterResultEnemy {
     public id: string,
     public displayName: string,
     public level: number,
-    public contentLoot: EncounterResultContentLoot[],
-    public monsterEssences: number
+    public contentLoot: EncounterResultContentLoot[]
   ) { }
 }
 
@@ -212,12 +212,13 @@ exports.collectEncounterResultReward = functions.https.onCall(async (data, conte
 
           //Dam ti perk co sis vybral
           //TODO :muzu zbytecne ziskavat skilldefinitions kdyz perkreward nema zadny equip reward na udeleni!!!
-          let skillDefinitions = await QuerryForSkillDefinitions(t);
+          // let skillDefinitions = await QuerryForSkillDefinitions(t);
           encounterResultData.perkChoices.forEach(perkChoice => {
 
             //je to muj choice
             if (characterData.uid == perkChoice.characterUid && perkChoice.choosenPerk != null) {
-              characterData.addPendingReward(perkChoice.choosenPerk, skillDefinitions);
+              //nedavam reward protoze uz by essence mely byt v bonus lootu
+              // characterData.addPendingReward(perkChoice.choosenPerk, skillDefinitions);
 
               if (perkChoice.choosenPerk.stockLeft != -1)
                 perksWithLimitedStock.push(perkChoice.choosenPerk);
@@ -324,7 +325,10 @@ exports.collectEncounterResultReward = functions.https.onCall(async (data, conte
 
       //Pridame killy/damage do leaderboardu...1x write 1xread za kazdeho combatanta....TODO: asi mit jen urcite casove okna kdy bezi monter slain leaderboard....a tady bych teda musel readnout jen jednou, ale pokazde jestli bezi leaderboard..
       //   if (expGained > 0) //jen kdyz ti do nejake expy jinak killy nepocitam
-      await updateMyMonsterKillsAndDamageDoneLeaderboards_GET_SET(t, encounterResultData, myCombatResultEntry, characterData);
+
+      let resultOfThisCall = await updateMyMonsterKillsAndDamageDoneLeaderboards_GET(t, encounterResultData, myCombatResultEntry, characterData);
+      resultOfThisCall.forEach(setOperation => { setOperations.push(setOperation); });
+
       //await updateMyScoreAtLeaderboard_GET_SET(t,"MONSTER_KILLS_"+encounterResultData.position.locationId, characterData, encounterResultData.enemies.length);
 
       //pokud is byl v dungeonu
@@ -343,10 +347,16 @@ exports.collectEncounterResultReward = functions.https.onCall(async (data, conte
           setOperations.push(await setScoreToLeaderboard(t, characterData, encounterResultData.dungeonData.dungeonId, encounterResultData.dungeonData.tier));
         }
       }
+      else {
+        setOperations.push(await incrementScoreToLeaderboard_GET(t, characterData, encounterResultData.typeOfOrigin, 1));
+      }
 
       //pokud si dostal level ulozim do CHARACTER LEVEL leaderboards
       if (gainedNewLevel)
         setOperations.push(await setMyCharacterLevelLeaderboards(t, characterData));
+
+
+
 
       //zkontroluju jestli uz vsichni nevybrali odmeny, pokud jo deletnu zaznam uplne, jinak jen updatnu
       if (encounterResultData.combatantsWithUnclaimedRewardsList.length == 0) {

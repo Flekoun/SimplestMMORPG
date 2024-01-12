@@ -41,40 +41,23 @@ public class UIPendingRewardPanel : MonoBehaviour
         {
             var perkUi = PrefabFactory.CreateGameObject<UIPendingReward>(PerkPrefab, Parent);
             perkUi.Setup(perk);
-            //   if (perkUi.IsClaimable())
-            //    claimablPerksCount++;
-            //  PerksList.Add(perkUi);
+
         }
 
-        ClaimAllUIPriceScavengePointsLabel.SetPrice(AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_ALL_COST);
-        UIPriceScavengeTimePrice.SetPrice(AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_ALL_COST_TIME);
+        //ClaimAllUIPriceScavengePointsLabel.SetPrice(AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_ALL_COST);
+        //UIPriceScavengeTimePrice.SetPrice(AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_ALL_COST_TIME);
 
-        bool enoughtScavengePoints = AccountDataSO.CharacterData.currency.scavengePoints >= AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_ALL_COST;
-        bool enoughtTime = AccountDataSO.CharacterData.currency.time >= AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_ALL_COST_TIME;
+        //bool enoughtScavengePoints = AccountDataSO.CharacterData.currency.scavengePoints >= AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_ALL_COST;
+        //bool enoughtTime = AccountDataSO.CharacterData.currency.time >= AccountDataSO.OtherMetadataData.constants.SCAVENGE_CLAIM_ALL_COST_TIME;
 
-        ClaimAllUIPriceScavengePointsLabel.gameObject.SetActive(enoughtScavengePoints);
-        UIPriceScavengeTimePrice.gameObject.SetActive(!enoughtScavengePoints);
+        //ClaimAllUIPriceScavengePointsLabel.gameObject.SetActive(enoughtScavengePoints);
+        //UIPriceScavengeTimePrice.gameObject.SetActive(!enoughtScavengePoints);
 
-        ClaimAllButton.interactable = enoughtScavengePoints || enoughtTime;
-        ClaimAllButtonGO.SetActive(false);
-        //  ClaimAllButtonGO.SetActive(AccountDataSO.CharacterData.pendingRewards.Count > 3);
+        ClaimAllButton.interactable = AccountDataSO.CharacterData.lastClaimedGameDay < AccountDataSO.GlobalMetadata.gameDay;
+        ClaimAllButtonGO.SetActive(true);
+
     }
-    //private void OnPortraitClicked(UIPortrait _entry)
-    //{
-    //    UIPromptWindow prompt;
-    //    prompt = UIManager.instance.SpawnPromptPanel(Utils.DescriptionsMetadata.GetPortraitsMetadata(_entry.Data).description.GetText(), Utils.DescriptionsMetadata.GetPortraitsMetadata(_entry.Data).title.GetText(), ChoosePortrait, null);
 
-
-
-    //    lastlyClickedEntry = _entry;
-
-    //    if (!AccountDataSO.CharacterData.portraitsUnlocked.Contains(_entry.GetUid()))
-    //        prompt.HideAcceptButton();
-
-
-    //    prompt.SetAcceptButtonText("Choose");
-    //    prompt.SetDeclineButtonText("Close");
-    //}
 
     public async void ClaimAllClicked()
     {

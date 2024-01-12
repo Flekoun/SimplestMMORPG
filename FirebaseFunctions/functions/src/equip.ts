@@ -46,6 +46,12 @@ export const enum ITEMS {
   REPUTATION = "REPUTATION",
   MAGIC_KEY = "MAGIC_KEY",
   TOWN_PORTAL = "TOWN_PORTAL",
+  FATIGUE_PILL = "FATIGUE_PILL",
+
+  //chests
+  CHEST_IRON = "CHEST_IRON",
+  CHEST_GOLD = "CHEST_GOLD",
+  CHEST_RUBY = "CHEST_RUBY",
 
   //quest items
   DEATH_MEDAILON = "DEATH_MEDAILON",
@@ -409,7 +415,7 @@ export function shuffleArray(array) {
 
 //equip level - level ktery bude mit nahodne vygenerovany equip....napr u dropu z enemy chci aby mel level enemyho z kterho vypadl
 //Momentalne pocet dropnutych itemu je linearni random cislo from dropCountMin to dropCountMax
-export function generateDropFromDropTable(_dropTables: DropTable[], _equipLevel: number, _skillDefinitions: SkillDefinitions | null): ContentContainer[] {
+export function generateDropFromDropTable(_dropTables: DropTable[], _equipLevel: number, _skillDefinitions: SkillDefinitions | null, _characterClass: string): ContentContainer[] {
 
   let droppedItems: ContentContainer[] = [];
 
@@ -434,7 +440,7 @@ export function generateDropFromDropTable(_dropTables: DropTable[], _equipLevel:
   _dropTables.forEach(async dropTable => {
 
     let dropCount = Math.floor(dropTable.dropCountMin + (dropTable.dropCountMax - dropTable.dropCountMin + 1) * (1 - Math.sqrt(1 - Math.random())));
-
+    console.log(dropTable.dropCountMin + "-" + dropTable.dropCountMax + " =  dropCount: " + dropCount);
     for (let i = 0; i < dropCount; i++) {
 
       rolledItem = rollForRandomItem(dropTable.dropTableItems);
@@ -449,7 +455,7 @@ export function generateDropFromDropTable(_dropTables: DropTable[], _equipLevel:
           if (_skillDefinitions == null)
             throw "You want to generate random equip but did not provide skill definitions. SERVER CODE ERROR!";
 
-          const equip = generateEquip(_equipLevel, (rolledItem as DropTableItem).rarity!, EQUIP_SLOT_ID.ANY, CHARACTER_CLASS.ANY, _skillDefinitions);
+          const equip = generateEquip(_equipLevel, (rolledItem as DropTableItem).rarity!, EQUIP_SLOT_ID.ANY, _characterClass, _skillDefinitions);
           droppedItems.push(generateContentContainer(equip));
         }
         else
@@ -492,24 +498,24 @@ export function generateContent(_itemId: string, _amount: number): Content {
   if (_itemId == ITEMS.TRAINING_TOKEN) { sellPrice = 0; stackSize = 10000000, rarity = RARITY.ARTIFACT, contentType = CONTENT_TYPE.ITEM }
   if (_itemId == ITEMS.REPUTATION) { sellPrice = 0; stackSize = 10000000, rarity = RARITY.ARTIFACT, contentType = CONTENT_TYPE.ITEM }
   if (_itemId == ITEMS.MAGIC_KEY) { sellPrice = 10000; stackSize = 1, rarity = RARITY.EPIC, contentType = CONTENT_TYPE.ITEM }
-  if (_itemId == ITEMS.TOWN_PORTAL) { sellPrice = 50; stackSize = 5, rarity = RARITY.RARE, customData = new CustomData(undefined, undefined, undefined), contentType = CONTENT_TYPE.FOOD }
+  if (_itemId == ITEMS.TOWN_PORTAL) { sellPrice = 50; stackSize = 5, rarity = RARITY.RARE, customData = new CustomData([5], undefined, undefined), contentType = CONTENT_TYPE.FOOD }
+  if (_itemId == ITEMS.FATIGUE_PILL) { sellPrice = 200; stackSize = 20, customData = new CustomData([100, 5], undefined, undefined,), contentType = CONTENT_TYPE.FOOD }
+
 
   //FOOD
   else if (_itemId == ITEMS.ROTTEN_APPLE) { sellPrice = 2; stackSize = 1, customData = new CustomData([1, 20], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY, expireDate = getCurrentDateTimeInMillis(24).toString() }
 
-  else if (_itemId == ITEMS.APPLE) { sellPrice = 5; stackSize = 20, customData = new CustomData([1, 1], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }
-  else if (_itemId == ITEMS.BERRY) { sellPrice = 10; stackSize = 20, customData = new CustomData([1, 1], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }//fatigueRecoveryBonus = 0, timeBonus = 3 }
+  else if (_itemId == ITEMS.APPLE) { sellPrice = 5; stackSize = 20, customData = new CustomData([1, 10], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }
+  else if (_itemId == ITEMS.BERRY) { sellPrice = 10; stackSize = 20, customData = new CustomData([3, 4], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }//fatigueRecoveryBonus = 0, timeBonus = 3 }
   else if (_itemId == ITEMS.MEAT) { sellPrice = 10; stackSize = 20, customData = new CustomData([1, 30], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }//fatigueRecoveryBonus = 0, timeBonus = 3 }
-  else if (_itemId == ITEMS.BONE) { sellPrice = 10; stackSize = 20, customData = new CustomData([1, 6], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }//fatigueRecoveryBonus = 0, timeBonus = 3 }
+  else if (_itemId == ITEMS.BONE) { sellPrice = 10; stackSize = 20, customData = new CustomData([1, 5], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }//fatigueRecoveryBonus = 0, timeBonus = 3 }
 
-
-  else if (_itemId == ITEMS.APPLE_PIE) { sellPrice = 100; stackSize = 20, customData = new CustomData([1, 2], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_CRIT_CHANCE, 5)]), contentType = CONTENT_TYPE.FOOD_SUPPLY } //fatigueRecoveryBonus = 80, timeBonus = 0 }
+  else if (_itemId == ITEMS.APPLE_PIE) { sellPrice = 100; stackSize = 20, customData = new CustomData([1, 20], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_CRIT_CHANCE, 10)]), contentType = CONTENT_TYPE.FOOD_SUPPLY } //fatigueRecoveryBonus = 80, timeBonus = 0 }
   else if (_itemId == ITEMS.RIBEYE) { sellPrice = 100; stackSize = 20, customData = new CustomData([1, 40], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_MAX_HP, 20)]), contentType = CONTENT_TYPE.FOOD_SUPPLY } //fatigueRecoveryBonus = 80, timeBonus = 0 }
-  else if (_itemId == ITEMS.OMELETTE) { sellPrice = 100; stackSize = 20, customData = new CustomData([1, 2], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_RESISTENCE, 3)]), contentType = CONTENT_TYPE.FOOD_SUPPLY } //fatigueRecoveryBonus = 80, timeBonus = 0 }
+  else if (_itemId == ITEMS.OMELETTE) { sellPrice = 100; stackSize = 20, customData = new CustomData([1, 4], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_RESISTENCE, 5)]), contentType = CONTENT_TYPE.FOOD_SUPPLY } //fatigueRecoveryBonus = 80, timeBonus = 0 }
   else if (_itemId == ITEMS.BONE_BROTH) { sellPrice = 100; stackSize = 20, customData = new CustomData([1, 8], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_MAX_MANA, 1)]), contentType = CONTENT_TYPE.FOOD_SUPPLY } //fatigueRecoveryBonus = 80, timeBonus = 0 }
-
-  else if (_itemId == ITEMS.FATIGUE_MEAL) { sellPrice = 200; stackSize = 20, customData = new CustomData([2], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_MAX_MANA, 1), new SimpleTally(FOOD_EFFECT.INCREASE_MANA_REGEN, 1), new SimpleTally(FOOD_EFFECT.INCREASE_MAX_HP, 30), new SimpleTally(FOOD_EFFECT.INCREASE_RESISTENCE, 4), new SimpleTally(FOOD_EFFECT.INCREASE_CRIT_CHANCE, 8)],), contentType = CONTENT_TYPE.FOOD_SUPPLY }
-  else if (_itemId == ITEMS.CURSE_REMOVE_MEAL) { sellPrice = 500; stackSize = 20, customData = new CustomData([3, 1], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }
+  else if (_itemId == ITEMS.FATIGUE_MEAL) { sellPrice = 200; stackSize = 20, customData = new CustomData([3], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_MAX_MANA, 1), new SimpleTally(FOOD_EFFECT.INCREASE_MANA_REGEN, 1), new SimpleTally(FOOD_EFFECT.INCREASE_MAX_HP, 30), new SimpleTally(FOOD_EFFECT.INCREASE_RESISTENCE, 7), new SimpleTally(FOOD_EFFECT.INCREASE_CRIT_CHANCE, 8)],), contentType = CONTENT_TYPE.FOOD_SUPPLY }
+  else if (_itemId == ITEMS.CURSE_REMOVE_MEAL) { sellPrice = 500; stackSize = 20, customData = new CustomData([5, 1], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }
 
 
   //else if (_itemId == ITEMS.BERRIES_DRIED) { sellPrice = 10; stackSize = 20, customData = new CustomData([1, 4], undefined, undefined), contentType = CONTENT_TYPE.FOOD_SUPPLY }//fatigueRecoveryBonus = 0, timeBonus = 3 }
@@ -517,7 +523,6 @@ export function generateContent(_itemId: string, _amount: number): Content {
   //SPECIAL
   //else if (_itemId == ITEMS.BEEF) { sellPrice = 100; stackSize = 1, customData = new CustomData([1, 10], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_MAX_HP, 10)]), contentType = CONTENT_TYPE.FOOD_SUPPLY } //fatigueRecoveryBonus = 80, timeBonus = 0 }
   //else if (_itemId == ITEMS.SALTED_RIBEYE) { sellPrice = 100; stackSize = 1, customData = new CustomData([1, 10], undefined, [new SimpleTally(FOOD_EFFECT.INCREASE_MAX_HP, 10)]), contentType = CONTENT_TYPE.FOOD_SUPPLY } //fatigueRecoveryBonus = 80, timeBonus = 0 }
-
   //fatigue
   //other
 
@@ -538,6 +543,7 @@ export function generateContent(_itemId: string, _amount: number): Content {
   else if (_itemId == ITEMS.VALORITE_ORE) { sellPrice = 40; stackSize = 20, contentType = CONTENT_TYPE.ITEM }
 
   //CURRENCY
+  else if (_itemId == CURRENCY_ID.MONSTER_ESSENCE) { sellPrice = 1; stackSize = 1000000, contentType = CONTENT_TYPE.CURRENCY }
   else if (_itemId == CURRENCY_ID.GOLD) { sellPrice = 1; stackSize = 1000000, contentType = CONTENT_TYPE.CURRENCY }
   else if (_itemId == CURRENCY_ID.SILVER) { sellPrice = 1; stackSize = 1000000, contentType = CONTENT_TYPE.CURRENCY }
 
@@ -551,16 +557,18 @@ export function generateContent(_itemId: string, _amount: number): Content {
   else if (_itemId == ITEMS.SALT) { sellPrice = 100; stackSize = 20, contentType = CONTENT_TYPE.ITEM }
 
 
-  //cooking
-
+  //chests , takto by to slo prodavat? v inventari kumulovat? vadi to? esli prodam chest nebo iutem z ni? na AH? Proste jbudou bind on pickup a dobry ne? vyreseno? wtf?
+  else if (_itemId == ITEMS.CHEST_IRON) { sellPrice = 10; stackSize = 5, contentType = CONTENT_TYPE.CHEST, rarity = RARITY.COMMON, customData = new CustomData(undefined, undefined, undefined) }
+  else if (_itemId == ITEMS.CHEST_GOLD) { sellPrice = 50; stackSize = 5, contentType = CONTENT_TYPE.CHEST, rarity = RARITY.UNCOMMON, customData = new CustomData(undefined, undefined, undefined) }
+  else if (_itemId == ITEMS.CHEST_RUBY) { sellPrice = 100; stackSize = 5, contentType = CONTENT_TYPE.CHEST, rarity = RARITY.RARE, customData = new CustomData(undefined, undefined, [new SimpleTally(ITEMS.MAGIC_KEY, 1)]) }
 
   //blacksmithing
   else if (_itemId == ITEMS.FORGE_ALLOY_BASE) { sellPrice = 20; stackSize = 20, contentType = CONTENT_TYPE.ITEM }
   //mining
-  else if (_itemId == ITEMS.COPPER_INGOT) { sellPrice = 10; stackSize = 20, rarity = RARITY.UNCOMMON, contentType = CONTENT_TYPE.ITEM }
-  else if (_itemId == ITEMS.IRON_INGOT) { sellPrice = 20; stackSize = 20, rarity = RARITY.RARE, contentType = CONTENT_TYPE.ITEM }
-  else if (_itemId == ITEMS.VERITE_INGOT) { sellPrice = 40; stackSize = 20, rarity = RARITY.EPIC, contentType = CONTENT_TYPE.ITEM }
-  else if (_itemId == ITEMS.VALORITE_INGOT) { sellPrice = 80; stackSize = 20, rarity = RARITY.LEGENDARY, contentType = CONTENT_TYPE.ITEM }
+  else if (_itemId == ITEMS.COPPER_INGOT) { sellPrice = 10; stackSize = 20, rarity = RARITY.COMMON, contentType = CONTENT_TYPE.ITEM }
+  else if (_itemId == ITEMS.IRON_INGOT) { sellPrice = 20; stackSize = 20, rarity = RARITY.UNCOMMON, contentType = CONTENT_TYPE.ITEM }
+  else if (_itemId == ITEMS.VERITE_INGOT) { sellPrice = 40; stackSize = 20, rarity = RARITY.RARE, contentType = CONTENT_TYPE.ITEM }
+  else if (_itemId == ITEMS.VALORITE_INGOT) { sellPrice = 80; stackSize = 20, rarity = RARITY.EPIC, contentType = CONTENT_TYPE.ITEM }
 
   //alchemy
   else if (_itemId == ITEMS.HARDENING_OIL) { sellPrice = 20; stackSize = 20, contentType = CONTENT_TYPE.ITEM }
@@ -581,7 +589,7 @@ export function generateContent(_itemId: string, _amount: number): Content {
   else if (_itemId == ITEMS.MINOR_MANA_POTION_RECIPE) { sellPrice = 50; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.UNCOMMON, customData = new CustomData([0, 1], [ITEMS.MINOR_MANA_POTION_RECIPE], [new SimpleTally(PROFESSION.ALCHEMY, 5)]) }
   else if (_itemId == ITEMS.MANA_POTION_RECIPE) { sellPrice = 125; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.UNCOMMON, customData = new CustomData([0, 3], [ITEMS.MINOR_MANA_POTION_RECIPE], [new SimpleTally(PROFESSION.ALCHEMY, 15)]) }
   else if (_itemId == ITEMS.INTELLECT_POTION_RECIPE) { sellPrice = 150; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.UNCOMMON, customData = new CustomData([0, 5], [ITEMS.INTELLECT_POTION_RECIPE], [new SimpleTally(PROFESSION.ALCHEMY, 20)]) }
-  else if (_itemId == ITEMS.MAJOR_HEALTH_POTION_RECIPE) { sellPrice = 1000; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.RARE, customData = new CustomData([0, 5], [ITEMS.HEALTH_POTION_RECIPE], [new SimpleTally(PROFESSION.ALCHEMY, 10)]) }
+  else if (_itemId == ITEMS.MAJOR_HEALTH_POTION_RECIPE) { sellPrice = 200; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.RARE, customData = new CustomData([0, 5], [ITEMS.HEALTH_POTION_RECIPE], [new SimpleTally(PROFESSION.ALCHEMY, 10)]) }
 
 
   //cooking
@@ -597,9 +605,9 @@ export function generateContent(_itemId: string, _amount: number): Content {
   //blacksmithing
   else if (_itemId == ITEMS.RING_1_RECIPE) { sellPrice = 150; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.UNCOMMON, customData = new CustomData([0, 1], [ITEMS.RING_1_RECIPE], [new SimpleTally(PROFESSION.BLACKSMITHING, 5)]) }
   else if (_itemId == ITEMS.BAG_1_RECIPE) { sellPrice = 250; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.UNCOMMON, customData = new CustomData([0, 1], [ITEMS.BAG_1_RECIPE], [new SimpleTally(PROFESSION.BLACKSMITHING, 10)]) }
-  else if (_itemId == ITEMS.EQUIP_COMMON_RECIPE) { sellPrice = 250; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.COMMON, customData = new CustomData([0, 1], [ITEMS.EQUIP_COMMON_RECIPE], undefined) }
-  else if (_itemId == ITEMS.EQUIP_UNCOMMON_RECIPE) { sellPrice = 500; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.UNCOMMON, customData = new CustomData([0, 1], [ITEMS.EQUIP_UNCOMMON_RECIPE], undefined) }
-  else if (_itemId == ITEMS.EQUIP_RARE_RECIPE) { sellPrice = 1000; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.RARE, customData = new CustomData([0, 1], [ITEMS.EQUIP_RARE_RECIPE], undefined) }
+  else if (_itemId == ITEMS.EQUIP_COMMON_RECIPE) { sellPrice = 25; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.COMMON, customData = new CustomData([0, 1], [ITEMS.EQUIP_COMMON_RECIPE], undefined) }
+  else if (_itemId == ITEMS.EQUIP_UNCOMMON_RECIPE) { sellPrice = 100; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.UNCOMMON, customData = new CustomData([0, 1], [ITEMS.EQUIP_UNCOMMON_RECIPE], undefined) }
+  else if (_itemId == ITEMS.EQUIP_RARE_RECIPE) { sellPrice = 500; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.RARE, customData = new CustomData([0, 1], [ITEMS.EQUIP_RARE_RECIPE], undefined) }
 
 
   else if (_itemId == ITEMS.COPPER_INGOT_RECIPE) { sellPrice = 150; stackSize = 1, contentType = CONTENT_TYPE.RECIPE, rarity = RARITY.UNCOMMON, customData = new CustomData([0, 1], [ITEMS.COPPER_INGOT_RECIPE], [new SimpleTally(PROFESSION.BLACKSMITHING, 0)]) }

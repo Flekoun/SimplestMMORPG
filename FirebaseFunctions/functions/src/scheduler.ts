@@ -1,9 +1,10 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { CharacterDocument, getCurrentDateTimeInMillis, GlobalMetadata, SCAVENGE_POINTS_INCREMENT_PER_SCHEDULED, SCAVENGE_POINTS_MAX, TIME_INCREMENT_PER_SCHEDULED, TIME_MAX } from ".";
-import { awardSeasonalLeaderboardRewards } from "./leaderboards";
+import { CharacterDocument, getCurrentDateTimeInMillis, GlobalMetadata, TIME_INCREMENT_PER_SCHEDULED, TIME_MAX } from ".";
+import { awardPoILeaderboardRewards, awardSeasonalLeaderboardRewards } from "./leaderboards";
 import axios from 'axios';
+import { InternalDefinition } from "./adminTools";
 
 
 
@@ -58,6 +59,7 @@ exports.scheduledFunction = functions.pubsub.schedule('0 0 * * *').onRun((contex
 
 
 
+
       //sezona skoncila!
       if (globalData.gameDay >= globalData.seasonDurationDays && globalData.isSeasonInProgress == true) {
 
@@ -89,9 +91,18 @@ exports.scheduledFunction = functions.pubsub.schedule('0 0 * * *').onRun((contex
       else {
         globalData.gameDay++;
         globalData.nextGameDayTimestamp = getCurrentDateTimeInMillis(24).toString();
+
+        //dam POI leaderboard rewardy prvnimu hraci
+        const internalDefinitionsDb = admin.firestore().collection('_internal_definitions').doc("MAP_GENERATOR");
+        const internalDefinitionsDoc = await t.get(internalDefinitionsDb);
+        let internalDefinitionsData: InternalDefinition = internalDefinitionsDoc.data();
+        internalDefinitionsData.MONSTER_SOLO.forEach(async PoI => {
+          await awardPoILeaderboardRewards(PoI.id, globalData.seasonNumber, globalData.nextGameDayTimestamp);
+        });
+
       }
 
-      t.set(globalDataDb, JSON.parse(JSON.stringify(globalData)), { merge: true });
+      await t.set(globalDataDb, JSON.parse(JSON.stringify(globalData)), { merge: true });
 
       return "OK";
     });
@@ -108,33 +119,33 @@ exports.scheduledFunction = functions.pubsub.schedule('0 0 * * *').onRun((contex
 
 
 //exports.scheduledFunction24 = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
-exports.scheduledFunction24 = functions.pubsub.schedule('0 0 * * *').onRun(async (context) => {
+// exports.scheduledFunction24 = functions.pubsub.schedule('0 0 * * *').onRun(async (context) => {
 
 
 
 
-  const charactersRef = admin.firestore().collection("characters").where('currency.scavengePoints', '<', SCAVENGE_POINTS_MAX);
-  const batch = admin.firestore().batch();
-  const dataSnapshot = await charactersRef.get();
+//   const charactersRef = admin.firestore().collection("characters").where('currency.scavengePoints', '<', SCAVENGE_POINTS_MAX);
+//   const batch = admin.firestore().batch();
+//   const dataSnapshot = await charactersRef.get();
 
-  dataSnapshot.forEach(doc => {
-    // const characterDoc = await t.get(characterDb);
-    let character: CharacterDocument = doc.data();
-    if (character.currency.scavengePoints <= character.currency.scavengePointsMax - SCAVENGE_POINTS_INCREMENT_PER_SCHEDULED)
-      character.currency.scavengePoints += SCAVENGE_POINTS_INCREMENT_PER_SCHEDULED;
-    else
-      character.currency.scavengePoints += character.currency.scavengePointsMax;
+//   dataSnapshot.forEach(doc => {
+//     // const characterDoc = await t.get(characterDb);
+//     let character: CharacterDocument = doc.data();
+//     if (character.currency.scavengePoints <= character.currency.scavengePointsMax - SCAVENGE_POINTS_INCREMENT_PER_SCHEDULED)
+//       character.currency.scavengePoints += SCAVENGE_POINTS_INCREMENT_PER_SCHEDULED;
+//     else
+//       character.currency.scavengePoints += character.currency.scavengePointsMax;
 
-    batch.update(doc.ref, JSON.parse(JSON.stringify(character)), { merge: true }); // Update the document in batch
-  });
-  return batch.commit() // Commit the batch
-    .then(() => {
-      console.log("Batch update completed.");
-      console.log("Increase Scavenge Points - Number of effected characters: ", dataSnapshot.size);
-    }
-    )
-    .catch(err => console.error("Error: ", err));
-});
+//     batch.update(doc.ref, JSON.parse(JSON.stringify(character)), { merge: true }); // Update the document in batch
+//   });
+//   return batch.commit() // Commit the batch
+//     .then(() => {
+//       console.log("Batch update completed.");
+//       console.log("Increase Scavenge Points - Number of effected characters: ", dataSnapshot.size);
+//     }
+//     )
+//     .catch(err => console.error("Error: ", err));
+// });
 
 
 //TODO: pak bude stacit kazdy den?!

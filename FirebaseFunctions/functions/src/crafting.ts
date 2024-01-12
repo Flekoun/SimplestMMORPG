@@ -1,9 +1,9 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { CHARACTER_CLASS, CharacterDocument, characterDocumentConverter, ContentContainer, CURRENCY_ID, generateContentContainer } from ".";
+import { CHARACTER_CLASS, CharacterDocument, characterDocumentConverter, ContentContainer, generateContentContainer } from ".";
 import { generateContent, generateEquip, ItemIdWithAmount, QuerryForSkillDefinitions } from "./equip";
-import { LEADERBOARD, incrementScoreToLeaderboard } from "./leaderboards";
+import { LEADERBOARD, incrementScoreToLeaderboard_GET } from "./leaderboards";
 import { RandomEquip } from "./questgiver";
 
 const admin = require('firebase-admin');
@@ -72,7 +72,7 @@ exports.craftRecipe = functions.https.onCall(async (data, context) => {
       //   //  console.log("zvedam");
       // }
 
-      characterData.subCurrency(CURRENCY_ID.TIME, recipeData.timePrice);
+      //  characterData.subCurrency(CURRENCY_ID.TIME, recipeData.timePrice);
 
 
 
@@ -88,7 +88,7 @@ exports.craftRecipe = functions.https.onCall(async (data, context) => {
 
 
       //updatnem leaderboards
-      let result = await incrementScoreToLeaderboard(t, characterData, LEADERBOARD.ITEMS_CRAFTED, 1);
+      let result = await incrementScoreToLeaderboard_GET(t, characterData, LEADERBOARD.ITEMS_CRAFTED, 1);
       await t.set(result.docRef, result.data, result.options);
 
       t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });

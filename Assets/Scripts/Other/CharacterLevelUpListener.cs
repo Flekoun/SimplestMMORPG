@@ -25,7 +25,7 @@ public class CharacterLevelUpListener : MonoBehaviour
 
         if (_oldData.stats.level < AccountDataSO.CharacterData.stats.level)
         {
-            var window = UIManager.instance.SpawnPromptPanel("Level " + AccountDataSO.CharacterData.stats.level + " reached! \n", null, null);
+            var window = UIManager.instance.SpawnPromptPanel("Level " + AccountDataSO.CharacterData.stats.level + " reached!\n +12 Time \n", null, null);
             window.HideDeclineButton();
             window.SetAcceptButtonText("Great!");
 

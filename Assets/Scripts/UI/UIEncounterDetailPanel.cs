@@ -8,7 +8,7 @@ using Unity.VisualScripting;
 using System.ComponentModel.Composition.Primitives;
 using UnityEngine.Events;
 using System;
-
+using static DijkstraMapMaker;
 
 public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
 {
@@ -18,6 +18,7 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
 
     public GameObject Model;
     public EncounterData Data;
+    public DijkstraMapMaker DijkstraMapMakerLocation;
     // public UICombatMemberSkillsSpawner UISkillsSpawner;
     public UILocation UILocationEncounters;
     public UIEncounterEntry UIEncounterEntry;
@@ -25,6 +26,8 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
     // public TextMeshProUGUI DrawDeckCardsCountText;
     // public TextMeshProUGUI DiscardDeckCardsCountText;
     public GameObject JoinEncounterButtonGO;
+    public GameObject TravelHereButtonGO;
+    public TextMeshProUGUI TravelHerePriceText;
     //  public GameObject MyCombatToolsGO;
     public UIInventory BonusLoot_UIInventory;
     public GameObject BonusLootGO;
@@ -116,49 +119,12 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
         throw new NotImplementedException();
     }
 
-    private async void SkillDropedOnCombatEntity(UICombatEntity _entity, UICombatMemberSkillEntry _skill)
-    {
-        var position = new Vector3(_entity.transform.position.x, _entity.transform.position.y, _entity.transform.position.z);
-        Debug.Log("position.x " + position.x + "position.y " + position.y);
-        if (_entity == null)
-        {
-            UIManager.instance.ImportantMessage.ShowMesssage("Choose your target!");
-            return;
-        }
-        if (_skill.Data.manaCost < 0)
-        {
 
-            UIManager.instance.ImportantMessage.ShowMesssage("This skill is unplayable!");
-            return;
-        }
-
-        var myUICombatEntity = UIEncounterEntry.GetUICombatEntityByUid(MyCombatMemberData.uid);
-
-        //  myUICombatEntity.FloatingTextSpawner.Spawn("Casting...", Color.blue, myUICombatEntity.FloatingTextsParent);
-        CastingEffectGO.gameObject.SetActive(true);
-
-        var result = await FirebaseCloudFunctionSO.ApplySkillOnEncounter(Data.uid, _skill.Data.uid, _entity.Data.uid);
-        if (result.Result)
-        {
-            Debug.Log("A position.x " + position.x + "position.y " + position.y);
-            UIManager.instance.SpawnParticleEffectUIPosition(position);
-            // myUICombatEntity.FloatingTextSpawner.Spawn("Casting Done!", Color.cyan, myUICombatEntity.FloatingTextsParent);
-        }
-        else
-        {
-            _skill.SkillFailedToBeCasted();
-            myUICombatEntity.FloatingTextSpawner.Spawn("Casting Failed!", Color.red, myUICombatEntity.FloatingTextsParent);
-        }
-        CastingEffectGO.SetActive(false);
-        // DeselectSelectedSkill();
-    }
 
     public void OnDestroy()
     {
         UIEncountersSpawner.OnUIEnecounterEntryClicked -= Show;
-        //UISkillsSpawner.OnSkillClicked -= SkillClicked;
-        //UISkillsSpawner.OnSkillHoldFinished -= SkillHoldFinished;
-        //UISkillsSpawner.OnSkillDropedOnCombatEntity -= SkillDropedOnCombatEntity;
+
 
     }
 
@@ -167,22 +133,14 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
         UICombatBuffDescription.SetData(_buff.Data);
     }
 
-    //private void OnCombatEntityClicked(UICombatEntity _entry)
-    //{
-    //    SelectedCombatEntity = _entry;
-    //}
-
 
 
     public void Show(EncounterData _data)
     {
         UILocationEncounters.Hide();
 
-        //        string oldChatText = "";
         Data = _data;
 
-        //AccountDataSO.OnCharacterDataChanged += Refresh;
-        //AccountDataSO.OnEncounterDataChanged += Refresh;
 
         Model.SetActive(true);
 
@@ -192,10 +150,8 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
 
     public void Hide()
     {
-        CancelInvoke();
+          CancelInvoke();
 
-        //AccountDataSO.OnCharacterDataChanged -= Refresh;
-        //AccountDataSO.OnEncounterDataChanged -= Refresh;
         Model.SetActive(false);
         UITopPanelGlobal.SetActive(true);
 
@@ -228,13 +184,13 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
 
         bool IAmComabatantInThisEncounter = Data.IsParticipatingInCombat(AccountDataSO.CharacterData.uid);
         bool IAmFounderOfThisEncounter = Data.foundByCharacterUid == AccountDataSO.CharacterData.uid;
-        bool PerkChoiceFinished = (Data.PendingPerksChoicesAmount() == 0);
-
+        bool PerkChoiceFinished = true;// (Data.PendingPerksChoicesAmount() == 0);
+        bool IAmAtThisEncounterPosition = AccountDataSO.CharacterData.position.pointOfInterestId == this.Data.position.pointOfInterestId;
         //  bool HasJoinedCombat = Data.IsParticipatingInCombat(AccountDataSO.CharacterData.uid);
 
         // UITopPanelGlobal.SetActive(!HasJoinedCombat);
-        PerkOffersPanel.gameObject.SetActive(AccountDataSO.CharacterData.IsWorldPositionExplored(Data.position) && !(IAmComabatantInThisEncounter && PerkChoiceFinished));
-        PerkTitleGO.SetActive(Data.PendingPerksChoicesAmount() > 0 && AccountDataSO.CharacterData.IsWorldPositionExplored(Data.position));
+        PerkOffersPanel.gameObject.SetActive(false);//AccountDataSO.CharacterData.IsWorldPositionExplored(Data.position) && !(IAmComabatantInThisEncounter && PerkChoiceFinished));
+        //PerkTitleGO.SetActive(Data.PendingPerksChoicesAmount() > 0 && AccountDataSO.CharacterData.IsWorldPositionExplored(Data.position));
         Utils.DestroyAllChildren(PerkOffersParent);
 
         foreach (var perkOffer in Data.perksOffers)
@@ -269,47 +225,6 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
         if (IAmComabatantInThisEncounter && PerkChoiceFinished)
         {
             MyCombatMemberData = Data.GetCombatMemeberByUid(AccountDataSO.CharacterData.uid);
-            //DrawDeckCardsCountText.SetText(MyCombatMemberData.skillsDrawDeck.Count.ToString());
-            //DiscardDeckCardsCountText.SetText(MyCombatMemberData.skillsDiscardDeck.Count.ToString());
-            //    CombatText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(Data.combatLog));
-            //OnCombatLogChanged.Invoke(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(Data.combatLog));
-            //UISkillsSpawner.Show(MyCombatMemberData);
-
-            //RestButton.interactable = !MyCombatMemberData.hasRested;
-
-            //if (!MyCombatMemberData.hasRested && !MyCombatMemberData.HasEnoughManaToCastAnySkill())
-            //{
-            //    TweenEffects.HighlightEffect(RestTweenEffect, Color.yellow);
-            //}
-            //else
-            //    TweenEffects.KillTween(RestTweenEffect.gameObject);
-
-            //if (!MyCombatMemberData.hasRested)
-            //    if (MyCombatMemberData.skillsDrawDeck.Count >= 5)
-            //    {
-            //        RestButtonText.SetText("End Turn");//(<color=\"yellow\">1% Fatigue</color>)")
-            //                                           // RestButton.colors = newC .normalColor = Color.white;
-            //    }
-            //    else
-            //    {
-            //        //Debug.Log(AccountDataSO.OtherMetadataData.constants.deckShuffleMaxHpPenalty);
-            //        //Debug.Log(MyCombatMemberData.stats.healthMax);
-            //        //Debug.Log(MyCombatMemberData.deckShuffleCount + 1);
-            //        //float healthTaken = AccountDataSO.OtherMetadataData.constants.deckShuffleMaxHpPenalty * MyCombatMemberData.stats.healthMax * (MyCombatMemberData.deckShuffleCount + 1);
-            //        //if (healthTaken >= MyCombatMemberData.stats.health)
-            //        //    healthTaken = MyCombatMemberData.stats.health - 1;
-
-            //        RestButtonText.SetText("End Turn & Reshuffle");//(<color=\"red\"> -" + Utils.RoundToInt(healthTaken) + " HP</color> )");
-            //    }
-            //else
-            //    RestButtonText.SetText("Waiting for others to end turn...");
-
-            //UISkillsSpawner.gameObject.SetActive(Data.GetCombatMemeberByUid(AccountDataSO.CharacterData.uid).stats.health > 0);
-            //RestButton.gameObject.SetActive(Data.GetCombatMemeberByUid(AccountDataSO.CharacterData.uid).stats.health > 0);
-
-
-            //if (!UIEncounterEntry.IsAnyItemSelected())
-            //    UIEncounterEntry.ClickOnRandomEnemy();
 
             CancelInvoke();
             InvokeRepeating("RefreshTurnTimeLeft", 0f, 1f);
@@ -336,15 +251,26 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
         CurseCountText.SetText(Data.curseCount.ToString());
 
         UITopPanel.SetActive(!(IAmComabatantInThisEncounter && PerkChoiceFinished));
-        JoinEncounterButtonGO.SetActive(!IAmComabatantInThisEncounter && Data.enemies.Count > 0);
-        if (Data.PendingPerksChoicesAmount() > 0)
-            ChoosePerkTitleText.SetText("Choose perk reward " + Data.PendingPerksChoicesAmount() + " more player");
+        JoinEncounterButtonGO.SetActive(!IAmComabatantInThisEncounter && Data.enemies.Count > 0 && IAmAtThisEncounterPosition);
+        TravelHereButtonGO.SetActive(!IAmAtThisEncounterPosition);
+        DijkstraMapMakerLocation.ShowPlannedTravelPath(AccountDataSO.CharacterData.position.pointOfInterestId, this.Data.position.pointOfInterestId);
+
+        PlannedPathCost travelCost = DijkstraMapMakerLocation.GetPlannedPathCost();
+        if (travelCost.TimeCost > 0)
+        {
+            TravelHerePriceText.SetText("<color=\"lightblue\">" + travelCost.TravelPointsCost.ToString() + "</color> + <color=\"yellow\">" + travelCost.TimeCost + "</color> ");
+        }
         else
-            ChoosePerkTitleText.SetText("Perk rewards chosen");
-        //  SituationDescriptionText.gameObject.SetActive(!IsParticipating);
-        //MyCombatToolsGO.SetActive(IAmComabatantInThisEncounter && PerkChoiceFinished);
-        //DiscardDeckCardsCountText.gameObject.SetActive(IAmComabatantInThisEncounter && PerkChoiceFinished);
-        //DrawDeckCardsCountText.gameObject.SetActive(IAmComabatantInThisEncounter && PerkChoiceFinished);
+        {
+            TravelHerePriceText.SetText("<color=\"lightblue\">" + travelCost.TravelPointsCost.ToString() + "</color>");
+        }
+
+        //if (Data.PendingPerksChoicesAmount() > 0)
+        //    ChoosePerkTitleText.SetText("Choose perk reward " + Data.PendingPerksChoicesAmount() + " more player");
+        //else
+        //    ChoosePerkTitleText.SetText("Perk rewards chosen");
+
+
         UIEncounterEntry.ShowBasicInfoPanel(!(IAmComabatantInThisEncounter && PerkChoiceFinished));
         JoinButtonText.SetText("<b>Join!</b>");
 
@@ -497,5 +423,10 @@ public class UIEncounterDetailPanel : MonoBehaviour, IEncounterDetailPanel
     public void OnPerkOfferClicked(UIPerkOffer _perkOffer)
     {
         FirebaseCloudFunctionSO.ChooseEncounterPerkOffer(Data.uid, _perkOffer.Data.uid);
+    }
+
+    public void TravelToThisPositionClicked()
+    {
+        FirebaseCloudFunctionSO.PointOfInterestTravel(this.Data.position.pointOfInterestId);
     }
 }

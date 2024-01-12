@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.Events;
+using DG.Tweening;
 
 public class UIEncounterEntryMap : MonoBehaviour
 {
@@ -18,13 +19,14 @@ public class UIEncounterEntryMap : MonoBehaviour
     public UIPortrait EnemyMainPortait;
     public Transform CombatMembersParent;
     public GameObject RareEnemyGO;
+    public DOTweenAnimation HighlightAnimation;
     public UnityAction<UIEncounterEntryMap> OnClicked;
     // public List<UICombatEntity> UICombatEnemyList = new List<UICombatEntity>();
     // public List<UICombatEntity> UICombatCombatMemberList = new List<UICombatEntity>();
     public EncounterData Data;
 
 
-    public void SetEncounter(EncounterData _encounterData)//, UIEncountersSpawner _parentSpawner)
+    public void SetEncounter(EncounterData _encounterData, bool _isHighlighted)//, UIEncountersSpawner _parentSpawner)
     {
         EnemyMainPortait.OnClicked += Clicked;
         EnemyMainPortait.EnableAsButton();
@@ -36,6 +38,11 @@ public class UIEncounterEntryMap : MonoBehaviour
         EnemyCountText.SetText(Data.enemies.Count.ToString());
 
         RareEnemyGO.SetActive(false);
+
+        if (!_isHighlighted)
+        {
+            HighlightAnimation.DOKill();
+        }
 
         int maxLeveEnemy = 0;
         int maxEstimatedStrength = 0;

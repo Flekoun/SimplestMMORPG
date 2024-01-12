@@ -5,7 +5,6 @@ using Firebase.Auth;
 using Firebase.Extensions;
 using Firebase.Firestore;
 using Firebase.Functions;
-using Newtonsoft.Json;
 using RoboRyanTron.Unite2017.Variables;
 using simplestmmorpg.data;
 

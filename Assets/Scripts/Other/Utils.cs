@@ -21,6 +21,17 @@ public static class Utils
 
     public static string ActiveLanguage = "EN";
 
+    public struct CURRENCY_ID
+    {
+
+        public const string GOLD = "GOLD";
+        public const string TIME = "TIME";
+        public const string FATIGUE = "FATIGUE";
+        public const string TRAVEL_POINTS = "TRAVEL_POINTS";
+        public const string SCAVENGE_POINTS = "SCAVENGE_POINTS";
+        public const string MONSTER_ESSENCE = "MONSTER_ESSENCE";
+
+    }
 
     public struct BLESS
     {
@@ -120,6 +131,7 @@ public static class Utils
         public const string GENERATED = "GENERATED";
         public const string FOOD_SUPPLY = "FOOD_SUPPLY";
         public const string RANDOM_EQUIP = "RANDOM_EQUIP";
+        public const string CHEST = "CHEST";
     }
 
     public struct ENCOUNTER_CONTEXT
@@ -257,6 +269,42 @@ public static class Utils
             case 5: return RARITY.LEGENDARY;
             case 6: return RARITY.MYTHICAL;
             case 7: return RARITY.ARTIFACT;
+
+            default:
+                Debug.LogError("UNKNOWN RARITY");
+                return "UNKNOWN RARITY";
+
+        }
+
+    }
+
+    public static int GetCurrencyIdIndex(string _index)
+    {
+
+        switch (_index)
+
+        {
+            case CURRENCY_ID.GOLD: return 0;
+            case CURRENCY_ID.MONSTER_ESSENCE: return 1;
+
+
+            default:
+                Debug.LogError("UNKNOWN CURRENCY ID");
+                return -100;
+
+        }
+
+    }
+
+    public static string GetCurrencyIdByIndex(int _index)
+    {
+
+        switch (_index)
+
+        {
+            case 0: return CURRENCY_ID.GOLD;
+            case 1: return CURRENCY_ID.MONSTER_ESSENCE;
+
 
             default:
                 Debug.LogError("UNKNOWN RARITY");

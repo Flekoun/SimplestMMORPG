@@ -9,7 +9,7 @@ using UnityEngine.Events;
 public class AdminToolsManager : MonoBehaviour
 {
 
-    public EnemyDropTablesData EnemyDropTablesData;
+    public DropTablesData EnemyDropTablesData;
     public PointOfInterestServerDataDefinitions ServerData;
     public InternalDefinition InternalDefinition;
     public UnityAction OnEnemyDropTablesDataChanged;
@@ -33,7 +33,7 @@ public class AdminToolsManager : MonoBehaviour
 
     public void SetEnemyDropTablesData(DocumentSnapshot _snapshot)
     {
-        EnemyDropTablesData = _snapshot.ConvertTo<EnemyDropTablesData>();
+        EnemyDropTablesData = _snapshot.ConvertTo<DropTablesData>();
         OnEnemyDropTablesDataChanged?.Invoke();
     }
 

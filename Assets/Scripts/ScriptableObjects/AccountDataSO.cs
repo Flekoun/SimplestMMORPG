@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Firebase.Firestore;
 using Firebase.Functions;
-using Newtonsoft.Json;
 using RoboRyanTron.Unite2017.Variables;
 
 using simplestmmorpg.data;
@@ -158,6 +157,26 @@ public class AccountDataSO : ScriptableObject
         if (OnClientVersionMatch != null)
             OnClientVersionMatch.Invoke(GlobalMetadata.serverVersion == Application.version);
 
+
+
+        int resultServerVersion;
+        bool successServer = int.TryParse(GlobalMetadata.serverVersion.Replace(".", ""), out resultServerVersion);
+
+        int resultAppVersion;
+        bool successApp = int.TryParse(Application.version.Replace(".", ""), out resultAppVersion);
+
+        if (successApp && successServer)
+        {
+            if (OnClientVersionMatch != null)
+                OnClientVersionMatch.Invoke(resultAppVersion >= resultServerVersion);
+        }
+        else
+        {
+            Debug.LogError("CRITICAL ERROR: Version control wrong string format!!");
+        }
+
+
+
         OnGlobalMetadataChanged?.Invoke();
     }
 
@@ -248,8 +267,8 @@ public class AccountDataSO : ScriptableObject
 
         if (CharacterDataChangedFirstTime)
         {
-            if (OnCharacterLoadedFirstTime != null)
-                OnCharacterLoadedFirstTime.Invoke();
+            Debug.Log("CALLING CHARACTER LOADED FIRST TIME!");
+            OnCharacterLoadedFirstTime?.Invoke();
 
             //LastWorldPosition = new WorldPosition();
             //LastWorldPosition.locationId = CharacterData.position.locationId;

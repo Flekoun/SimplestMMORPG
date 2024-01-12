@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using static DijkstraMapMaker;
 using static Utils;
 
 public class UIPointOfInterestButton : MonoBehaviour
@@ -25,6 +26,7 @@ public class UIPointOfInterestButton : MonoBehaviour
     public Sprite MonsterProgressFinishedEliteSprite;
     public UIQualityProgress UIMonsterTiersProgress; //Tiers
     public GameObject AmbushWarningGO;
+    public GameObject LeaderboardButton;
     //    public TextMeshProUGUI CharacterLevelText;
 
     //   public UIPortrait PlayerPortrait;
@@ -32,6 +34,8 @@ public class UIPointOfInterestButton : MonoBehaviour
     public GameObject PortraitPrefab;
     // public GameObject InterestingStuffPrefab;
     public Transform InterestingStuffParent;
+    public Transform MemmoryParent;
+
 
     public Transform EncountersMapParent;
     public Transform EncountersResultMapParent;
@@ -60,6 +64,8 @@ public class UIPointOfInterestButton : MonoBehaviour
     public GameObject EncounterResultEntryMapPrefab;
     public GameObject WorldMapMemmoryEntryPrefab;
 
+    public TooltipSpawner AmbushDangerTooltip;
+
     public Color ColorActive;
     public Color ColorNormal;
     public Color ColorUnexplored;
@@ -78,6 +84,8 @@ public class UIPointOfInterestButton : MonoBehaviour
     private bool IsPlayerOnThisPoI = false;
     private BaseDescriptionMetadata_NoId metadata = null;
     private bool IsReachable = false;
+
+    private bool SetupForFistTime = false;
     //public void Awake()
     //{
     //    AccountDataSO.OnCharacterDataChanged += Refresh;
@@ -154,33 +162,38 @@ public class UIPointOfInterestButton : MonoBehaviour
     }
 
 
-    private void Refresh()
+    public void Refresh()
     {
         if (this == null)
         {
-            Debug.LogWarning("divne ze se toto deje");
+            Debug.Log("divne ze se toto deje");
             return;
         }
+
 
         if (AccountDataSO.LocationData.GetDijkstraMapVertexById(WorldPosition.pointOfInterestId) != null)
             this.transform.localPosition = AccountDataSO.LocationData.GetDijkstraMapVertexById(WorldPosition.pointOfInterestId).screenPosition.ToVector2(); //LocationDef.Position;
 
+        if (AccountDataSO.CharacterData.IsWorldPositionExplored(WorldPosition))
+            LeaderboardButton.gameObject.SetActive(AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).roomType == "MONSTER_SOLO"); //uffff
+        else
+            LeaderboardButton.gameObject.SetActive(false);
 
+        AmbushDangerTooltip.SetString("UI_TOOLTIP_AMBUSH_DANGER", new int[] { AccountDataSO.OtherMetadataData.constants.HIGH_LEVEL_POI_FATIGUE_PENALTY });
 
         //I am at this PoI?
         IsPlayerOnThisPoI = AccountDataSO.CharacterData.position.pointOfInterestId == WorldPosition.pointOfInterestId;//&& AccountDataSO.CharacterData.position.zoneId == ZoneDef.Id;
 
 
-        Utils.DestroyAllChildren(InterestingStuffParent);
 
         metadata = Utils.DescriptionsMetadata.GetPointsOfInterestMetadata(WorldPosition.pointOfInterestId);
 
 
-        //if (TimePriceText != null)
-        //    TimePriceText.gameObject.SetActive(AccountDataSO.IsPositionExplored(WorldPosition) && IsPlayerOnThisPoI);
+
         TimePriceText.gameObject.SetActive(false);
-        //if (AccountDataSO.PointOfInterestData.pointOfInterestType == (int)Utils.POI_TYPE.MONSTER_SOLO)//(AccountDataSO.PointOfInterestData.pointOfInterestType != (int)Utils.POI_TYPE.DUNGEON && AccountDataSO.PointOfInterestData.pointOfInterestType != (int)Utils.POI_TYPE.ENDGAME)
-        //{
+
+        UIMonsterTiersProgress.gameObject.SetActive(false);
+
         if (IsPlayerOnThisPoI && AccountDataSO.PointOfInterestData.monsters != null && AccountDataSO.PointOfInterestData.monsters.tiersTotal > 0)
         {
             UIMonsterTiersProgress.gameObject.SetActive(true);
@@ -215,19 +228,9 @@ public class UIPointOfInterestButton : MonoBehaviour
 
                 }
 
-                //if (memmory.tiersCount > 0)
-                //{
-                //    UIMonsterTiersProgress.gameObject.SetActive(true);
-                //    UIMonsterTiersProgress.Setup(AccountDataSO.CharacterData.GetMaxTierReachedForPointOfInterest(WorldPosition.pointOfInterestId) + 1, memmory.tiersCount, MonsterProgressFinishedSprite, MonsterProgressSprite);
-                //}
-                //else
-                //    UIMonsterTiersProgress.gameObject.SetActive(false);
+
             }
         }
-        //}
-        //else UIMonsterTiersProgress.gameObject.SetActive(false);
-        //  TimePriceText.SetPrice(AccountDataSO.PointOfInterestData.exploreTimePrice);//+ AccountDataSO.CharacterData.GetMaxTierReachedForPointOfInterest(WorldPosition.pointOfInterestId) + 2));
-
 
         if (AccountDataSO.CharacterData.IsWorldPositionExplored(WorldPosition))//AccountDataSO.CharacterData.IsPositionExplored(Data.id))
         {
@@ -267,6 +270,7 @@ public class UIPointOfInterestButton : MonoBehaviour
 
 
         Utils.DestroyAllChildren(PartyMembersParent);
+
         if (AccountDataSO.IsInParty())
         {
             foreach (var member in AccountDataSO.PartyData.partyMembers)
@@ -298,10 +302,18 @@ public class UIPointOfInterestButton : MonoBehaviour
         //else
         //    PlayerPortrait.gameObject.SetActive(false);
 
-        //je prozkoumany PoI a jsem na nem, ukazu co o nem vim detailne, mam dokument ziskany 
-        if (AccountDataSO.CharacterData.IsWorldPositionExplored(WorldPosition) && IsPlayerOnThisPoI)
+
+        //  proste nejak jen refrehovat at sou enabled a listenery na clicked atd...nedelam zadne slozitosti ani nejake data velke nenastavuju? zbytecny vse nicit a zas spawnovat na VSECH POI pokazde?!
+
+        InterestingStuffParent.gameObject.SetActive(false);
+        MemmoryParent.gameObject.SetActive(false);
+        if (SetupForFistTime)
         {
-            ///   Utils.DestroyAllChildren(InterestingStuffParent);
+            Utils.DestroyAllChildren(InterestingStuffParent);
+
+            //je prozkoumany PoI a jsem na nem, ukazu co o nem vim detailne, mam dokument ziskany 
+            //if (AccountDataSO.CharacterData.IsWorldPositionExplored(WorldPosition) && IsPlayerOnThisPoI)
+            //{
 
             GameObject spawnedEntry = null;
             foreach (var item in AccountDataSO.PointOfInterestData.GetValidQuestGivers(AccountDataSO.CharacterData))
@@ -356,7 +368,7 @@ public class UIPointOfInterestButton : MonoBehaviour
                 }
                 else if (item == Utils.POI_SPECIALS.INN)
                 {
-                    Debug.Log("INN");
+
                     var entryUI = PrefabFactory.CreateGameObject(InnPrefab, InterestingStuffParent);
 
                     entryUI.gameObject.GetComponentInChildren<UIInterestMapButton>().SetEnabled(IsPlayerOnThisPoI);
@@ -406,33 +418,62 @@ public class UIPointOfInterestButton : MonoBehaviour
 
             }
 
-        }
-        else //pokud mam nejaky memmory a mel bych mit tak ukazu co na nem si bylo
-        {
+            //}
+            //else //pokud mam nejaky memmory a mel bych mit tak ukazu co na nem si bylo
+            //{
             //   Utils.DestroyAllChildren(InterestingStuffParent);
 
             if (AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition) != null)
             {
+                Utils.DestroyAllChildren(MemmoryParent);
+
                 foreach (var specialPoIMemmory in AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).specialPointsOfInterest)
                 {
-                    var memmoryUI = PrefabFactory.CreateGameObject<UIWorldMapMemmoryEntry>(WorldMapMemmoryEntryPrefab, InterestingStuffParent);
+                    var memmoryUI = PrefabFactory.CreateGameObject<UIWorldMapMemmoryEntry>(WorldMapMemmoryEntryPrefab, MemmoryParent);
                     memmoryUI.Setup(specialPoIMemmory);
+                }
+            }
+            //}
+        }
+
+
+        else//jeste zadne info o memory nebylo vytvroreno, checknem esli neni ted
+        {
+            if (MemmoryParent.childCount == 0)
+            {
+                if (AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition) != null)
+                {
+                    foreach (var specialPoIMemmory in AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).specialPointsOfInterest)
+                    {
+                        var memmoryUI = PrefabFactory.CreateGameObject<UIWorldMapMemmoryEntry>(WorldMapMemmoryEntryPrefab, MemmoryParent);
+                        memmoryUI.Setup(specialPoIMemmory);
+                    }
                 }
             }
         }
 
-        InterestingStuffParent.gameObject.SetActive(InterestingStuffParent.childCount > 0);
+
+        if (AccountDataSO.CharacterData.IsWorldPositionExplored(WorldPosition) && IsPlayerOnThisPoI)
+        {
+            InterestingStuffParent.gameObject.SetActive(true);
+        }
+        else
+        {
+            MemmoryParent.gameObject.SetActive(true);
+
+        }
 
         Utils.DestroyAllChildren(EncountersMapParent);
 
 
         foreach (var item in AccountDataSO.EncountersData)
         {
+            //  Debug.Log("Spawnuju ENCOUNTER  X :" + WorldPosition.pointOfInterestId + item.position.pointOfInterestId);
             if (item.position.pointOfInterestId == WorldPosition.pointOfInterestId)
             {
-
+                //      Debug.Log("Spawnuju ENCOUNTER  :" + WorldPosition.pointOfInterestId);
                 var entryUI = PrefabFactory.CreateGameObject<UIEncounterEntryMap>(EncounterEntryMapPrefab, EncountersMapParent);
-                entryUI.SetEncounter(item);
+                entryUI.SetEncounter(item, AccountDataSO.CharacterData.position.pointOfInterestId == WorldPosition.pointOfInterestId);
                 entryUI.OnClicked += OnEncounterEntryClicked;
 
                 // ExploreButton.targetGraphic.color = ColorEnemy;
@@ -453,21 +494,7 @@ public class UIPointOfInterestButton : MonoBehaviour
         DisplayButtonAsNormal();
 
         ColoriseButton();
-        //Refreshnu kameru na tuhle pozici
-
-        //if (IsPlayerOnThisPoI)
-        //{
-        //    Vector3 pos1 = this.transform.localPosition;
-        //    Vector3 pos2 = new Vector3((-1) * pos1.x, (-1) * pos1.y, pos1.z);
-        //    //   ScrollContent.localPosition = pos2;
-
-        //    if (ViewMoveCoroutine != null)
-        //        StopCoroutine(ViewMoveCoroutine);
-
-        //    ViewMoveCoroutine = StartCoroutine(MoveView(pos2));
-        //}
-        //else
-        //    Debug.LogError("Jaktoze nejsem na zadnem PoI buttonu? Kde sem?");
+        SetupForFistTime = true;
 
 
     }
@@ -520,7 +547,7 @@ public class UIPointOfInterestButton : MonoBehaviour
         FirebaseCloudFunctionSO.PointOfInterestTravel(WorldPosition.pointOfInterestId);
     }
 
-    public void RefreshButtonDisplay(UIPointOfInterestButton _selectedButton, int _totalTravelTime)
+    public void RefreshButtonDisplay(UIPointOfInterestButton _selectedButton, PlannedPathCost _totalTravelTime)
     {
         this.DisplayButtonAsNormal();
 
@@ -534,32 +561,27 @@ public class UIPointOfInterestButton : MonoBehaviour
             HoldButton.SetFunctional(true);
     }
 
-    private void DisplayButtonAsTravelTimeToThisPoI(int _travelPointsCost)
+    private void DisplayButtonAsTravelTimeToThisPoI(PlannedPathCost _travelPointsCost)
     {
         HoldButton.SetFunctional(true);
 
-        Debug.Log("_travelPointsCost:" + _travelPointsCost);
-        int timePerTravelPoint = AccountDataSO.OtherMetadataData.constants.timePerTravelPoint;
-        int playerTravelPointAmount = Mathf.FloorToInt(AccountDataSO.CharacterData.currency.travelPoints);
+        //Debug.Log("_travelPointsCost:" + _travelPointsCost);
+        //int timePerTravelPoint = AccountDataSO.OtherMetadataData.constants.timePerTravelPoint;
+        //int playerTravelPointAmount = Mathf.FloorToInt(AccountDataSO.CharacterData.currency.travelPoints);
 
-        int stockOfTravelTimeInsideTravelPoints = playerTravelPointAmount * timePerTravelPoint;
-        int lefotverPriceInTimeToPay = (_travelPointsCost * timePerTravelPoint) - stockOfTravelTimeInsideTravelPoints;
-        //    int pricePaidInFormOfTravelPoints = stockOfTravelTimeInsideTravelPoints / timePerTravelPoint;
+        //int stockOfTravelTimeInsideTravelPoints = playerTravelPointAmount * timePerTravelPoint;
+        //int lefotverPriceInTimeToPay = (_travelPointsCost * timePerTravelPoint) - stockOfTravelTimeInsideTravelPoints;
+        ////    int pricePaidInFormOfTravelPoints = stockOfTravelTimeInsideTravelPoints / timePerTravelPoint;
 
-        if (lefotverPriceInTimeToPay > 0)
+        if (_travelPointsCost.TimeCost > 0)
         {
-            //  NameText.color = Color.yellow;
-            NameText.SetText("Travel Here (<color=\"lightblue\">" + playerTravelPointAmount.ToString() + "</color> + <color=\"yellow\">" + lefotverPriceInTimeToPay + "</color> ) ");
+            NameText.SetText("Travel Here (<color=\"lightblue\">" + _travelPointsCost.TravelPointsCost.ToString() + "</color> + <color=#FFFF78>" + _travelPointsCost.TimeCost + "</color> ) ");
         }
         else
         {
-            NameText.SetText("Travel Here (<color=\"lightblue\">" + _travelPointsCost.ToString() + "</color>)");
+            NameText.SetText("Travel Here (<color=\"lightblue\">" + _travelPointsCost.TravelPointsCost.ToString() + "</color>)");
         }
 
-        //if (_travelPointsCost <= AccountDataSO.CharacterData.currency.travelPoints)
-        //    NameText.SetText("Travel Here (<color=\"lightblue\">" + _travelPointsCost.ToString() + "</color>)");
-        //else
-        //    NameText.SetText("Travel Here (<color=\"red\">" + _travelPointsCost.ToString() + "</color>)");
 
     }
 
@@ -575,15 +597,35 @@ public class UIPointOfInterestButton : MonoBehaviour
             if (!AccountDataSO.EncountersContainsEncounterCreatedByMe())
             {
 
-                Debug.Log("AccountDataSO.PointOfInterestData.roomType:" + AccountDataSO.PointOfInterestData.roomType);
+                //                Debug.Log("AccountDataSO.PointOfInterestData.roomType:" + AccountDataSO.PointOfInterestData.roomType);
                 //HoldButton.SetFunctional(true);
                 //ExploreButton.interactable = true;
                 NameText.color = Color.green;
                 NameText.SetText("");
+
+
                 if (metadata != null && AccountDataSO.CharacterData.IsWorldPositionExplored(WorldPosition))
+                {
                     NameText.SetText(metadata.title.GetText());//+ "(" +( AccountDataSO.PointOfInterestData.exploreTimePrice + AccountDataSO.CharacterData.getMaxTierReachedForPointOfInterest(PointOfInterestId) + 1) + ")");
+
+                }
                 else
+                {
                     NameText.SetText(Utils.DescriptionsMetadata.GetPointsOfInterestRoomTypesMetadata(AccountDataSO.PointOfInterestData.roomType).title.EN);//NameText.SetText(AccountDataSO.PointOfInterestData.typeId + "(" + AccountDataSO.PointOfInterestData.id + ")");// (" + (AccountDataSO.PointOfInterestData.exploreTimePrice + AccountDataSO.CharacterData.getMaxTierReachedForPointOfInterest(PointOfInterestId) + 1) + ")");
+                }
+
+
+                if (AccountDataSO.PointOfInterestData.roomType == "MONSTER_SOLO")
+                {
+                    if (AccountDataSO.CharacterData.currency.scavengePoints == 0)
+                    {
+                        NameText.SetText("Explore (<color=#FFFF78>" + AccountDataSO.OtherMetadataData.constants.TIME_COST_TO_EXPLORE_POI.ToString() + "</color>)");
+                    }
+                    else
+                    {
+                        NameText.SetText("Explore (<color=#FFB0A3>" + 1 + "</color>)");
+                    }
+                }
             }
             else
             {
@@ -607,7 +649,8 @@ public class UIPointOfInterestButton : MonoBehaviour
                     NameText.SetText(metadata.title.GetText());
                 else if (AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition) != null)
                 {
-                    Debug.Log("AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).typeId:" + AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).roomType);
+
+                    //                    Debug.Log("AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).typeId:" + AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).roomType);
                     NameText.SetText(Utils.DescriptionsMetadata.GetPointsOfInterestRoomTypesMetadata(AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).roomType).title.EN);//NameText.SetText(AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).typeId);
                 }
             }
@@ -637,6 +680,7 @@ public class UIPointOfInterestButton : MonoBehaviour
 
     public void SetReachable(bool _isInteractable)
     {
+        //        Debug.Log("nastavuju reachable :" + WorldPosition.pointOfInterestId + " na " + _isInteractable);
         IsReachable = _isInteractable;
 
         ExploreButton.interactable = IsReachable;
@@ -679,19 +723,8 @@ public class UIPointOfInterestButton : MonoBehaviour
             ExploreButton.targetGraphic.color = ColorActive;
     }
 
-    //private IEnumerator MoveView(Vector3 targetPosition)
-    //{
-    //    float startTime = Time.time;
-    //    while (Vector3.Distance(ScrollContent.localPosition, targetPosition) > 10 && (Time.time - startTime) < 1f)
-    //    {
-    //        //            Debug.Log(ScrollContent.localPosition);
-    //        //           Debug.Log(targetPosition);
-    //        ScrollContent.localPosition = Vector3.Lerp(ScrollContent.localPosition, targetPosition, 2f * Time.deltaTime);
-    //        yield return null;
-    //    }
-    //}
-    //public void ShowPointOfInterestLeaderboard()
-    //{
-    //    UIManager.instance.UILeaderboardsPanel.ShowPointOfInterestLeaderboard("MONSTER_KILLS", QueryData);
-    //}
+    public void ShowPoILeaderboard()
+    {
+        UIManager.instance.UILeaderboardsPanel.ShowLeaderboard(AccountDataSO.CharacterData.GetWorldMapMemmoryForWorldPosition(WorldPosition).typeId);
+    }
 }

@@ -39,7 +39,7 @@ public class UIDeepRestDetailPanel : MonoBehaviour
 
     public void Show()
     {
-        SupplyLimit = AccountDataSO.OtherMetadataData.constants.restSupplyLimitBase + ((AccountDataSO.CharacterData.stats.level - 1) * AccountDataSO.OtherMetadataData.constants.restSupplyLimitIncrement);
+        SupplyLimit = AccountDataSO.CharacterData.stats.restFoodLimit + ((AccountDataSO.CharacterData.stats.level - 1) * AccountDataSO.OtherMetadataData.constants.restSupplyLimitIncrement);
 
         //        AccountDataSO.OnVendorsDataChanged += Refresh;
         AccountDataSO.OnCharacterDataChanged += Refresh;
@@ -151,18 +151,23 @@ public class UIDeepRestDetailPanel : MonoBehaviour
 
     public async void RestClicked()
     {
-
-        var result = await FirebaseCloudFunctionSO.RestDeep(UIInventoyFoodSuppliesToUse.GetAllItemUids(), UIInventoyFoodSuppliesToUse.GetAllItemAmounts());
-
-        if (result.Result)
+        if (UIInventoyFoodSuppliesToUse.GetAllItemUids().Count == 0)
         {
-            UIManager.instance.ImportantMessage.ShowMesssage("Rested!");
-            UIInventoyFoodSuppliesToUse.RemoveAllItemsOffline();
-
-            Hide();
-
+            UIManager.instance.ImportantMessage.ShowMesssage("To rest is to refuel. No journey resumes on an empty stomach", 3);
         }
+        else
+        {
+            var result = await FirebaseCloudFunctionSO.RestDeep(UIInventoyFoodSuppliesToUse.GetAllItemUids(), UIInventoyFoodSuppliesToUse.GetAllItemAmounts());
 
+            if (result.Result)
+            {
+                UIManager.instance.ImportantMessage.ShowMesssage("Rested!");
+                UIInventoyFoodSuppliesToUse.RemoveAllItemsOffline();
+
+                Hide();
+
+            }
+        }
         ///UIManager.instance.ImportantMessage.ShowMesssage("Trade complete!");
 
     }

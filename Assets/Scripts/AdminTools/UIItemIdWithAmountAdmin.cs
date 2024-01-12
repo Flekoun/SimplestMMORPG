@@ -17,6 +17,7 @@ public class UIItemIdWithAmountAdmin : MonoBehaviour
     public Image PortraitImage;
 
     public ItemIdWithAmountAdmin Data;
+    public ItemIdWithAmount Data2;
 
     public UnityAction<UIItemIdWithAmountAdmin> OnRemoveClicked;
 
@@ -26,6 +27,18 @@ public class UIItemIdWithAmountAdmin : MonoBehaviour
     public void SetData(ItemIdWithAmountAdmin _item)
     {
         Data = _item;
+        Data2 = null;
+        AmountInput.text = _item.amount.ToString();
+        ItemIdText.SetText(_item.itemId.ToString());
+        PortraitImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(_item.GetImageId()).Image;
+
+    }
+
+    // Start is called before the first frame update
+    public void SetData(ItemIdWithAmount _item)
+    {
+        Data2 = _item;
+        Data = null;
         AmountInput.text = _item.amount.ToString();
         ItemIdText.SetText(_item.itemId.ToString());
         PortraitImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(_item.GetImageId()).Image;
@@ -34,10 +47,12 @@ public class UIItemIdWithAmountAdmin : MonoBehaviour
 
 
 
-
     public void AmountInputValueChanged(string _value)
     {
-        Data.amount = int.Parse(_value);
+        if (Data != null)
+            Data.amount = int.Parse(_value);
+        else if (Data2 != null)
+            Data2.amount = int.Parse(_value);
     }
 
     public void RemoveClicked()

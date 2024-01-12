@@ -165,7 +165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5412df00f3953406aaf42e74d128a214, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stringId: UI_TOOLTIP_PLAYER_TRAINING_POINTS
+  stringId: MONSTER_ESSENCE
   OffsetY: 0
   IsFunctional: 1
 --- !u!1 &7751846232003919946

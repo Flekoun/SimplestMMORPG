@@ -2,10 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 using System;
-using Google.MiniJSON;
 using simplestmmorpg.data;
-using UnityEditor.Experimental.GraphView;
-using UnityEngine.UIElements;
 using static Utils;
 using System.Linq;
 
@@ -43,7 +40,7 @@ public class MapGenerator : MonoBehaviour
         { ROOM_TYPE.MONSTER_COOP, 0 },
         { ROOM_TYPE.MONSTER_ELITE, 0 },
         { ROOM_TYPE.CHAPEL, 0 },
-        { ROOM_TYPE.MERCHANT, 12 },
+        { ROOM_TYPE.MERCHANT, 16 },
         { ROOM_TYPE.QUEST, 0 },
         { ROOM_TYPE.REST, 0 },
         { ROOM_TYPE.TOWN,6},
@@ -86,7 +83,7 @@ public class MapGenerator : MonoBehaviour
         types = types.Where(rt => roomTypeMaxCount[rt] > 0).ToList();
 
         if (floor == 0)
-            types.RemoveAll(rt => rt != ROOM_TYPE.MONSTER_SOLO);
+            types.RemoveAll(rt => rt != ROOM_TYPE.MONSTER_SOLO && rt != ROOM_TYPE.MERCHANT);
 
         if (floor < 2)
             types.RemoveAll(rt => rt == ROOM_TYPE.DUNGEON);

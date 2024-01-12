@@ -1,9 +1,11 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { CHEATS_ENABLED, CharacterDocument, ContentContainer, GlobalMetadata, characterDocumentConverter, generateContentContainer, randomIntFromInterval } from ".";
+import { CHEATS_ENABLED, CharacterDocument, GlobalMetadata, characterDocumentConverter, generateContentContainer, getCurrentDateTimeInMillis } from ".";
 import { EQUIP_SLOT_ID, QuerryForSkillDefinitions, RARITY, generateEquip } from "./equip";
-import { awardSeasonalLeaderboardRewards } from "./leaderboards";
+import { awardPoILeaderboardRewards } from "./leaderboards";
+import { InternalDefinition } from "./adminTools";
+import { InboxItem } from "./inbox";
 
 
 const admin = require('firebase-admin');
@@ -24,19 +26,6 @@ export class ServerData_Economy {
 
 
 
-export class InboxItem {
-  constructor(
-    public uid: string,
-    public recipientUid: string,
-    public content: ContentContainer,
-    public messageTitle: string,
-    public messageBody: string,
-    public expireDate: string,
-
-
-  ) { }
-}
-
 exports.addSimpleItemToDatabase = functions.https.onCall(async (data, context) => {
 
   const inboxItemUid = data.inboxItemUid;
@@ -55,7 +44,7 @@ exports.addSimpleItemToDatabase = functions.https.onCall(async (data, context) =
 
       // inboxItemData.content = new ContentContainer(inboxItemData.content.contentType,inboxItemData.content.contentItem,inboxItemData.content.contentEquip,inboxItemData.content.contentCurrency,inboxItemData.content.contentFood); //kvuli tomu ze nemam withConverter...
 
-      characterData.addContentToInventory(inboxItemData.content, true, false);
+      characterData.addContentToInventory(inboxItemData.content!, true, false);
       t.delete(inboxDb);
       t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
 
@@ -77,14 +66,17 @@ exports.addSimpleItemToDatabase = functions.https.onCall(async (data, context) =
 
 exports.cheatTime = functions.https.onCall(async (data, context) => {
 
-  if (!CHEATS_ENABLED)
-    throw "Cheats are not enabled!";
+
 
   const callerCharacterUid = data.characterUid;
 
   const characterDb = await admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
 
   try {
+
+    if (!CHEATS_ENABLED)
+      throw "Cheats are not enabled!";
+
     const result = await admin.firestore().runTransaction(async (t: any) => {
 
       const characterDoc = await t.get(characterDb);
@@ -116,15 +108,43 @@ exports.test = functions.https.onCall(async (data, context) => {
     throw "Cheats are not enabled!";
 
 
-  const globalDataRef = admin.firestore().collection("_metadata_coreDefinitions").doc("Global");
-  const globalSnapshot = await globalDataRef.get();
-  let globalData: GlobalMetadata = globalSnapshot.data();
+  try {
+    const result = await admin.firestore().runTransaction(async (t: any) => {
 
-  await awardSeasonalLeaderboardRewards("CHARACTER_LEVEL", globalData.seasonNumber);
-  await awardSeasonalLeaderboardRewards("DAMAGE_DONE", globalData.seasonNumber);
-  await awardSeasonalLeaderboardRewards("HEALING_DONE", globalData.seasonNumber);
-  await awardSeasonalLeaderboardRewards("ITEMS_CRAFTED", globalData.seasonNumber);
-  return await awardSeasonalLeaderboardRewards("MONSTER_KILLS", globalData.seasonNumber);
+
+      const globalDataRef = admin.firestore().collection("_metadata_coreDefinitions").doc("Global");
+      const globalSnapshot = await globalDataRef.get();
+      let globalData: GlobalMetadata = globalSnapshot.data();
+
+      // await awardSeasonalLeaderboardRewards("CHARACTER_LEVEL", globalData.seasonNumber);
+      // await awardSeasonalLeaderboardRewards("DAMAGE_DONE", globalData.seasonNumber);
+      // await awardSeasonalLeaderboardRewards("HEALING_DONE", globalData.seasonNumber);
+      // await awardSeasonalLeaderboardRewards("ITEMS_CRAFTED", globalData.seasonNumber);
+      // return await awardSeasonalLeaderboardRewards("MONSTER_KILLS", globalData.seasonNumber);
+
+
+
+      const internalDefinitionsDb = admin.firestore().collection('_internal_definitions').doc("MAP_GENERATOR");
+      const internalDefinitionsDoc = await t.get(internalDefinitionsDb);
+      let internalDefinitionsData: InternalDefinition = internalDefinitionsDoc.data();
+      internalDefinitionsData.MONSTER_SOLO.forEach(async PoI => {
+        await awardPoILeaderboardRewards(PoI.id, globalData.seasonNumber, getCurrentDateTimeInMillis(24).toString());
+      });
+
+
+
+
+    });
+
+
+    console.log('Transaction success', result);
+    return result;
+  } catch (e) {
+    console.log('Transaction failure:', e);
+    throw new functions.https.HttpsError("aborted", "Error : " + e);
+  }
+
+
 
   // const charactersRef = admin.firestore().collection("characters").where('currency.time', '<', TIME_MAX);
   // const batch = admin.firestore().batch();
@@ -162,8 +182,6 @@ exports.test = functions.https.onCall(async (data, context) => {
 
 exports.grantNewEquip = functions.https.onCall(async (data, context) => {
 
-  if (!CHEATS_ENABLED)
-    throw "Cheats are not enabled!";
 
   // 
   const callerCharacterUid = data.characterUid;
@@ -172,6 +190,10 @@ exports.grantNewEquip = functions.https.onCall(async (data, context) => {
   // 
   // 
   try {
+    if (!CHEATS_ENABLED)
+      throw "Cheats are not enabled!";
+
+
     const result = await admin.firestore().runTransaction(async (t: any) => {
       // 
       const callerCharacterDoc = await t.get(callerCharacterDb);

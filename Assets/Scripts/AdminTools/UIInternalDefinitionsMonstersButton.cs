@@ -9,12 +9,15 @@ public class UIInternalDefinitionsMonstersButton : MonoBehaviour
 {
 
     public PointOfInterestInternalDefinition Data;
+    public ImageIdDefinitionSOSet AllImageIdDefinitionSOSet;
+    public PrefabFactory PrefabFactory;
     public TMP_InputField FloorMinInput;
     public TMP_InputField FloorMaxInput;
     public TMP_InputField RarePerksIdInput;
     public TMP_InputField IdInput;
     public TMP_InputField PartySizeInput;
-
+    public Transform EnemiesParent;
+    public GameObject EnemyPortraitPrefab;
 
     public UnityAction<UIInternalDefinitionsMonstersButton> OnClicked;
 
@@ -29,7 +32,11 @@ public class UIInternalDefinitionsMonstersButton : MonoBehaviour
         IdInput.text = Data.id;
         PartySizeInput.text = Data.monsters.partySize.ToString();
 
-
+        foreach (var enemy in Data.monsters.tiers[0].enemies)
+        {
+            var item = PrefabFactory.CreateGameObject<UIPortrait>(EnemyPortraitPrefab, EnemiesParent);
+            item.SetPortrait(AllImageIdDefinitionSOSet.GetDefinitionById(enemy).ImageId, "");
+        }
     }
 
     // Update is called once per frame

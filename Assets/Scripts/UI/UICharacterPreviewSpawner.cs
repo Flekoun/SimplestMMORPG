@@ -23,7 +23,8 @@ public class UICharacterPreviewSpawner : UISelectableSpawner
     // Start is called before the first frame update
     public void Spawn()
     {
-        Spawn(AccountDataSO.PlayerData.characters);
+        if (AccountDataSO.PlayerData != null)
+            Spawn(AccountDataSO.PlayerData.characters);
     }
 
     // TODO: tyhle parametry sou tu zbytecne imo, kdysi kdyz sem to pouzival i na leaderboards sem to otreboval

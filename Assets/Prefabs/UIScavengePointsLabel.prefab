@@ -222,6 +222,7 @@ MonoBehaviour:
   stringId: UI_TOOLTIP_SCAVENGE_POINTS
   OffsetY: 0
   IsFunctional: 1
+  SpawnAtBottom: 0
 --- !u!1 &4126011743579058627
 GameObject:
   m_ObjectHideFlags: 0
@@ -297,8 +298,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4291611852
-  m_fontColor: {r: 0.8018868, g: 0.8018868, b: 0.8018868, a: 1}
+    rgba: 4288852223
+  m_fontColor: {r: 1, g: 0.688906, b: 0.6367924, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -315,7 +316,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 39.05
+  m_fontSize: 49.3
   m_fontSizeBase: 37.5
   m_fontWeight: 400
   m_enableAutoSizing: 1

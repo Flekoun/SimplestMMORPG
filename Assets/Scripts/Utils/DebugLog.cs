@@ -53,7 +53,6 @@ public class DebugLog : MonoBehaviour
                 output += "<color=\"red\">" + logString + "</color>" + "\n";
             }
             else
-
                 output += "<color=\"blue\">" + logString + "</color>" + "\n";
         }
         //  output += logString+"\n";

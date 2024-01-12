@@ -26,6 +26,10 @@ namespace simplestmmorpg.data
 
         [field: SerializeField]
         [FirestoreProperty]
+        public PerkOfferDefinition perkOffer { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
         public string messageBody { get; set; }
 
 

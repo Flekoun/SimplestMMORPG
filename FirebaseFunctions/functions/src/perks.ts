@@ -1,7 +1,7 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { ContentContainer, CharacterDocument, characterDocumentConverter, generateContentContainer, SimpleTally, GlobalMetadata, SCAVENGE_CLAIM_COST, SCAVENGE_CLAIM_ALL_COST, SCAVENGE_CLAIM_ALL_COST_TIME, SCAVENGE_CLAIM_COST_TIME } from ".";
+import { ContentContainer, CharacterDocument, characterDocumentConverter, generateContentContainer, SimpleTally, GlobalMetadata } from ".";
 
 
 import { generateContent, generateEquip, IHasChanceToSpawn, ItemIdWithAmount, QuerryForSkillDefinitions } from "./equip";
@@ -154,6 +154,7 @@ export class PendingReward {
     this.chargesClaimed++;
     this.lastClaimGameDay = _gameDay;
     for (const reward of this.rewards) {
+      console.log("ok sem az tadyy");
       _character.addContentToInventory(reward, true, false);
     }
 
@@ -189,16 +190,21 @@ exports.pendingRewardClaim = functions.https.onCall(async (data, context) => {
       const globalDataDoc = await t.get(globalDb);
       let globalData: GlobalMetadata = globalDataDoc.data();
 
+      if (globalData.gameDay <= characterData.lastClaimedGameDay)
+        throw "You have already scavenged today!";
+
+      characterData.lastClaimedGameDay = globalData.gameDay;
+
       let skillDefinitions = await QuerryForSkillDefinitions(t);
 
       if (perkUid != "") { //konkretni perk
         for (var perk of characterData.pendingRewards) {
           if (perkUid == perk.uid) {//|| perkUid == "") {
             try {
-              if (characterData.currency.scavengePoints >= SCAVENGE_CLAIM_COST)
-                characterData.subScavengePoints(SCAVENGE_CLAIM_COST);
-              else
-                characterData.subTime(SCAVENGE_CLAIM_COST_TIME);
+              // if (characterData.currency.scavengePoints >= SCAVENGE_CLAIM_COST)
+              //   characterData.subScavengePoints(SCAVENGE_CLAIM_COST);
+              // else
+              //   characterData.subTime(SCAVENGE_CLAIM_COST_TIME);
 
               perk.resolve(characterData, globalData.gameDay, skillDefinitions);
             }
@@ -211,26 +217,26 @@ exports.pendingRewardClaim = functions.https.onCall(async (data, context) => {
           }
         }
       }
-      // else //all perky
-      // {
-      //   if (characterData.pendingRewards.length == 0)
-      //     throw "There is nothing to scavange";
+      else //all perky
+      {
+        if (characterData.pendingRewards.length == 0)
+          throw "There is nothing to scavange";
 
-      //   if (characterData.currency.scavengePoints >= SCAVENGE_CLAIM_ALL_COST)
-      //     characterData.subScavengePoints(SCAVENGE_CLAIM_ALL_COST);
-      //   else
-      //     characterData.subTime(SCAVENGE_CLAIM_ALL_COST_TIME);
+        // if (characterData.currency.scavengePoints >= SCAVENGE_CLAIM_ALL_COST)
+        //   characterData.subScavengePoints(SCAVENGE_CLAIM_ALL_COST);
+        // else
+        //   characterData.subTime(SCAVENGE_CLAIM_ALL_COST_TIME);
 
-      //   for (var perk of characterData.pendingRewards) {
-      //     try {
-      //       perk.resolve(characterData, globalData.gameDay, skillDefinitions);
-      //     }
-      //     catch (e) {
-      //       throw e;
-      //     }
+        for (var perk of characterData.pendingRewards) {
+          try {
+            perk.resolve(characterData, globalData.gameDay, skillDefinitions);
+          }
+          catch (e) {
+            throw e;
+          }
 
-      //   }
-      // }
+        }
+      }
 
       t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
 

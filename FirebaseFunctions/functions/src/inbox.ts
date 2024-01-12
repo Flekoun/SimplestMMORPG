@@ -2,9 +2,12 @@
 // [START import]
 import * as functions from "firebase-functions";
 import { CharacterDocument, characterDocumentConverter, ContentContainer, getCurrentDateTime, PlayerData, PlayerDataConverter } from ".";
+import { PerkOfferDefinition } from "./perks";
+import { QuerryForSkillDefinitions } from "./equip";
 
 const admin = require('firebase-admin');
 // // [END import]
+
 
 
 
@@ -12,11 +15,12 @@ export class InboxItem {
   constructor(
     public uid: string,
     public recipientUid: string,
-    public content: ContentContainer,
+    public content: ContentContainer | undefined,
+    public perkOffer: PerkOfferDefinition | undefined,
     public messageTitle: string,
     public messageBody: string,
+    public expireDate: string,
 
-    public expireDate: string
 
   ) { }
 }
@@ -24,7 +28,7 @@ export class InboxItem {
 export async function sendContentToInbox(_transaction: any, _itemToSend: ContentContainer, _recieverCharacterUid: string, _messageTitle: string, _messageBody: string) {
 
   const inboxDb = admin.firestore().collection('inbox').doc();
-  const inboxEntry = new InboxItem(inboxDb.id, _recieverCharacterUid, _itemToSend, _messageTitle, _messageBody, getCurrentDateTime(480));
+  const inboxEntry = new InboxItem(inboxDb.id, _recieverCharacterUid, _itemToSend, undefined, _messageTitle, _messageBody, getCurrentDateTime(480));
 
   _transaction.set(inboxDb, JSON.parse(JSON.stringify(inboxEntry)));
 }
@@ -47,10 +51,15 @@ exports.claimInboxItem = functions.https.onCall(async (data, context) => {
       const inboxItemDoc = await t.get(inboxDb);
       let inboxItemData: InboxItem = inboxItemDoc.data();
 
+      if (inboxItemData.content) {
+        inboxItemData.content = new ContentContainer(inboxItemData.content.content, inboxItemData.content.contentEquip); //kvuli tomu ze nemam withConverter...
+        characterData.addContentToInventory(inboxItemData.content, true, false);
+      }
+      else if (inboxItemData.perkOffer) {
+        let skillDefinitions = await QuerryForSkillDefinitions(t);
+        characterData.addPendingReward(inboxItemData.perkOffer, skillDefinitions);
+      }
 
-      inboxItemData.content = new ContentContainer(inboxItemData.content.content, inboxItemData.content.contentEquip); //kvuli tomu ze nemam withConverter...
-
-      characterData.addContentToInventory(inboxItemData.content, true, false);
       t.delete(inboxDb);
       t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
 
@@ -71,8 +80,8 @@ exports.claimInboxItem = functions.https.onCall(async (data, context) => {
 
 exports.claimPlayerInboxItem = functions.https.onCall(async (data, context) => {
 
-  //const callerPlayerUid = data.characterUid;
-  const callerPlayerUid = context.auth?.uid;
+  const callerPlayerUid = data.playerUid;
+  //const callerPlayerUid = context.auth?.uid;
   const inboxItemUid = data.inboxItemUid;
 
   const playerDb = admin.firestore().collection('players').doc(callerPlayerUid).withConverter(PlayerDataConverter);
@@ -87,10 +96,11 @@ exports.claimPlayerInboxItem = functions.https.onCall(async (data, context) => {
       const inboxItemDoc = await t.get(inboxDb);
       let inboxItemData: InboxItem = inboxItemDoc.data();
 
+      if (inboxItemData.content) {
+        inboxItemData.content = new ContentContainer(inboxItemData.content.content, inboxItemData.content.contentEquip); //kvuli tomu ze nemam withConverter...
+        playerData.addContentToInventory(inboxItemData.content, true, false);
+      }
 
-      inboxItemData.content = new ContentContainer(inboxItemData.content.content, inboxItemData.content.contentEquip); //kvuli tomu ze nemam withConverter...
-
-      playerData.addContentToInventory(inboxItemData.content, true, false);
       t.delete(inboxDb);
       t.set(playerDb, JSON.parse(JSON.stringify(playerData)), { merge: true });
 

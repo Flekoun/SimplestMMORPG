@@ -1,12 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using simplestmmorpg.adminToolsData;
 using simplestmmorpg.data;
 using UnityEngine;
-using UnityEngine.Events;
-using static UnityEditor.Progress;
 
 public class UIInternalDefinitionsPanel : MonoBehaviour
 {
@@ -197,13 +193,15 @@ public class UIInternalDefinitionsPanel : MonoBehaviour
         ActiveDetail = ACTIVE_DETAIL.NONE;
         MonstersSoloDetail.gameObject.SetActive(false);
         DungeonDetail.gameObject.SetActive(false);
+        DetailChooserGO.SetActive(false);
+        DetailsGO.SetActive(false);
         ListenOnInternalDefinitions.StopListening();
     }
 
     public void SaveClicked()
     {
 
-        FirebaseCloudFunctionSO_Admin.SaveMapGeneratorPointsOfInterest(AdminToolsManager.instance.InternalDefinition);
+        FirebaseCloudFunctionSO_Admin.SaveInternalDefinitionsMapGenerator(AdminToolsManager.instance.InternalDefinition);
 
     }
     public void AdddTierClicked()

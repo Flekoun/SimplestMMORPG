@@ -7,11 +7,13 @@ public class KeepViewOnCurrentPointOfInterest : MonoBehaviour
     public AccountDataSO AccountDataSO;
     public Transform ScrollContent;
     public UIPointsOfInterestSpawner UIPointsOfInterestSpawner;
+    public bool IsFunctional = true;
     private Coroutine ViewMoveCoroutine = null;
 
     // Start is called before the first frame update
     public void OnEnable()
     {
+        if (!IsFunctional) return;
         AccountDataSO.OnPointOfInterestDataChanged += Refresh;
         Refresh();
     }
@@ -20,12 +22,13 @@ public class KeepViewOnCurrentPointOfInterest : MonoBehaviour
     // Update is called once per frame
     public void OnDisable()
     {
-
+        if (!IsFunctional) return;
         AccountDataSO.OnPointOfInterestDataChanged -= Refresh;
     }
 
     private void Refresh()
     {
+        if (!IsFunctional) return;
         var CurrentPoi = UIPointsOfInterestSpawner.GetPointOfInterestButtonAtCharacterPosition();
         Debug.Log("CurrentPoi : " + CurrentPoi.WorldPosition.pointOfInterestId);
         if (CurrentPoi != null)

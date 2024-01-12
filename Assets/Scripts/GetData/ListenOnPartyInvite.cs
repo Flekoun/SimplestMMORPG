@@ -33,7 +33,7 @@ public class ListenOnPartyInvite : MonoBehaviour
      {
 
          if (snapshot.Count > 1)
-            Debug.LogError("There is more than 1 party invite! How is this possible?!");
+             Debug.LogError("There is more than 1 party invite! How is this possible?!");
 
          if (snapshot.Count == 0)
              AccountDataSO.SetPartyInviteData(null);
@@ -43,7 +43,7 @@ public class ListenOnPartyInvite : MonoBehaviour
              AccountDataSO.SetPartyInviteData(item);
          }
 
-         Debug.Log("New data on PARTY INVITE recieved : " + snapshot .Count + " -- "+ JsonConvert.SerializeObject(AccountDataSO.PartyInviteData, Formatting.Indented));
+         Debug.Log("New data on PARTY INVITE recieved : " + snapshot.Count + " -- " + JsonConvert.SerializeObject(AccountDataSO.PartyInviteData, Formatting.Indented));
          // OnListenerStarted.Invoke();
 
      });

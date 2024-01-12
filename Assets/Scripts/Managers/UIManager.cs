@@ -24,13 +24,14 @@ public class UIManager : MonoBehaviour
     public Transform MessagesParent;
     public Transform PromptWindowParent;
     public Transform ParticleEffectsParent;
-
+    public Transform TooltipParent;
+    public Transform TooltipParentBottom;
 
     [Header("Other")]
     public GameObject MainScreen;
     public GameObject LoginScreen;
     public Canvas MainCanvas;
-
+    public UITooltip UITooltip;
 
     public ImportantMessage ImportantMessage;
 
@@ -40,6 +41,10 @@ public class UIManager : MonoBehaviour
     public UIVendorDetailPanel UIVendorDetailPanel;
     public UITrainerDetailPanel UITrainerDetailPanel;
     public UILeaderboards UILeaderboardsPanel;
+    public UILocation UILocation;
+
+
+    //public List<DragDrop> DraggedSkillsInCombatList = new List<DragDrop>();
 
     public ContextInfoPanel ContextInfoPanel;
 
@@ -62,11 +67,23 @@ public class UIManager : MonoBehaviour
         return window;
     }
 
-    public UITooltip SpawnTooltip(Transform _parent, string _stringId, IContentDisplayable _contentContainer, CombatSkill _combatSkill, CombatBuff _combatBuff, int _manaLeft, float _offSetY, int[] _values = null)
+    public UITooltip SpawnTooltip(Transform _parent, string _stringId, IContentDisplayable _contentContainer, CombatSkill _combatSkill, CombatBuff _combatBuff, int _manaLeft, float _offSetY, bool _spawnAtBottom = false, int[] _values = null)
     {
-        var tooltip = PrefabFactory.CreateGameObject<UITooltip>(TooltipPrefab, PromptWindowParent);
+        Transform Parent = null;
+        if (_spawnAtBottom)
+            Parent = TooltipParentBottom;
+        else
+            Parent = TooltipParent;
+
+        Utils.DestroyAllChildren(Parent);
+
+        var tooltip = PrefabFactory.CreateGameObject<UITooltip>(TooltipPrefab, Parent);
         tooltip.Setup(_stringId, _contentContainer, _combatSkill, _combatBuff, _manaLeft, _parent, _offSetY, _values);
         return tooltip;
+
+        //UITooltip.Setup(_stringId, _contentContainer, _combatSkill, _combatBuff, _manaLeft, _parent, _offSetY, _values);
+        //UITooltip.Show();
+        //return UITooltip;
     }
 
 
@@ -129,6 +146,11 @@ public class UIManager : MonoBehaviour
         LoadingScreen.SetActive(false);
         LoadingScreenHiddenScreenLock.SetActive(false);
     }
+
+    public void ShowPoIChooser(UnityAction<string> _onPoIChoosen, string _textToShow)
+    {
+        UILocation.SetPoIChooser(_onPoIChoosen, _textToShow);
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -137,10 +159,28 @@ public class UIManager : MonoBehaviour
 
     }
 
+    //public void AddDraggedSkillToList(DragDrop _dragDrop)
+    //{
+    //    DraggedSkillsInCombatList.Add(_dragDrop);
+    //}
 
-    // Update is called once per frame
-    void Update()
-    {
+    //public void ClearList()
+    //{
+    //    foreach (var item in DraggedSkillsInCombatList)
+    //        item.ResetPosition();
 
-    }
+    //    DraggedSkillsInCombatList.Clear();
+
+    //}
+
+    //public List<string> GetDraggedSkills()
+    //{
+    //    List<string> skillsDragged = new List<string>();
+
+    //    foreach (var item in DraggedSkillsInCombatList)
+    //    {
+    //        skillsDragged.Add(item.GetComponent<UICombatMemberSkillEntry>().Data.skillId);
+    //    }
+    //    return skillsDragged;
+    //}
 }

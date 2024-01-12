@@ -14,7 +14,7 @@ public class UIInboxDetailPanel : MonoBehaviour
     public TextMeshProUGUI BodyText;
     public UIContentItem UIContentItem;
     public UIInboxItemsSpawner UIInboxItemsSpawner;
-
+    public GameObject PerkOfferIndicatorGO;
     public InboxItem Data;
 
 
@@ -34,7 +34,14 @@ public class UIInboxDetailPanel : MonoBehaviour
         Data = _data;
         TitleText.SetText(Data.messageTitle);
         BodyText.SetText(Data.messageBody);
-        UIContentItem.SetData(Data.content.GetContent());
+        PerkOfferIndicatorGO.SetActive(false);
+        if (Data.content != null)
+            UIContentItem.SetData(Data.content.GetContent());
+        else if (Data.perkOffer != null)
+        {
+            UIContentItem.SetData(Data.perkOffer.rewards[0].GetContent());
+            PerkOfferIndicatorGO.SetActive(true);
+        }
         Model.SetActive(true);
     }
 

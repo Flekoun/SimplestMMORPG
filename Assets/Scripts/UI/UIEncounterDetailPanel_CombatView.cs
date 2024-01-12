@@ -91,7 +91,7 @@ public class UIEncounterDetailPanel_CombatView : MonoBehaviour, IEncounterDetail
     private async void SkillDropedOnCombatEntity(UICombatEntity _entity, UICombatMemberSkillEntry _skill)
     {
         var position = new Vector3(_entity.transform.position.x, _entity.transform.position.y, _entity.transform.position.z);
-        Debug.Log("position.x " + position.x + "position.y " + position.y);
+        // Debug.Log("position.x " + position.x + "position.y " + position.y);
         if (_entity == null)
         {
             UIManager.instance.ImportantMessage.ShowMesssage("Choose your target!");
@@ -106,15 +106,16 @@ public class UIEncounterDetailPanel_CombatView : MonoBehaviour, IEncounterDetail
 
         var myUICombatEntity = UIEncounterEntry.GetUICombatEntityByUid(MyCombatMemberData.uid);
 
-        //  myUICombatEntity.FloatingTextSpawner.Spawn("Casting...", Color.blue, myUICombatEntity.FloatingTextsParent);
         CastingEffectGO.gameObject.SetActive(true);
 
-        var result = await FirebaseCloudFunctionSO.ApplySkillOnEncounter(Data.uid, _skill.Data.uid, _entity.Data.uid);
+        var result = await FirebaseCloudFunctionSO.ApplySkillOnEncounter(Data.uid, new List<string>() { _skill.Data.uid }, _entity.Data.uid);
+        //var result = await FirebaseCloudFunctionSO.ApplySkillOnEncounter(Data.uid, UIManager.instance.GetDraggedSkills(), _entity.Data.uid);
+
         if (result.Result)
         {
-            Debug.Log("A position.x " + position.x + "position.y " + position.y);
+            //            Debug.Log("A position.x " + position.x + "position.y " + position.y);
             UIManager.instance.SpawnParticleEffectUIPosition(position);
-            // myUICombatEntity.FloatingTextSpawner.Spawn("Casting Done!", Color.cyan, myUICombatEntity.FloatingTextsParent);
+
         }
         else
         {
@@ -122,7 +123,7 @@ public class UIEncounterDetailPanel_CombatView : MonoBehaviour, IEncounterDetail
             myUICombatEntity.FloatingTextSpawner.Spawn("Casting Failed!", Color.red, myUICombatEntity.FloatingTextsParent);
         }
         CastingEffectGO.SetActive(false);
-        //DeselectSelectedSkill();
+
     }
 
     public void OnDestroy()
@@ -197,7 +198,7 @@ public class UIEncounterDetailPanel_CombatView : MonoBehaviour, IEncounterDetail
 
         bool IAmComabatantInThisEncounter = Data.IsParticipatingInCombat(AccountDataSO.CharacterData.uid);
         bool IAmFounderOfThisEncounter = Data.foundByCharacterUid == AccountDataSO.CharacterData.uid;
-        bool PerkChoiceFinished = (Data.PendingPerksChoicesAmount() == 0);
+        bool PerkChoiceFinished = true;//(Data.PendingPerksChoicesAmount() == 0);
 
         //  bool HasJoinedCombat = Data.IsParticipatingInCombat(AccountDataSO.CharacterData.uid);
 
@@ -326,7 +327,7 @@ public class UIEncounterDetailPanel_CombatView : MonoBehaviour, IEncounterDetail
     public void EndTurnClicked()
     {
         // SelectedSkillDetail.transform.parent.gameObject.SetActive(false);
-        UIManager.instance.ContextInfoPanel.Hide();
+        // UIManager.instance.ContextInfoPanel.Hide();
         FirebaseCloudFunctionSO.RestEncounter(Data.uid);
     }
 
@@ -348,7 +349,7 @@ public class UIEncounterDetailPanel_CombatView : MonoBehaviour, IEncounterDetail
             prompt = "Do you want to flee from combat? <s>You will suffer <color=\"yellow\">" + penalty + "%</color> Fatigue penalty</s> (" + Utils.DescriptionsMetadata.GetBlessesMetadata(Utils.BLESS.UNWEARIED).title.EN + ").";
 
         if (Data.GetCombatMemeberByUid(AccountDataSO.CharacterData.uid).stats.health == 0)
-            prompt += "You will be revived at your home tavern but also suffer a random <color=\"pink\">Curse</color>.";
+            prompt += "You will be revived at your home tavern but also suffer a random <color=\"purple\">Curse</color>.";
 
         UIManager.instance.SpawnPromptPanel(prompt, () =>//and flee to <color=\"yellow\">" + Utils.DescriptionsMetadata.GetPointsOfInterestMetadata(AccountDataSO.LocationData.graveyard).title.GetText() + "</color>", () =>
         {

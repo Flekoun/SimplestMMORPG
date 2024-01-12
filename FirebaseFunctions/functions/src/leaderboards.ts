@@ -5,10 +5,11 @@ import * as functions from "firebase-functions";
 import { CharacterDocument, CharacterPreview, ContentContainer, generateContentContainer, getCurrentDateTime, getCurrentDateTimeInMillis, hourstoMillis, millisToHours, WorldPosition } from ".";
 import { EncounterResult, EncounterResultCombatant } from "./encounterResult";
 import { generateContent, generateEquip, ItemIdWithAmount, QuerryForSkillDefinitions } from "./equip";
-import { sendContentToInbox } from "./inbox";
+import { InboxItem, sendContentToInbox } from "./inbox";
 import { RandomEquip } from "./questgiver";
 import { LOC } from "./worldMap";
-import { InboxItem, SetOperation } from "./utils";
+import { PerkOfferDefinition } from "./perks";
+import { SetOperation } from "./utils";
 
 const admin = require('firebase-admin');
 // // [END import]
@@ -19,7 +20,7 @@ export enum LEADERBOARD {
   ITEMS_CRAFTED = "ITEMS_CRAFTED",
   HEALING_DONE = "HEALING_DONE",
   DAMAGE_DONE = "DAMAGE_DONE",
-  DUNGEON_ENDGAME = "DUNGEON_ENDGAME",
+  DUNGEON_ENDGAME = "DUNGEON_ENDGAME"
   // LOCATION_VALLEY_OF_TRIALS = "LOCATION_VALLEY_OF_TRIALS",
   // LOCATION_VILLAGE_OF_MALAKA = "LOCATION_VILLAGE_OF_MALAKA",
   // LOCATION_DEEP_RAVINE = "LOCATION_DEEP_RAVINE",
@@ -34,6 +35,7 @@ export enum LEADERBOARD_SCORE_TYPE {
   HEALING_DONE = "HEALING_DONE",
   ITEMS_CRAFTED = "ITEMS_CRAFTED",
   FLOOR_REACHED = "FLOOR_REACHED",
+  KILLS_ENCOUNTER = "KILLS_ENCOUNTER"
 }
 
 export enum LEADERBOARD_TYPE {
@@ -57,6 +59,7 @@ export class LeaderboardReward {
     public generatedContent: ItemIdWithAmount[] | undefined, //definice obyc itemu
     public content: ContentContainer[] | undefined, //specificky content/equip
     public randomEquip: RandomEquip[] | undefined, //random equip,
+    public perkOffer: PerkOfferDefinition[] | undefined, //specifikuje perk ktery dostanes....resp recurring perk, jiny nedava smysl...pak se z nej dela pending reward...
 
 
   ) { }
@@ -285,7 +288,7 @@ export async function setScoreToLeaderboard(_transaction: any, _characterData: C
 
 
 
-export async function incrementScoreToLeaderboard(_transaction: any, _characterData: CharacterDocument, _leaderboardId: string, _amountToAdd: number): Promise<SetOperation> {
+export async function incrementScoreToLeaderboard_GET(_transaction: any, _characterData: CharacterDocument, _leaderboardId: string, _amountToAdd: number): Promise<SetOperation> {
 
 
   let leaderboardDbMyEntryDb = admin.firestore().collection('leaderboards').doc(_leaderboardId).collection("season" + _characterData.seasonNumber).doc(_characterData.uid);
@@ -310,11 +313,12 @@ export async function incrementScoreToLeaderboard(_transaction: any, _characterD
 
 //TODO: pripadne jen predavat uid charakteru, a tahle metoda pokud nenajde zaznam mohla ziskat charakter, pokud najde nemusi ho ziskavat a pouzije zaznam z leaderboards
 //docela brutalni...pokazde kdyz dokoncis encounter tak tato metoda udela klidne 3x get a 3x set....to je mazec
-export async function updateMyMonsterKillsAndDamageDoneLeaderboards_GET_SET(_transaction: any, _encounterResult: EncounterResult, _encounterResultMyEntry: EncounterResultCombatant, _characterData: CharacterDocument) {
+export async function updateMyMonsterKillsAndDamageDoneLeaderboards_GET(_transaction: any, _encounterResult: EncounterResult, _encounterResultMyEntry: EncounterResultCombatant, _characterData: CharacterDocument): Promise<SetOperation[]> {
 
   let leaderboardsIds: string[] = [];
   let leaderboardsAmountsToAdd: number[] = [];
   let amountToAdd: number = 0;
+
   //vyberu spravne leaderboardy
   LEADERBOARDS_DEFINITIONS.leaderboards.forEach(leaderboardDefinition => {
 
@@ -327,12 +331,14 @@ export async function updateMyMonsterKillsAndDamageDoneLeaderboards_GET_SET(_tra
           leaderboardsAmountsToAdd.push(amountToAdd);
         }
       }
+
       // else if (leaderboardDefinition.leaderboardType == LEADERBOARD_TYPE.LOCATION_BASED) {
       //   if (leaderboardDefinition.location == _encounterResult.position.locationId) {
       //     leaderboardsIds.push(leaderboardDefinition.leaderboardId);
       //     leaderboardsAmountsToAdd.push(amountToAdd);
       //   }
       // }
+
     }
     else if (leaderboardDefinition.leaderboardScoreType == LEADERBOARD_SCORE_TYPE.DAMAGE_DONE) {
       amountToAdd = _encounterResultMyEntry.damageDone;
@@ -389,13 +395,25 @@ export async function updateMyMonsterKillsAndDamageDoneLeaderboards_GET_SET(_tra
   }
 
 
+  let setOperations: SetOperation[] = [];
 
 
   for (let index = 0; index < leaderboardsIds.length; index++) {
     // console.log(leaderboardScoreEntries.length);
     // console.log((leaderboardScoreEntries[index]));
-    await _transaction.set(admin.firestore().collection('leaderboards').doc(leaderboardsIds[index]).collection("season" + _characterData.seasonNumber).doc(_characterData.uid), JSON.parse(JSON.stringify(leaderboardScoreEntries[index])), { merge: true });
+    //await _transaction.set(admin.firestore().collection('leaderboards').doc(leaderboardsIds[index]).collection("season" + _characterData.seasonNumber).doc(_characterData.uid), JSON.parse(JSON.stringify(leaderboardScoreEntries[index])), { merge: true });
+    setOperations.push(
+      {
+        docRef: admin.firestore().collection('leaderboards').doc(leaderboardsIds[index]).collection("season" + _characterData.seasonNumber).doc(_characterData.uid),
+        data: JSON.parse(JSON.stringify(leaderboardScoreEntries[index])),
+        options: { merge: true }
+      }
+    )
   }
+
+
+
+  return setOperations;
 
 }
 
@@ -424,7 +442,7 @@ export async function awardSeasonalLeaderboardRewards(_leaderboardId: string, _s
         if (reward != null && reward.content != null) {
           for (const content of reward.content) {
             const inboxDb = admin.firestore().collection('inboxPlayer').doc();
-            const inboxEntry = new InboxItem(inboxDb.id, entry.character.playerUid, content, "Season " + _seasonNumber + " reward", "Your hero " + entry.character.name + " placed at " + rank + ". place in " + _leaderboardId + " leaderboard! Here is your reward!", getCurrentDateTime(480));
+            const inboxEntry = new InboxItem(inboxDb.id, entry.character.playerUid, content, undefined, "Season " + _seasonNumber + " reward", "Your hero " + entry.character.name + " placed at " + rank + ". place in " + _leaderboardId + " leaderboard! Here is your reward!", getCurrentDateTime(480));
             batch.set(inboxDb, JSON.parse(JSON.stringify(inboxEntry))); // Update the document in batch
             //});
           }
@@ -633,6 +651,65 @@ export async function checkForLeaderboardReset(_leaderboardId: string) {
 
 }
 
+
+
+export async function awardPoILeaderboardRewards(_leaderboardId: string, _seasonNumber: number, _nextResetTimestamp: string) {
+
+
+  const batch = admin.firestore().batch();
+  const leaderboardDb = await admin.firestore().collection('leaderboards').doc(_leaderboardId).withConverter(LeaderboardBaseDataConverter);
+  const top1leaderboardEntryDb = await leaderboardDb.collection("season" + _seasonNumber).orderBy("score", "desc").limit(1);
+
+  try {
+    await admin.firestore().runTransaction(async (t: any) => {
+
+      const leaderboardDoc = await t.get(leaderboardDb);
+      if (!leaderboardDoc)
+        return;
+
+      const leaderboardData: LeaderboardBaseData = leaderboardDoc.data();
+      const topLeaderboardEntrySnapshot = await t.get(top1leaderboardEntryDb);
+
+      let rank = 0;
+
+      for (const doc of topLeaderboardEntrySnapshot.docs) {
+        rank++;
+        console.log("_leaderboardId:" + _leaderboardId + " rank:" + rank);
+        let entry: LeaderboardScoreEntry = doc.data();
+        let reward = leaderboardData.getRewardForRank(rank);
+        //PROTOZE generateContent prasacky slouzi serveru jako referencni hodnoty, ktere se v AdminTools rozkopirujou na content a pripadne pozmeni....udeluje se jen Content potom. Generated vubec
+        if (reward != null && reward.perkOffer != null) {
+          console.log("_aaa");
+          for (const perkOffer of reward.perkOffer) {
+            console.log("bb");
+            const inboxDb = admin.firestore().collection('inbox').doc();
+            const inboxEntry = new InboxItem(inboxDb.id, entry.character.characterUid, undefined, perkOffer, "Location master reward", "Your hero " + entry.character.name + " placed first at purging " + _leaderboardId + " location! Here is your reward!", getCurrentDateTime(480));
+            batch.set(inboxDb, JSON.parse(JSON.stringify(inboxEntry))); // Update the document in batch
+            //});
+          }
+        }
+        batch.delete(leaderboardDb.collection("season" + _seasonNumber).doc(doc.id));
+      }
+
+      leaderboardData.timestampNextReset = _nextResetTimestamp;
+      batch.set(leaderboardDb, JSON.parse(JSON.stringify(leaderboardData)));
+    });
+
+    return await batch.commit()
+      .then(() => {
+        console.log("Batch update completed.");
+        console.log("Reward given for leaderboard -" + _leaderboardId);
+        return "Batch update successful";
+      })
+      .catch((e) => {
+        console.error("Batch update failed: ", e);
+        throw new functions.https.HttpsError("aborted", "Batch update failed: " + e);
+      });
+  } catch (e) {
+    console.log('Transaction failure:', e);
+    throw new functions.https.HttpsError("aborted", "Transaction failure: " + e);
+  }
+}
 
 
 // [END allAdd]

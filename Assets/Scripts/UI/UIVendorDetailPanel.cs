@@ -13,7 +13,8 @@ public class UIVendorDetailPanel : MonoBehaviour
     public UIInventory UIInventoryPlayer;
     public UIInventory UIInventoyItemsToBuy;
     public UIInventory UIInventoyItemsToSell;
-    public UIPriceLabel UIPriceLabelItemsToExchange;
+    public UIPriceLabel UIPriceLabelGold;
+    public UIPriceMonsterEssence UIPriceLabelMonsterEssence;
     public UIVendorGoodsSpawner UIVendorGoodsSpawner;
     //  public UIContentContainerDetail UIItemDetail;
     public TextMeshProUGUI TitleText;
@@ -58,7 +59,8 @@ public class UIVendorDetailPanel : MonoBehaviour
         ItemsToSell = new List<IContentDisplayable>();
         UIInventoyItemsToSell.Refresh(ItemsToSell);
 
-        UIPriceLabelItemsToExchange.SetPrice(0);
+        UIPriceLabelGold.SetPrice(0);
+        UIPriceLabelMonsterEssence.SetPrice(0);
 
 
         Data = _data;
@@ -85,13 +87,27 @@ public class UIVendorDetailPanel : MonoBehaviour
 
     private void RefreshTradeBalance()
     {
-        int totalTradeBalance = UIInventoyItemsToSell.GetValueOfAllItems() - UIInventoyItemsToBuy.GetValueOfAllItems();
-        UIPriceLabelItemsToExchange.SetPrice(totalTradeBalance);
 
-        if ((totalTradeBalance * -1) > AccountDataSO.CharacterData.currency.gold)
-            UIPriceLabelItemsToExchange.SetColor(Color.red);
+        int totalTradeBalanceGold = UIInventoyItemsToSell.GetValueOfAllItemsByCurrencyType(Utils.CURRENCY_ID.GOLD) - UIInventoyItemsToBuy.GetValueOfAllItemsByCurrencyType(Utils.CURRENCY_ID.GOLD);
+
+        UIPriceLabelGold.SetPrice(totalTradeBalanceGold);
+        UIPriceLabelGold.gameObject.SetActive(totalTradeBalanceGold != 0);
+        // Debug.Log("totalTradeBalanceGold:" + totalTradeBalanceGold);
+        if ((totalTradeBalanceGold * -1) > AccountDataSO.CharacterData.currency.gold)
+            UIPriceLabelGold.SetColor(Color.red);
         else
-            UIPriceLabelItemsToExchange.SetColor(Color.white);
+            UIPriceLabelGold.SetColor(Color.white);
+
+
+        int totalTradeBalanceMonsterEssence = UIInventoyItemsToSell.GetValueOfAllItemsByCurrencyType(Utils.CURRENCY_ID.MONSTER_ESSENCE) - UIInventoyItemsToBuy.GetValueOfAllItemsByCurrencyType(Utils.CURRENCY_ID.MONSTER_ESSENCE);
+        // Debug.Log("totalTradeBalanceMonsterEssence:" + totalTradeBalanceMonsterEssence);
+        UIPriceLabelMonsterEssence.SetPrice(totalTradeBalanceMonsterEssence);
+        UIPriceLabelMonsterEssence.gameObject.SetActive(totalTradeBalanceMonsterEssence != 0);
+
+        if ((totalTradeBalanceMonsterEssence * -1) > AccountDataSO.CharacterData.currency.monsterEssence)
+            UIPriceLabelMonsterEssence.SetColor(Color.red);
+        else
+            UIPriceLabelMonsterEssence.SetColor(Color.white);
     }
 
 
@@ -144,21 +160,24 @@ public class UIVendorDetailPanel : MonoBehaviour
     {
 
         //UIItemDetail.Show(_item.UIInventoryItem.GetData());
-
+        //  Debug.Log("eh?");
         if (_item.Data.content != null)
         {
             //prepisu uid a cenu to co ma dany vendorgood, protoze vendor to prodava za sve ceny a ma vlastni uid
             _item.Data.content.content.uid = _item.Data.uid;
             _item.Data.content.content.sellPrice = _item.Data.sellPrice;
+            _item.Data.content.content.currencyType = _item.Data.currencyType;
 
-            UIInventoyItemsToBuy.AddItemOffline(_item.Data.content.GetContent());
+            UIInventoyItemsToBuy.AddItemOffline(_item.Data.content.GetContent(), true);
+
+            // Debug.Log("eh?2");
         }
         else if (_item.Data.contentGenerated != null) //nemely by uz existovat
         {
             //tady musim doplnit UID a cenu z VendorGood, protoze ItemWithIdAndAmount je nema nastavene
             _item.Data.contentGenerated.uid = _item.Data.uid;
             _item.Data.contentGenerated.sellPrice = _item.Data.sellPrice;
-            Debug.Log(" _item.Data.sellPrice: " + _item.Data.sellPrice);
+            // Debug.Log(" _item.Data.sellPrice: " + _item.Data.sellPrice);
             UIInventoyItemsToBuy.AddItemOffline(_item.Data.contentGenerated);
         }
         else if (_item.Data.contentRandomEquip != null)
@@ -166,7 +185,8 @@ public class UIVendorDetailPanel : MonoBehaviour
             //tady musim doplnit UID a cenu z VendorGood, protoze  je nema nastavene
             _item.Data.contentRandomEquip.uid = _item.Data.uid;
             _item.Data.contentRandomEquip.sellPrice = _item.Data.sellPrice;
-            Debug.Log(" _item.Data.sellPrice: " + _item.Data.sellPrice);
+            _item.Data.contentRandomEquip.currencyType = _item.Data.currencyType;
+            //   Debug.Log(" _item.Data.sellPrice: " + _item.Data.sellPrice);
             UIInventoyItemsToBuy.AddItemOffline(_item.Data.contentRandomEquip);
         }
 
@@ -213,10 +233,11 @@ public class UIVendorDetailPanel : MonoBehaviour
 
         if (result.Result)
         {
-            UIManager.instance.ImportantMessage.ShowMesssage("Trade complete!");
+            UIManager.instance.ImportantMessage.ShowMesssage("Thanks for the trade! Good luck out there", 3);
             UIInventoyItemsToSell.RemoveAllItemsOffline();
             UIInventoyItemsToBuy.RemoveAllItemsOffline();
-            UIPriceLabelItemsToExchange.SetPrice(0);
+            UIPriceLabelGold.SetPrice(0);
+            UIPriceLabelMonsterEssence.SetPrice(0);
 
         }
 

@@ -51,6 +51,8 @@ public class UILeaderboardRankRewardEntry : MonoBehaviour
             }
         }
 
+
+
         if (Data.randomEquip != null)
         {
             foreach (var item in Data.randomEquip)
@@ -58,6 +60,18 @@ public class UILeaderboardRankRewardEntry : MonoBehaviour
                 //      var equip = PrefabFactory.CreateGameObject<UIRandomEquip>(UIRandomEquipPrefab, RewardsParent);
                 var content = PrefabFactory.CreateGameObject<UIContentItem>(ContentContainerPrefab, RewardsParent);
                 content.SetData(item, true);
+            }
+        }
+
+        if (Data.perkOffer != null)
+        {
+
+            foreach (var item in Data.perkOffer)
+            {
+                var content = PrefabFactory.CreateGameObject<UIContentItem>(ContentContainerPrefab, RewardsParent);
+                content.SetData(item.rewards[0].GetContent(), true);
+                //  content.OnClicked += OnRewardClicked;
+
             }
         }
 

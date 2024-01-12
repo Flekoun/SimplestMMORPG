@@ -10,16 +10,20 @@ namespace simplestmmorpg.adminToolsData
 
     [Serializable]
     [FirestoreData]
-    public class EnemyDropTablesData
+    public class DropTablesData
     {
         [field: SerializeField]
         [FirestoreProperty]
-        public List<EnemyDropTable> enemyDropTables { get; set; }
+        public List<DropTableGroup> enemyDropTables { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<DropTableGroup> chestDropTables { get; set; }
     }
 
     [Serializable]
     [FirestoreData]
-    public class EnemyDropTable
+    public class DropTableGroup
     {
         [field: SerializeField]
         [FirestoreProperty]
@@ -27,7 +31,7 @@ namespace simplestmmorpg.adminToolsData
 
         [field: SerializeField]
         [FirestoreProperty]
-        public string enemyId { get; set; }
+        public string id { get; set; }
     }
 
     [Serializable]

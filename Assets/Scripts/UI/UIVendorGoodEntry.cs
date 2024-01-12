@@ -16,8 +16,10 @@ public class UIVendorGoodEntry : MonoBehaviour
     public TextMeshProUGUI DisplayNameText;
     public UIContentItem UIInventoryItem;
     public UIPriceLabel UIPriceLabel;
+    public UIPriceMonsterEssence UIPriceMonsterEssence;
     public TextMeshProUGUI TotalStockLeftText;
     public TextMeshProUGUI MyStockLeftText;
+    public TextMeshProUGUI AmountText;
     public GameObject SoldOutGO;
     public Button Button;
     public VendorGood Data;
@@ -45,7 +47,21 @@ public class UIVendorGoodEntry : MonoBehaviour
         //   tady musim zohlednit ze vendor good muze byt jak content ktery je jasne dany anebo generated content ( ItemDropDefinition)
         Data = _data;
 
-        UIPriceLabel.SetPrice(Data.sellPrice);
+        UIPriceLabel.gameObject.SetActive(false);
+        UIPriceMonsterEssence.gameObject.SetActive(false);
+
+
+        if (Data.currencyType == Utils.CURRENCY_ID.GOLD)
+        {
+            UIPriceLabel.gameObject.SetActive(true);
+            UIPriceLabel.SetPrice(Data.sellPrice);
+        }
+        else if (Data.currencyType == Utils.CURRENCY_ID.MONSTER_ESSENCE)
+        {
+            UIPriceMonsterEssence.gameObject.SetActive(true);
+            UIPriceMonsterEssence.SetPrice(Data.sellPrice);
+        }
+
         if (Data.content != null)
         {
             DisplayNameText.SetText(Utils.ReplacePlaceholdersInTextWithDescriptionFromMetadata(Data.content.GetContent().GetDisplayName()));
@@ -62,11 +78,11 @@ public class UIVendorGoodEntry : MonoBehaviour
             UIInventoryItem.SetData(Data.contentRandomEquip, true);
         }
 
-        int myStockLeft = (_data.stockPerCharacter - AccountDataSO.CharacterData.GetVendorGoodsPurchased(_vendorId, _data.uid));
+        int myStockLeft = (Data.stockPerCharacter - AccountDataSO.CharacterData.GetVendorGoodsPurchased(_vendorId, Data.uid));
 
 
         MyStockLeftText.gameObject.SetActive(true);
-        if (_data.stockTotalLeft == -1)
+        if (Data.stockTotalLeft == -1)
         {
             TotalStockLeftText.gameObject.SetActive(false);
             TotalStockLeftText.SetText("(\u221E)");
@@ -74,10 +90,10 @@ public class UIVendorGoodEntry : MonoBehaviour
         else
         {
             TotalStockLeftText.gameObject.SetActive(true);
-            TotalStockLeftText.SetText(_data.stockTotalLeft + " stock");
+            TotalStockLeftText.SetText(Data.stockTotalLeft + " stock");
         }
 
-        if (_data.stockPerCharacter == -1)
+        if (Data.stockPerCharacter == -1)
             // MyStockLeftText.gameObject.SetActive(false);
             MyStockLeftText.SetText("(\u221E)");
         else
@@ -86,7 +102,7 @@ public class UIVendorGoodEntry : MonoBehaviour
             MyStockLeftText.SetText(myStockLeft.ToString());
         }
         SoldOutGO.SetActive(myStockLeft == 0);
-        Button.interactable = (myStockLeft > 0 || _data.stockPerCharacter == -1);
+        Button.interactable = (myStockLeft > 0 || Data.stockPerCharacter == -1);
 
         if (myStockLeft == 0)
             MyStockLeftText.color = Color.red;
@@ -95,6 +111,14 @@ public class UIVendorGoodEntry : MonoBehaviour
         //if (myStockLeft == 0)
         //    this.gameObject.SetActive(false);
 
+
+        if (Data.content != null)
+        {
+            AmountText.gameObject.SetActive(Data.content.GetContent().amount > 1);
+            AmountText.SetText(Data.content.GetContent().amount.ToString() + "x");
+        }
+        else
+            AmountText.gameObject.SetActive(false);
 
     }
 

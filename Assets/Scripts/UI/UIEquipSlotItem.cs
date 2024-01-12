@@ -62,9 +62,9 @@ public class UIEquipSlotItem : MonoBehaviour
 
         NoDataGO.SetActive(!dataFound);
 
-        Debug.Log("EquipSlotDefinition.EquipSlotId:" + EquipSlotDefinition.EquipSlotId);
-        Debug.Log("EquipSlotDefinition.EquipSlotId2" + Utils.DescriptionsMetadata.GetEquipSlots(EquipSlotDefinition.EquipSlotId).imageId);
-        Debug.Log("EquipSlotDefinition.EquipSlotId3" + AllImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetEquipSlots(EquipSlotDefinition.EquipSlotId).imageId).Image);
+//        Debug.Log("EquipSlotDefinition.EquipSlotId:" + EquipSlotDefinition.EquipSlotId);
+ //       Debug.Log("EquipSlotDefinition.EquipSlotId2" + Utils.DescriptionsMetadata.GetEquipSlots(EquipSlotDefinition.EquipSlotId).imageId);
+ //       Debug.Log("EquipSlotDefinition.EquipSlotId3" + AllImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetEquipSlots(EquipSlotDefinition.EquipSlotId).imageId).Image);
 
         EquipSlotPortraitImage.sprite = AllImageIdDefinitionSOSet.GetDefinitionById(Utils.DescriptionsMetadata.GetEquipSlots(EquipSlotDefinition.EquipSlotId).imageId).Image;
 

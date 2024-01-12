@@ -5,7 +5,6 @@ using Firebase.Auth;
 using Firebase.Extensions;
 using Firebase.Firestore;
 using Firebase.Functions;
-using Newtonsoft.Json;
 using RoboRyanTron.Unite2017.Variables;
 using simplestmmorpg.data;
 using TMPro;
@@ -22,10 +21,10 @@ public class ListenOnParty : MonoBehaviour
 
     public void Awake()
     {
-        AccountDataSO.OnCharacterLoadedFirstTime += StartListening;
+        AccountDataSO.OnCharacterLoadedFirstTime += StartListeningOnParty;
     }
 
-    public void StartListening()
+    public void StartListeningOnParty()
     {
         Debug.Log("Starting to listen on Party ...");
 

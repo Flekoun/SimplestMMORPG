@@ -3,15 +3,15 @@
 import * as functions from "firebase-functions";
 
 import { _databaseWithOptions } from "firebase-functions/v1/firestore";
-import { CharacterDocument, characterDocumentConverter, checkForServerVersion, ContentContainer, CURRENCY_ID, getCurrentDateTime, HIGH_LEVEL_POI_FATIGUE_PENALTY, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInAnyEncounterOnHisPosition, QuerryIfCharacterIsInCombatAtAnyEncounter, QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition, randomIntFromInterval, rollForRandomItem, TIME_PER_TRAVEL_POINT, validateCallerBulletProof, WorldPosition } from ".";
-import { CombatEnemy, CombatMember, CombatStats, ENCOUNTER_CONTEXT, EncounterDocument, encounterDocumentConverter, EnemyDefinitionMoveSetSkill, EnemyDefinitions, EnemyDefinitionsConverter, joinCharacterToEncounter, TierMonstersDefinition, TierDungeonDefinition } from "./encounter";
+import { CharacterDocument, characterDocumentConverter, checkForServerVersion, ContentContainer, CURRENCY_ID, HIGH_LEVEL_POI_FATIGUE_PENALTY, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInAnyEncounterOnHisPosition, QuerryIfCharacterIsInCombatAtAnyEncounter, QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition, rollForRandomItem, TIME_PER_TRAVEL_POINT, validateCallerBulletProof, WorldPosition } from ".";
+import { EncounterDocument, encounterDocumentConverter, TierMonstersDefinition, TierDungeonDefinition } from "./encounter";
 import { IHasChanceToSpawn, ItemIdWithAmount } from "./equip";
 
 import { Party } from "./party";
 import { Questgiver, RandomEquip } from "./questgiver";
 
 import { Vendor } from "./vendor";
-import { firestoreAutoId } from "./general2";
+
 import { PerksOffersRareData } from "./adminTools";
 //import { CharacterDocument, characterDocumentConverter } from ".";
 
@@ -749,7 +749,7 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
   const characterDb = await admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
   const partiesDb = admin.firestore().collection('parties')
   const myPartyDb = partiesDb.where("partyMembersUidList", "array-contains", callerCharacterUid);
-  const encounterDb = admin.firestore().collection('encounters');
+  //const encounterDb = admin.firestore().collection('encounters');
 
   //Tento querry VYZADUJE COMPOSITE INDEX , byl vytvoren v FIRESTORE!!!
   // const callerPersonalEncounterWithoutCombatants = encountersDb.where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).where("combatantList", "==", []).withConverter(encounterDocumentConverter);
@@ -773,7 +773,7 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
         throw ("You must loot all corpses before travel!");
 
       const destinationLocationMetadataDb = admin.firestore().collection('_metadata_zones').doc(characterData.position.zoneId).collection("locations").doc(characterData.position.locationId);
-      const destinationLocationMetadataEnemyStatsDb = destinationLocationMetadataDb.collection("definitions").doc("ENEMIES");
+      // const destinationLocationMetadataEnemyStatsDb = destinationLocationMetadataDb.collection("definitions").doc("ENEMIES");
       const destinationPointOfInterestDb = destinationLocationMetadataDb.collection("pointsOfInterest").doc(destinationPointOfInterestId);//characterData.position.pointOfInterestId);
 
       const destinationLocationMetadataDoc = await t.get(destinationLocationMetadataDb.withConverter(LocationConverter));
@@ -1022,8 +1022,13 @@ exports.travelToPoI = functions.https.onCall(async (data, context) => {
 
       if (!characterData.hasExploredPosition(destinationPointOfInterestData.worldPosition)) { //pokud neni jeste prozkoumana
 
-        if (characterData.stats.level < destinationPointOfInterestData.floorNumber)
-          characterData.addFatigue(HIGH_LEVEL_POI_FATIGUE_PENALTY);
+        if (characterData.stats.level < destinationPointOfInterestData.floorNumber) {
+
+          if (characterData.getMaxHealthWithFatigueBlocked() < HIGH_LEVEL_POI_FATIGUE_PENALTY + 5)
+            throw "You are too fatigued to travel to this place!";
+
+          characterData.addFatiguePercentage(HIGH_LEVEL_POI_FATIGUE_PENALTY);
+        }
         // else {
 
         characterData.exploredPositions.push(destinationPointOfInterestData.worldPosition);

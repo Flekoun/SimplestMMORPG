@@ -1,17 +1,14 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { ContentContainer, SATOSHIUM_LEADERBOARDS_COEFICIENT, WorldPosition, generateContentContainer, rollForRandomItem } from ".";
-import { EnemyDropTablesData, TierMonstersDefinition, TierDungeonDefinition } from "./encounter";
-
+import { ContentContainer, SATOSHIUM_LEADERBOARDS_COEFICIENT, WorldPosition, generateContentContainer, getCurrentDateTimeInMillis, rollForRandomItem } from ".";
+import { DropTablesData, TierMonstersDefinition, TierDungeonDefinition } from "./encounter";
 import { Dijkstra, IdWithChance, LocationConverter, MapLocation, PointOfInterest, PointOfInterestConverter, Coordinates2DCartesian, PointOfInterestServerDataDefinitions, DungeonDefinitionPublic, DungeonDefinitionServerOnly, MonstersDefinitionServerOnly, MonstersDefinitionPublic } from "./worldMap";
 import { PerkOfferDefinition } from "./perks";
 import { Questgiver, RandomEquip, RewardClassSpecific } from "./questgiver";
 import { Vendor } from "./vendor";
-//import { Trainer } from "./trainer";
 import { IHasChanceToSpawn, ITEMS, ItemIdWithAmount, generateContent } from "./equip";
-import { LeaderboardBaseData, LeaderboardBaseDataConverter } from "./leaderboards";
-//import { debug } from "firebase-functions/logger";
+import { LeaderboardBaseData, LeaderboardReward } from "./leaderboards";
 
 const admin = require('firebase-admin');
 // // [END import]
@@ -63,7 +60,7 @@ export class MonstersDefinition {
 
     public partySize: number,
     public exploreTimePrice: number,
-    public tiers: TierMonstersDefinition[],
+    public tiers: TierMonstersDefinition[], //Momentalne se jne 1. zaznam pouziva na definici jaky enemy bude na POI a jaky perk reward bude mit leaderboard jeho
     public perkOffersRareId: string
 
 
@@ -161,7 +158,7 @@ exports.savePointOfInterestScreenPositionsForLocation = functions.https.onCall(a
 exports.saveDropTablesEnemy = functions.https.onCall(async (data, context) => {
   //const jsonString = data.dropTables
 
-  const enemyDropTablesData: EnemyDropTablesData = JSON.parse(data.dropTables);
+  const enemyDropTablesData: DropTablesData = JSON.parse(data.dropTables);
   const locationId = data.locationId;
   const zoneId = data.zoneId;
 
@@ -233,12 +230,13 @@ exports.saveTiers = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("aborted", "Error : " + e);
   }
 
-
 });
 
 
 
-exports.saveMapGeneratorPointsOfInterest = functions.https.onCall(async (data, context) => {
+
+
+exports.saveInternalDefinitionsMapGenerator = functions.https.onCall(async (data, context) => {
   //const jsonString = data.dropTables
 
   const internalData: InternalDefinition = JSON.parse(data.definition);
@@ -267,6 +265,42 @@ exports.saveMapGeneratorPointsOfInterest = functions.https.onCall(async (data, c
 
 
 });
+
+
+
+// exports.saveVendorGoods = functions.https.onCall(async (data, context) => {
+//   //const jsonString = data.dropTables
+
+//   const internalData: InternalDefinition = JSON.parse(data.definition);
+
+
+//   const internalDefinitionsDb = admin.firestore().collection('_internal_definitions').doc("MAP_GENERATOR");
+
+//   const internalDefinitionsDoc = await t.get(internalDefinitionsDb);
+//   let internalDefinitionsData: InternalDefinition = internalDefinitionsDoc.data();
+
+
+//   try {
+//     const result = await admin.firestore().runTransaction(async (t: any) => {
+
+
+//       //ulozim 
+//       t.set(internalDb, internalData, { merge: true });
+
+//       return "OK";
+//     });
+
+
+//     console.log('Transaction success', result);
+//     return result;
+//   } catch (e) {
+//     console.log('Transaction failure:', e);
+//     throw new functions.https.HttpsError("aborted", "Error : " + e);
+//   }
+
+
+// });
+
 
 
 exports.generateLocationMap = functions.https.onCall(async (data, context) => {
@@ -312,11 +346,19 @@ exports.generateLocationMap = functions.https.onCall(async (data, context) => {
       let MONSTERSOLO_usedList: PointOfInterestInternalDefinition[] = [];
       let DUNGEON_usedList: PointOfInterestInternalDefinition[] = [];
 
-      // let leaderboard: LeaderboardBaseData;
-      const leaderboardDb = admin.firestore().collection('leaderboards');//.withConverter(LeaderboardBaseDataConverter);
-      const querySnapshot = await t.get(leaderboardDb);
 
-      querySnapshot.docs.forEach(doc => {
+      const leaderboardDb = admin.firestore().collection('leaderboards');//.withConverter(LeaderboardBaseDataConverter);
+
+
+
+
+
+
+
+      //leaderbodum nastavim multiplier SATOHIUM a progeneruju rewardy 
+      const leaderboardsQuerySnapshot = await t.get(leaderboardDb);
+
+      leaderboardsQuerySnapshot.docs.forEach(doc => {
         let leaderboard: LeaderboardBaseData = doc.data();
 
         //aplikujem satoshium koeficient
@@ -330,37 +372,14 @@ exports.generateLocationMap = functions.https.onCall(async (data, context) => {
               if (rewardContent.itemId == ITEMS.SATOSHIUM) {
                 amount = Math.max(1, Math.round(SATOSHIUM_LEADERBOARDS_COEFICIENT * rewardContent.amount)); //1 je minimum, zaokrohlime nasobeni
               }
-
               rewardInfo.content?.push(generateContentContainer(generateContent(rewardContent.itemId, amount)));
-
-
-              // if (rewardContent.itemId == ITEMS.SATOSHIUM) {
-              //   rewardContent.amount = Math.max(1, Math.round(SATOSHIUM_LEADERBOARDS_COEFICIENT * rewardContent.amount)); //1 je minimum, zaokrohlime nasobeni
-              // }
-
 
             });
           }
         });
 
-        // //vytvorime rewardy z generated na finalni
-        // leaderboard.rewards.forEach(rewardInfo => {
-
-        //   if (rewardInfo.generatedContent) {
-        //     rewardInfo.content = [];
-        //     rewardInfo.generatedContent.forEach(rewardContent => {
-        //       //  if (!rewardInfo.content)
-
-        //       rewardInfo.content?.push(generateContentContainer(generateContent(rewardContent.itemId, rewardContent.amount)));
-        //       //   rewardInfo.generatedContent = undefined;
-        //     });
-        //   }
-        // });
-
         console.log("fixju leaderboard: " + doc.id);
         t.set(leaderboardDb.doc(doc.id), JSON.parse(JSON.stringify(leaderboard)), { merge: true });
-
-
       });
 
 
@@ -375,6 +394,8 @@ exports.generateLocationMap = functions.https.onCall(async (data, context) => {
             }
           });
         });
+
+
 
         item.questgivers.forEach(questgiver => {
           if (questgiver.rewardsGenerated != null) {
@@ -410,6 +431,16 @@ exports.generateLocationMap = functions.https.onCall(async (data, context) => {
             perkOffer.rewardsGenerated = [];
           });
         });
+
+      });
+
+
+      internalDefinitionsData.DUNGEON.forEach(item => {
+        item.dungeon?.rewardsGenerated.forEach(rewardGenerated => {
+          item.dungeon?.rewards.push(generateContentContainer(generateContent(rewardGenerated.itemId, rewardGenerated.amount)));
+
+        });
+        item.dungeon!.rewardsGenerated = [];
 
       });
 
@@ -588,9 +619,17 @@ exports.generateLocationMap = functions.https.onCall(async (data, context) => {
         //  batch2.set(destinationLocationMetadataDb, JSON.parse(JSON.stringify(destinationLocationMetadataData)), { merge: false });
         t.set(destinationLocationMetadataDb, JSON.parse(JSON.stringify(destinationLocationMetadataData)), { merge: false }); //merge false chceme vsechno prepsat novym 
 
-
-
       });
+      console
+        .log("JDiu na to");
+      //vytvorim leaderboardy pro vsechny POI
+      await MONSTERSOLO_usedList.forEach(async monsterSoloEnrty => {
+        console.log("ahah:" + monsterSoloEnrty.id);
+        let leaderbardReward = new LeaderboardReward(1, 1, undefined, undefined, undefined, monsterSoloEnrty.monsters?.tiers[0].perkOffers);
+        let leaderboardEntry = new LeaderboardBaseData([leaderbardReward], "DAY", getCurrentDateTimeInMillis(24).toString(), "KILLS_ENCOUNTER");
+        await t.set(leaderboardDb.doc(monsterSoloEnrty.id), JSON.parse(JSON.stringify(leaderboardEntry)), { merge: true });
+      });
+      console.log("Comituju");
 
       await batch.commit();
 

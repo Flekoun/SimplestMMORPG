@@ -35,6 +35,8 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public List<LeaderboardReward> rewards { get; set; }
 
+
+
         [field: SerializeField]
         [FirestoreProperty]
         public string timestampNextReset { get; set; }
@@ -51,11 +53,13 @@ namespace simplestmmorpg.data
 
         public LeaderboardReward GetRewardForRank(int _rank)
         {
+
             foreach (var item in rewards)
             {
                 if (_rank >= item.rankMin && _rank <= item.rankMax)
                     return item;
             }
+
 
             return null;
         }
@@ -122,6 +126,10 @@ namespace simplestmmorpg.data
         [field: SerializeField]
         [FirestoreProperty]
         public List<RandomEquip> randomEquip { get; set; }
+
+        [field: SerializeField]
+        [FirestoreProperty]
+        public List<PerkOfferDefinition> perkOffer { get; set; }
 
 
     }

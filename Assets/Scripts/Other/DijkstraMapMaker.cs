@@ -1,12 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using simplestmmorpg.data;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UIElements;
-using static UnityEditor.Progress;
 
 public class DijkstraMapMaker : MonoBehaviour
 {
@@ -18,6 +13,47 @@ public class DijkstraMapMaker : MonoBehaviour
     public UnityAction<DijkstraMapVertex> OnVertexReachable;
     private List<DijkstraMapVertex> Data;
     // private List<WorldPosition> ExploredPositions;
+    private string LastLocation = "";
+    public struct PlannedPathCost
+    {
+        public int TravelPointsCost;
+        public int TimeCost;
+    }
+
+    public PlannedPathCost GetPlannedPathCost()
+    {
+        if (PlannedPathNewest != null)
+        {
+            int timePerTravelPoint = AccountDataSO.OtherMetadataData.constants.timePerTravelPoint;
+            int playerTravelPointAmount = Mathf.FloorToInt(AccountDataSO.CharacterData.currency.travelPoints);
+
+            int stockOfTravelTimeInsideTravelPoints = playerTravelPointAmount * timePerTravelPoint;
+            int lefotverPriceInTimeToPay = (PlannedPathNewest.totalWeight * timePerTravelPoint) - stockOfTravelTimeInsideTravelPoints;
+
+            var result = new PlannedPathCost();
+
+            if (lefotverPriceInTimeToPay > 0)
+            {
+                result.TravelPointsCost = playerTravelPointAmount;
+                result.TimeCost = lefotverPriceInTimeToPay;
+
+            }
+            else
+            {
+                result.TravelPointsCost = PlannedPathNewest.totalWeight;
+                result.TimeCost = 0;
+            }
+
+            return result;
+        }
+        else
+        {
+            var result = new PlannedPathCost();
+            result.TimeCost = 0;
+            result.TravelPointsCost = 0;
+            return result;
+        }
+    }
 
     public void ClearPlannedTravelPath()
     {
@@ -37,8 +73,12 @@ public class DijkstraMapMaker : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    public void SetupForCurrentLocation()//, List<ScreenPoisitionWihtId> _positionsList)
+    public void SetupForCurrentLocation(bool _hardRefresh = false)//, List<ScreenPoisitionWihtId> _positionsList)
     {
+        //pokud je uz nastavena, ignoruju;
+        //if (LastLocation == AccountDataSO.LocationData.id)
+        //    return;
+
         Data = new List<DijkstraMapVertex>();
         foreach (var vertex in AccountDataSO.LocationData.dijkstraMap.exportMap)
         {
@@ -48,8 +88,6 @@ public class DijkstraMapMaker : MonoBehaviour
             vertexCopy.screenPosition = new Coordinates2DCartesian();
             vertexCopy.screenPosition.x = vertex.screenPosition.x;
             vertexCopy.screenPosition.y = vertex.screenPosition.y;
-
-
 
             foreach (var node in vertex.nodes)
             {
@@ -63,21 +101,17 @@ public class DijkstraMapMaker : MonoBehaviour
 
         }
 
-        // Data = new List<DijkstraMapVertex>(AccountDataSO.LocationData.dijkstraMap.exportMap);
-        // ExploredPositions = _exploredPositions;
-        //  List<DijkstraMapVertex> locationMap = Data;
+        if (LastLocation == AccountDataSO.LocationData.id && !_hardRefresh)
+            return;
+
         AllPathsUILineMaker.DestroyAllLines();
 
         Dijkstra.FillGraph(Data);
 
         foreach (var vertex in Data)
         {
-
             foreach (var node in vertex.nodes)
             {
-
-
-
                 var targetMapVertexDefinition = GetVertexById(node.idOfVertex);
 
                 //pouze pokud je startovni pozice prozkoumana ukazem dijkstra cestu z nej
@@ -86,23 +120,20 @@ public class DijkstraMapMaker : MonoBehaviour
                 worldPosition.locationId = AccountDataSO.CharacterData.position.locationId;
                 worldPosition.zoneId = AccountDataSO.CharacterData.position.zoneId;
 
-
-
                 //if (AccountDataSO.IsPositionExplored(worldPosition))
                 //{
 
-
                 AllPathsUILineMaker.MakeLineFromPrefab(vertex.screenPosition.x, vertex.screenPosition.y, targetMapVertexDefinition.screenPosition.x, targetMapVertexDefinition.screenPosition.y, node.weight);
-
 
                 OnVertexReachable?.Invoke(vertex);
                 OnVertexReachable?.Invoke(targetMapVertexDefinition);
 
                 //}
-
             }
 
         }
+
+        LastLocation = AccountDataSO.LocationData.id;
 
     }
 
@@ -159,6 +190,11 @@ public class DijkstraMapMaker : MonoBehaviour
 
     public List<string> GetReacheableVertices()
     {
+        if (Data == null)
+        {
+            Debug.LogWarning("DIJKSTRA data nebyly nastaveny jeste ale uz chces reachavle vertexy? Volatm teda naplneni dat ");
+            SetupForCurrentLocation();
+        }
 
         var exploredMap = new List<DijkstraMapVertex>();
 
@@ -273,7 +309,7 @@ public class DijkstraMapMaker : MonoBehaviour
 
             if (!isExplored)
             {
-                Debug.Log(vertex.id + " neni prozkoumany, smazavam mu vsechny nody...");
+                //   Debug.Log(vertex.id + " neni prozkoumany, smazavam mu vsechny nody...");
                 foreach (var node in vertex.nodes)
                 {
                     node.weight = ABSURD_WEIGHT;
@@ -297,7 +333,7 @@ public class DijkstraMapMaker : MonoBehaviour
             {
                 if (!allVertexIds.Contains(vertex.nodes[i].idOfVertex))
                 {
-                    Debug.Log("ostranuji: " + vertex.nodes[i].idOfVertex + " z " + vertex.id);
+                    //    Debug.Log("ostranuji: " + vertex.nodes[i].idOfVertex + " z " + vertex.id);
 
                     vertex.nodes.RemoveAt(i);
                 }

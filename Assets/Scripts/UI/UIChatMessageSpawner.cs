@@ -145,7 +145,7 @@ public class UIChatMessageSpawner : MonoBehaviour
 
     public void ShowCombatLog()
     {
-        Debug.Log("EH?");
+     //   Debug.Log("EH?");
         ScrollRectParty.parent.gameObject.SetActive(false);
         ScrollRectZone.parent.gameObject.SetActive(false);
         ScrollRectLocation.parent.gameObject.SetActive(false);

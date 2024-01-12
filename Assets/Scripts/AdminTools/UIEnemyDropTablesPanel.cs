@@ -41,6 +41,14 @@ public class UIEnemyDropTablesPanel : MonoBehaviour
             UIItem.Setup(item);
             List.Add(UIItem);
         }
+
+        foreach (var item in AdminToolsManager.instance.EnemyDropTablesData.chestDropTables)
+        {
+            var UIItem = PrefabFactory.CreateGameObject<UIDropTableEnemy>(UIDropTableEnemyPrefab, Parent);
+
+            UIItem.Setup(item);
+            List.Add(UIItem);
+        }
     }
 
     public void Hide()

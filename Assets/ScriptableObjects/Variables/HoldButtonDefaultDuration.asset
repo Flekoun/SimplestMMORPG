@@ -21,6 +21,6 @@ MonoBehaviour:
   MaxValue: 0
   MinValue: 0
   StartupValue: 0
-  Value: 1
+  Value: 0.5
   IsPercentages: 0
   ChangeEvent: {fileID: 0}

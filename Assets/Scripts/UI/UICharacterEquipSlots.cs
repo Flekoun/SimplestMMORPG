@@ -13,7 +13,7 @@ public class UICharacterEquipSlots : MonoBehaviour
 
     public void Setup(CharacterData _data)
     {
-        Debug.Log("VOLAM setup : " + _data.characterName);
+//        Debug.Log("VOLAM setup : " + _data.characterName);
         Data = _data;
 
         foreach (var slot in EquipSlots)

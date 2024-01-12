@@ -6,6 +6,8 @@ using UnityEngine.UI;
 using TMPro;
 using simplestmmorpg.data;
 using static UnityEngine.GraphicsBuffer;
+using UnityEngine.Events;
+using static UnityEngine.ParticleSystem;
 
 public class UILocation : MonoBehaviour
 {
@@ -32,13 +34,40 @@ public class UILocation : MonoBehaviour
     public GameObject SpecialsPanel;
     public GameObject TrainersPanel;
 
+    public TextMeshProUGUI PoIChooserModeText;
     // public UIEnterDungeon UIEnterDungeon;
 
     public Image BackgroundImage;
     public DijkstraMapMaker DijkstraMapMaker;
 
     private UIPointOfInterestButton selectedUIPointOfInterestButton = null;
-    // private Coroutine ViewMoveCoroutine = null;
+    private UnityAction<string> OnPoIChoosen;
+    private bool IsPoIChooserModeOn = false; //POI chooser mod vyuzivam na vybirani POI pro nejakou akci, treba teleport nebo carriage
+                                             // private Coroutine ViewMoveCoroutine = null;
+
+    public void DisablePoIChooser()
+    {
+        IsPoIChooserModeOn = false;
+        PoIChooserModeText.gameObject.SetActive(false);
+
+        //if (IsPoIChooserModeOn)
+        //{
+
+        //}
+    }
+
+    public void SetPoIChooser(UnityAction<string> _onPoIChoosen, string _textToShow)
+    {
+        OnPoIChoosen = _onPoIChoosen;
+        IsPoIChooserModeOn = true;
+        PoIChooserModeText.gameObject.SetActive(true);
+        PoIChooserModeText.SetText(_textToShow);
+
+        //if (IsPoIChooserModeOn)
+        //{
+
+        //}
+    }
 
     public void Awake()
     {
@@ -47,19 +76,9 @@ public class UILocation : MonoBehaviour
         AccountDataSO.OnLocationDataChanged += OnWorldLocationChanged;
         UIPointsOfInterestSpawner.OnUIEntryClicked += OnPointOfInterestClicked;
 
-        // DijkstraMapMaker.OnVertexReachable += OnVertexReachable;
-
-        AccountDataSO.OnPartyDataChanged += RefreshMap;  // mam to tu kvuli tomu kdyz parta jde do dungeonu, tak se ulozi do ni ze maji prozkoumanou 1. entrance lokaci, tak musim refreshnout mapu abych ji videl.....
-        AccountDataSO.OnCharacterDataChanged += RefreshMap;
-
-        //tohle sem pridal kvuli AdminTools....at muzu ru
-        //  AccountDataSO.OnLocationDataChanged += RefreshMap;
     }
 
-    //private void OnVertexReachable(DijkstraMapVertex _vertexDef)
-    //{
-    //    UIPointsOfInterestSpawner.ShowPointOfInterestButton(_vertexDef);
-    //}
+
 
     private void RefreshMap()
     {
@@ -73,17 +92,12 @@ public class UILocation : MonoBehaviour
     {
         Refresh();
         DijkstraMapMaker.ClearPlannedTravelPath();
-
     }
 
     private void OnWorldPointOfInterestChanged()
     {
-
-
-
         Refresh();
         DijkstraMapMaker.ClearPlannedTravelPath();
-
     }
     // Start is called before the first frame update
     public void Show()
@@ -93,7 +107,23 @@ public class UILocation : MonoBehaviour
 
         Model.gameObject.SetActive(true);
 
-       
+        UIQuestgiverSpawner.OnRefreshed += Refresh;
+        UIVendorSpawner.OnRefreshed += Refresh;
+        UISpecialsSpawner.OnRefreshed += Refresh;
+        UITrainerSpawner.OnRefreshed += Refresh;
+
+        Refresh();
+    }
+
+    public void ShowWithHardRefresh()
+    {
+        //Show();
+        //RefreshHard();
+        DijkstraMapMaker.SetupForCurrentLocation(true);
+        UIPointsOfInterestSpawner.Refresh(true);
+
+        Model.gameObject.SetActive(true);
+
         UIQuestgiverSpawner.OnRefreshed += Refresh;
         UIVendorSpawner.OnRefreshed += Refresh;
         UISpecialsSpawner.OnRefreshed += Refresh;
@@ -105,8 +135,6 @@ public class UILocation : MonoBehaviour
     public void Hide()
     {
 
-
-      
         UIQuestgiverSpawner.OnRefreshed -= Refresh;
         UIVendorSpawner.OnRefreshed -= Refresh;
         UISpecialsSpawner.OnRefreshed -= Refresh;
@@ -115,52 +143,33 @@ public class UILocation : MonoBehaviour
         Model.gameObject.SetActive(false);
     }
 
+    private void RefreshHard()
+    {
+        DijkstraMapMaker.SetupForCurrentLocation(true);
+        UIPointsOfInterestSpawner.Refresh(true);
+
+        RefreshButtons();
+    }
     private void Refresh()
     {
+        DijkstraMapMaker.SetupForCurrentLocation();
         UIPointsOfInterestSpawner.Refresh();
-
-        DijkstraMapMaker.SetupForCurrentLocation();//, AccountDataSO.LocationData.GetScreenPositionsWithIds());
 
         RefreshButtons();
 
-        //if (UIPointsOfInterestSpawner.GetPointOfInterestButtonAtCharacterPosition() != null)
-        //{
-        //    Vector3 pos1 = UIPointsOfInterestSpawner.GetPointOfInterestButtonAtCharacterPosition().transform.localPosition;
-        //    Vector3 pos2 = new Vector3((-1) * pos1.x, (-1) * pos1.y, pos1.z);
-        //    //   ScrollContent.localPosition = pos2;
-
-        //    if (ViewMoveCoroutine != null)
-        //        StopCoroutine(ViewMoveCoroutine);
-
-        //    ViewMoveCoroutine = StartCoroutine(MoveView(pos2));
-        //}
-        //else
-        //    Debug.LogError("Jaktoze nejsem na zadnem PoI buttonu? Kde sem?");
-
     }
 
-    //    private IEnumerator MoveView(Vector3 targetPosition)
-    //    {
-    //        float startTime = Time.time;
-    //        while (Vector3.Distance(ScrollContent.localPosition, targetPosition) > 10 && (Time.time - startTime) < 1f)
-    //        {
-    ////            Debug.Log(ScrollContent.localPosition);
-    // //           Debug.Log(targetPosition);
-    //            ScrollContent.localPosition = Vector3.Lerp(ScrollContent.localPosition, targetPosition, 2f * Time.deltaTime);
-    //            yield return null;
-    //        }
-    //    }
 
-
-
-    private void OnQuestGiverClicked(UIQuestgiverEntry _entry)
-    {
-
-    }
     private void OnPointOfInterestClicked(UIPointOfInterestButton _entry)
     {
+        if (IsPoIChooserModeOn)
+        {
+            OnPoIChoosen?.Invoke(_entry.WorldPosition.pointOfInterestId);
+            DisablePoIChooser();
+            return;
+        }
 
-        Debug.Log("clicked");
+        //    Debug.Log("clicked");
         //pokud PoI na kterou klikam uz je vybrana (tedy klikam po 2.) a neni to moje PoI, jdeme cestovat
         if (_entry == selectedUIPointOfInterestButton && _entry.WorldPosition.pointOfInterestId != AccountDataSO.CharacterData.position.pointOfInterestId)
         {
@@ -182,7 +191,7 @@ public class UILocation : MonoBehaviour
         }
         else //jinak ti ukazu kolik by te stala cesta tam
         {
-            Debug.Log("clicked showing");
+            //       Debug.Log("clicked showing");
             DijkstraMapMaker.ShowPlannedTravelPath(AccountDataSO.CharacterData.position.pointOfInterestId, _entry.WorldPosition.pointOfInterestId);
 
         }
@@ -198,10 +207,11 @@ public class UILocation : MonoBehaviour
     {
         foreach (var item in UIPointsOfInterestSpawner.EntryList)
         {
-            if (DijkstraMapMaker.PlannedPathNewest != null)
-                item.RefreshButtonDisplay(selectedUIPointOfInterestButton, DijkstraMapMaker.PlannedPathNewest.totalWeight);
-            else
-                item.RefreshButtonDisplay(selectedUIPointOfInterestButton, 0);
+            //if (DijkstraMapMaker.PlannedPathNewest != null)
+            //    item.RefreshButtonDisplay(selectedUIPointOfInterestButton, DijkstraMapMaker.PlannedPathNewest.totalWeight);
+            //else
+            //    item.RefreshButtonDisplay(selectedUIPointOfInterestButton, 0);
+            item.RefreshButtonDisplay(selectedUIPointOfInterestButton, DijkstraMapMaker.GetPlannedPathCost());
         }
     }
 

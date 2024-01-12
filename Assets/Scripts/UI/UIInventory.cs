@@ -4,9 +4,6 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.Events;
 using simplestmmorpg.data;
-using System.Linq;
-using static UnityEditor.Progress;
-
 public class UIInventory : UISelectableSpawner
 {
 
@@ -52,13 +49,39 @@ public class UIInventory : UISelectableSpawner
         return anyItemFound;
     }
 
-    public int GetValueOfAllItems()
+    public Dictionary<string, int> GetValueOfAllItems()
+    {
+        Dictionary<string, int> result = new Dictionary<string, int>();
+        //int result = 0;
+
+        foreach (var item in inventoryData)
+        {
+            if (!result.ContainsKey(item.currencyType))
+            {
+                result.Add(item.currencyType, item.sellPrice);
+            }
+            else
+            {
+                result[item.currencyType] += item.sellPrice;
+            }
+            // result += item.sellPrice * item.amount;
+        }
+        return result;
+    }
+
+    public int GetValueOfAllItemsByCurrencyType(string _currencyType)
     {
         int result = 0;
 
         foreach (var item in inventoryData)
         {
-            result += item.sellPrice * item.amount;
+            if (item.currencyType == _currencyType)
+            {
+                //       Debug.Log("item.currencyType:" + item.currencyType);
+                //       Debug.Log("item.sellPrice:" + item.sellPrice);
+                //       Debug.Log(" item.amount:" + item.amount);
+                result += item.sellPrice * item.amount;
+            }
         }
         return result;
     }
@@ -86,12 +109,12 @@ public class UIInventory : UISelectableSpawner
             for (int i = 0; i < item.amount; i++)
             {
                 result.Add(item.GetDescription());
-                Debug.Log("adding! :" + item.GetDescription());
+                //Debug.Log("adding! :" + item.GetDescription());
             }
 
 
         }
-        Debug.Log("result count! :" + result.Count);
+        // Debug.Log("result count! :" + result.Count);
         return result;
     }
 
@@ -182,6 +205,7 @@ public class UIInventory : UISelectableSpawner
                     SpawnItems(Utils.CONTENT_TYPE.GENERATED);
                     SpawnItems(Utils.CONTENT_TYPE.FOOD_SUPPLY);
                     SpawnItems(Utils.CONTENT_TYPE.RANDOM_EQUIP);
+                    SpawnItems(Utils.CONTENT_TYPE.CHEST);
                 }
                 break;
             case INVENTORY_FILTER.EQUIP_ONLY:

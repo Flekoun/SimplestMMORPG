@@ -4,6 +4,7 @@ using simplestmmorpg.data;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class UIPointsOfInterestSpawner : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
     public RectTransform Content; //abychom nastavili spravnou vysku a sirku
     // public UILineMaker AllPathsUILineMaker;
     public DijkstraMapMaker DijkstraMapMaker;
+    private float largestPositionX = 0;
+    private float largestPositionY = 0;
 
     public UnityAction<UIPointOfInterestButton> OnUIEntryClicked;
 
@@ -33,72 +36,77 @@ public class UIPointsOfInterestSpawner : MonoBehaviour
 
     }
 
-    //public void ShowPointOfInterestButton(DijkstraMapVertex _vertex)
-    //{
-    //    foreach (var item in EntryList)
-    //    {
-    //        if (item.WorldPosition.pointOfInterestId == _vertex.id)
-    //        {
-    //            //TADY  JE PROSTE PROBLEM visaulni ze tohle se zavola driv nez se zavoola ten refresh poi pres location changed...takze se ukaze vzhled stareho poi a pak to preblikne...
-    //            item.Show(true);
 
-    //        }
-    //    }
 
-    //}
-
-    public void Refresh()
+    public void Refresh(bool _forceHardRefresh = false)
     {
-        //   Debug.Log("MAZU vsechny PoIButtony a vytvarim nove");
+
+
+
         var reachableVertices = DijkstraMapMaker.GetReacheableVertices();
 
-        EntryList.Clear();
-        Utils.DestroyAllChildren(Parent);
+        //        EntryList.Clear();
+        //        Utils.DestroyAllChildren(Parent);
 
-        float largestPositionX = 0;
-        float largestPositionY = 0;
 
-        foreach (var vertex in AccountDataSO.LocationData.dijkstraMap.exportMap)
+
+        if (EntryList.Count == 0 || _forceHardRefresh)
         {
+            EntryList.Clear();
+            Utils.DestroyAllChildren(Parent);
+            largestPositionX = 0;
+            largestPositionY = 0;
+            Debug.Log("---------------OK TAK HARD....");
+            foreach (var vertex in AccountDataSO.LocationData.dijkstraMap.exportMap)
+            {
 
-            UIPointOfInterestButton entry = null;
-
-            //if (Utils.DescriptionsMetadata.GetPointsOfInterestMetadata(vertex.id) == null)
-            //    entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab_NoDescriptionData, Parent);
-            //else
-            entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab, Parent);
-
-            //    EntryList.Add(entry);
-
-            var worldPosition = new WorldPosition();
-            worldPosition.pointOfInterestId = vertex.id;
-            worldPosition.locationId = AccountDataSO.LocationData.id;
-            worldPosition.zoneId = "DUNOTAR";
+                UIPointOfInterestButton entry = null;
 
 
-            entry.SetData(worldPosition);
+                entry = PrefabFactory.CreateGameObject<UIPointOfInterestButton>(UIEntryPrefab, Parent);
 
-            entry.OnClicked += UIEntryClicked;
-            entry.OnQuestgiverClicked += OnQuestgiverClicked;
-            entry.OnEncounterClicked += OnEncounterEntryClicked;
-            entry.OnEncounterResultClicked += OnEncounterResultEntryClicked;
-            entry.OnVendorClicked += OnVendorEntryClicked;
-            entry.OnTrainerClicked += OnTrainerEntryClicked;
 
-            entry.SetReachable(reachableVertices.Contains(vertex.id));
-            ///  entry.Show(false);
-            EntryList.Add(entry);
 
-            if (largestPositionX < Mathf.Abs(vertex.screenPosition.x))
-                largestPositionX = Mathf.Abs(vertex.screenPosition.x);
+                var worldPosition = new WorldPosition();
+                worldPosition.pointOfInterestId = vertex.id;
+                worldPosition.locationId = AccountDataSO.LocationData.id;
+                worldPosition.zoneId = "DUNOTAR";
 
-            if (largestPositionY < Mathf.Abs(vertex.screenPosition.y))
-                largestPositionY = Mathf.Abs(vertex.screenPosition.y);
+
+                entry.SetData(worldPosition);
+
+                entry.OnClicked += UIEntryClicked;
+                entry.OnQuestgiverClicked += OnQuestgiverClicked;
+                entry.OnEncounterClicked += OnEncounterEntryClicked;
+                entry.OnEncounterResultClicked += OnEncounterResultEntryClicked;
+                entry.OnVendorClicked += OnVendorEntryClicked;
+                entry.OnTrainerClicked += OnTrainerEntryClicked;
+
+                entry.SetReachable(reachableVertices.Contains(vertex.id));
+
+                EntryList.Add(entry);
+
+                if (largestPositionX < Mathf.Abs(vertex.screenPosition.x))
+                    largestPositionX = Mathf.Abs(vertex.screenPosition.x);
+
+                if (largestPositionY < Mathf.Abs(vertex.screenPosition.y))
+                    largestPositionY = Mathf.Abs(vertex.screenPosition.y);
+            }
+        }
+        else
+        {
+            Debug.Log("---------------OK TAK SOFT....");
+
+            foreach (var poi in EntryList)
+            {
+                poi.Refresh();
+                poi.SetReachable(reachableVertices.Contains(poi.WorldPosition.pointOfInterestId));
+            }
         }
 
-        largestPositionX = (largestPositionX + 500) * 2;
-        largestPositionY = (largestPositionY + 500) * 2;
-        Content.sizeDelta = new Vector2(largestPositionX, largestPositionY);
+        //largestPositionX = (largestPositionX + 500) * 2;
+        //largestPositionY = (largestPositionY + 500) * 2;
+        Content.sizeDelta = new Vector2((largestPositionX + 500) * 2, (largestPositionY + 500) * 2);
 
         // Debug.Log("HOTOVO smazany a vytvoreny");
     }

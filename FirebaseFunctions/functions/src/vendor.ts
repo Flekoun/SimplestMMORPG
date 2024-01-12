@@ -1,9 +1,9 @@
 
 // [START import]
 import * as functions from "firebase-functions";
-import { ContentContainer, CharacterDocument, characterDocumentConverter, generateContentContainer, CURRENCY_ID, validateCallerBulletProof } from ".";
+import { CharacterDocument, characterDocumentConverter, generateContentContainer, validateCallerBulletProof, ContentContainer } from ".";
 
-import { generateContent, generateEquip, ItemIdWithAmount, QuerryForSkillDefinitions } from "./equip";
+import { Content, generateEquip, ItemIdWithAmount, QuerryForSkillDefinitions } from "./equip";
 import { QuerryForPointOfInterestCharacterIsAt } from "./worldMap";
 import { RandomEquip } from "./questgiver";
 
@@ -42,9 +42,9 @@ export class VendorGood {
   constructor(
     public uid: string,
     public sellPrice: number,
-    public content: ContentContainer | undefined, //pro presny equip
-    public contentGenerated: ItemIdWithAmount | undefined, //pro generovany equip
-    public contentRandomEquip: RandomEquip | undefined,
+    public content: ContentContainer | undefined, //behem generovani mapy se z generated contentu zde vytvori presny kontent podle definic
+    public contentGenerated: ItemIdWithAmount | undefined, //slouzi pro  definovani co bude vendor mit. Pri tvorbe mapy se z tohoto vygeneruje presny konkreni good a toto se smaze
+    public contentRandomEquip: RandomEquip | undefined, // toto slouzi kdyz chci aby vendor mel random loot. Nic se z toho negenruje a nemeni pro tvorbe mapy....mohl byses divit pro vendor ma RandomEquip ale enemy maji v droptable ItemWithID....je to proto ze proste u enemy to mam zjednodusene nechci mit ruzne equip sloty definovane a level itemu se bere z monstra tak je to zbytacne....tady muzu dat venorovi konkretni equip slot i level itemu,,
     public stockTotal: number,  //-1 = nekonecno
     public stockTotalLeft: number,
     public stockPerCharacter: number, //kolik si muze maximalne kazdy charakter nakoupit
@@ -86,9 +86,11 @@ exports.tradeWithVendor = functions.https.onCall(async (data, context) => {
       // if(!characterData.isOnSameWorldPosition(vendorData.position))
       // throw("You cant trade with vendor at diffrent world position!")
 
-      let totalPurchasePrice: number = 0;
-      let currentyType = "";
-      let isFirstItem = true;
+      //  let totalPurchasePrice: number = 0;
+      //let totalPurchasePrices : SimpleTally[] =[];
+      let totalPurchasePrices = new Map<string, number>();
+      //  let currentyType = "";
+      // let isFirstItem = true;
       //Najdu vsechny itemy co chci koupit u vendora a pridam si je do inventare a spocitam celkovou cenu
       let skillDefinitions = await QuerryForSkillDefinitions(t);
 
@@ -96,12 +98,12 @@ exports.tradeWithVendor = functions.https.onCall(async (data, context) => {
         const item = vendorData.goods.find(good => good.uid === uid);
 
         if (item) {
-          if (isFirstItem) {
-            currentyType = item.currencyType;
-            isFirstItem = false;
-          }
-          if (currentyType != item.currencyType)
-            throw "You are trying to buy vendor items with missmatching currency prices....this is not implemented!";
+          //   if (isFirstItem) {
+          //  currentyType = item.currencyType;
+          //   isFirstItem = false;
+          //   }
+          // if (currentyType != item.currencyType)
+          //   throw "You are trying to buy vendor items with missmatching currency prices....this is not implemented!";
 
           //zkontroluju jestli mi zbyva dost personal stocku a pak i global stocku
           //    if (item.stockTotalLeft >= vendorItemsToBuyAmounts[idx] && (item.stockPerCharacter - characterData.getStockPurchasedForGivenVendorGood(vendorData.id, item.uid) >= vendorItemsToBuyAmounts[idx])) {
@@ -116,14 +118,26 @@ exports.tradeWithVendor = functions.https.onCall(async (data, context) => {
               vendorDataChanged = true;
             }
 
+            if (totalPurchasePrices.get(item.currencyType)) {
+              totalPurchasePrices.set(item.currencyType, item.sellPrice * vendorItemsToBuyAmounts[idx] + totalPurchasePrices.get(item.currencyType)!)
+            }
+            else
+              totalPurchasePrices.set(item.currencyType, item.sellPrice * vendorItemsToBuyAmounts[idx])
 
-            totalPurchasePrice += item.sellPrice * vendorItemsToBuyAmounts[idx];
+
+            //   totalPurchasePrice += item.sellPrice * vendorItemsToBuyAmounts[idx];
 
             if (item.content) {
-              characterData.addContentToInventory(item.content, true, false);
+              // item.content.content!.amount = item.content.content!.amount! * vendorItemsToBuyAmounts[idx]; //vynasobim tim kolikrat to chces koupit 
+
+              //kopiruju content proot ze potrebuju nasobit mnoustvi kontentu co ziskam tim kolikrat ho kupuju 2x kupuju item co je 3xjablko = 6 itemu musi mit kontent ktery davam hraci. Ale nemuzu menit ten puvodni vendoruv item protoze by to posralo co nabiji vendor, ulozilo by to zmenu v jeho contentu.
+              var contentCopy = new Content(item.content.content!.uid, item.content.content!.itemId, item.content.content!.rarity, item.content.content!.sellPrice, item.content.content!.currencyType, item.content.content!.stackSize, item.content.content!.amount * vendorItemsToBuyAmounts[idx], item.content.content!.customData, item.content.content!.contentType, item.content.content!.expireDate);
+              var contentContainer = new ContentContainer(contentCopy, undefined);
+              characterData.addContentToInventory(contentContainer, true, false);
             } else if (item.contentGenerated) {
-              const generatedContent = generateContent(item.contentGenerated.itemId, vendorItemsToBuyAmounts[idx]);
-              characterData.addContentToInventory(generateContentContainer(generatedContent), true, false);
+              throw "Content you are trying to buy is generated. Send this bug report to Flekoun pls!"
+              // const generatedContent = generateContent(item.contentGenerated.itemId, vendorItemsToBuyAmounts[idx]);
+              // characterData.addContentToInventory(generateContentContainer(generatedContent), true, false);
             }
             else if (item.contentRandomEquip) {
               for (let index = 0; index < vendorItemsToBuyAmounts[idx]; index++) {
@@ -156,39 +170,56 @@ exports.tradeWithVendor = functions.https.onCall(async (data, context) => {
 
       //prodam veci hrace
 
-      let totalSellPrice: number = 0;
+      //let totalSellPrice: number = 0;
+      let totalSellPrices = new Map<string, number>();
 
       for (var i = itemsToSellUids.length - 1; i >= 0; i--) {
         for (var j = characterData.inventory.content.length - 1; j >= 0; j--) {
-          if (itemsToSellUids[i] == characterData.inventory.content[j].getItem().uid) {
+          let itemToSell = characterData.inventory.content[j].getItem();
+          if (itemsToSellUids[i] == itemToSell.uid) {
 
-            if (isFirstItem) {
-              currentyType = characterData.inventory.content[j].getItem().currencyType;
-              isFirstItem = false;
+            let totalSellPricesEntry = totalSellPrices.get(itemToSell.currencyType);
+
+            if (totalSellPricesEntry) {
+              totalSellPrices.set(itemToSell.currencyType, itemToSell.sellPrice * itemsToSellAmounts[i] + totalSellPricesEntry)
             }
-            if (currentyType != characterData.inventory.content[j].getItem().currencyType)
-              throw "You are trying to sell vendor items with missmatching currency prices....this is not implemented!";
+            else {
+              totalSellPrices.set(itemToSell.currencyType, itemToSell.sellPrice * itemsToSellAmounts[i])
+            }
 
-            totalSellPrice += characterData.inventory.content[j].getItem().sellPrice * itemsToSellAmounts[i];//characterData.inventory.content[i].getItem().amount;
-            if (itemsToSellAmounts[i] == characterData.inventory.content[j].getItem().amount) { //prodavam vse
+            //     totalSellPrice += characterData.inventory.content[j].getItem().sellPrice * itemsToSellAmounts[i];//characterData.inventory.content[i].getItem().amount;
+            if (itemsToSellAmounts[i] == itemToSell.amount) { //prodavam vse
               characterData.inventory.content.splice(j, 1);
               characterData.inventory.capacityLeft++;
             }
             else
-              characterData.inventory.content[j].getItem().amount -= itemsToSellAmounts[i];
+              itemToSell.amount -= itemsToSellAmounts[i];
 
             break;
           }
         }
       }
 
-      console.log("Total sell price: " + totalSellPrice);
-      characterData.addCurrency(currentyType, totalSellPrice);
+      // console.log("Total sell price: " + totalSellPrice);
+      // characterData.addCurrency(currentyType, totalSellPrice);
+      for (const [key, value] of totalSellPrices.entries()) {
+        characterData.addCurrency(key, value);
+        console.log("addingCurrency " + key + "value: " + value);
+      }
 
 
-      console.log("Total pruchase price: " + totalPurchasePrice);
+      for (const [key, value] of totalPurchasePrices.entries()) {
+        characterData.subCurrency(key, value);
+        console.log("subbingCurrency " + key + "value: " + value);
+      }
+
+      // totalPurchasePrices.forEach(entry => {
+      //   characterData.subCurrency(entry, totalPurchasePrice);
+      // });
+
+      // console.log("Total pruchase price: " + totalPurchasePrice);
       // if (totalPurchasePrice <= characterData.currency.gold) {
-      characterData.subCurrency(currentyType, totalPurchasePrice);
+      // characterData.subCurrency(currentyType, totalPurchasePrice);
       //}
       //else {
       // throw ("Not enough gold");

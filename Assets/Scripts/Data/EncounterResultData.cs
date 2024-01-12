@@ -124,6 +124,10 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public int tier { get; set; }
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string typeOfOrigin { get; set; }
+
 
 
 

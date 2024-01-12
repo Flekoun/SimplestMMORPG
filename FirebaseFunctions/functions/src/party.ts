@@ -2,7 +2,7 @@
 // [START import]
 import * as functions from "firebase-functions";
 import { CharacterDocument, characterDocumentConverter, ContentContainer, QuerryForParty, QuerryIfCharacterIsInCombatAtAnyEncounter, SimpleStringDictionary, WorldPosition } from ".";
-import { EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT, TierMonstersDefinition } from "./encounter";
+import { EncounterDocument, encounterDocumentConverter, ENCOUNTER_CONTEXT } from "./encounter";
 
 import { PointOfInterest, POI_SPECIALS, PointOfInterestServerDataDefinitions, PointOfInterestServerDataDefinitionsConverter } from "./worldMap";
 
@@ -401,14 +401,18 @@ exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1
 
   const PARTY_MAX_SIZE = 5;
 
+  const batch = admin.firestore().batch();
+
   var partyLeaderUid: string = data.partyLeaderUid;
   var callerCharacterUid: string = data.callerCharacterUid;
   // console.log("partyInviteUid: " + partyInviteUid);
   const encountersDb = admin.firestore().collection('encounters');
-  //const callerPersonalEncounters = encountersDb.where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).withConverter(encounterDocumentConverter);
+  const partiesDb = admin.firestore().collection('parties');
+
+  const callerRareEncountersDb = encountersDb.where("foundByCharacterUid", "==", callerCharacterUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).where("maxCombatants", ">", 1).withConverter(encounterDocumentConverter);
+  const partyLeaderRareEncountersDb = encountersDb.where("foundByCharacterUid", "==", partyLeaderUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).where("maxCombatants", ">", 1).withConverter(encounterDocumentConverter);
   // const callerPersonalEncounters = encountersDb.where("foundByCharacterUid", "==", callerCharacterUid).withConverter(encounterDocumentConverter);
 
-  const PartiesDb = admin.firestore().collection('parties');
   const partyInviteDb = admin.firestore().collection('partyInvites').doc(partyLeaderUid);
   const callerCharacterDb = admin.firestore().collection('characters').doc(callerCharacterUid).withConverter(characterDocumentConverter);
 
@@ -422,9 +426,12 @@ exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1
       const partyInviteDoc = await t.get(partyInviteDb);
       const partyInviteData: PartyInvite = partyInviteDoc.data();
 
-      const partyLeaderUidCharacterDb = admin.firestore().collection('characters').doc(partyInviteData.partyLeaderUid).withConverter(characterDocumentConverter);
-      //const partyLeaderPersonalEncounters = encountersDb.where("foundByCharacterUid", "==", partyInviteData.partyLeaderUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).withConverter(encounterDocumentConverter);
-      const partyMonsterEncounters = encountersDb.where("foundByCharacterUid", "==", partyInviteData.partyUid).withConverter(encounterDocumentConverter);
+
+      const partyLeaderCharacterDb = admin.firestore().collection('characters').doc(partyInviteData.partyLeaderUid).withConverter(characterDocumentConverter);
+      const partyRareEncountersDb = encountersDb.where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).where("maxCombatants", ">", 1).where("partyId", "==", partyInviteData.partyUid).withConverter(encounterDocumentConverter);
+
+      //     const partyLeaderPersonalEncounters = encountersDb.where("foundByCharacterUid", "==", partyInviteData.partyLeaderUid).where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).withConverter(encounterDocumentConverter);
+      // const partyMonsterEncounters = encountersDb.where("foundByCharacterUid", "==", partyInviteData.partyUid).withConverter(encounterDocumentConverter);
 
       //console.log("null 0 : " + partyInviteData.partyLeaderUid);
       //podle me nestaci ziskat tam kde jsi leader....muze se stat ze ten co ti poslal invite do party se stane party memberem jine party do ktere ho pozval nekdo jiny! a tim padem je v parte ale neni paryt leader! Proto toto  misto toho zakomentovaneho
@@ -448,13 +455,16 @@ exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1
 
 
       let dungeonEncounterData: EncounterDocument | undefined;
+      const callerRareEncounters: EncounterDocument[] = [];
+      const partyLeaderRareEncounters: EncounterDocument[] = [];
+      const partyRareEncounters: EncounterDocument[] = [];
 
       //Parta jeste nebyla vytvorena, budeme prvni dvojka...teoreticky bych mohl i checkovat na "partyUid ==""  "
       if (partyData == undefined) {
         console.log("Parta neexistuje jeste, vytvorim ji a pridam vas dva do ni");
 
-        const partyLeaderUidCharacterDoc = await t.get(partyLeaderUidCharacterDb);
-        let partyLeaderUidCharacterData: CharacterDocument = partyLeaderUidCharacterDoc.data();
+        const partyLeaderUidCharacterDoc = await t.get(partyLeaderCharacterDb);
+        let partyLeaderCharacterData: CharacterDocument = partyLeaderUidCharacterDoc.data();
 
         let partyMembers: PartyMember[] = [];
         let partyMembersUidList: string[] = [];
@@ -466,17 +476,31 @@ exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1
 
         //TODO: Jeste by tu mel byt check na presenceStatus jestli je skutecne online.....
         //pridam hosta, tedy partyLeadera
-        partyMembers.push(new PartyMember(partyLeaderUidCharacterData.uid, partyLeaderUidCharacterData.characterName, partyLeaderUidCharacterData.characterClass, partyLeaderUidCharacterData.stats.level, partyLeaderUidCharacterData.position, true, partyLeaderUidCharacterData.characterPortrait));
-        partyMembersUidList.push(partyLeaderUidCharacterData.uid);
+        partyMembers.push(new PartyMember(partyLeaderCharacterData.uid, partyLeaderCharacterData.characterName, partyLeaderCharacterData.characterClass, partyLeaderCharacterData.stats.level, partyLeaderCharacterData.position, true, partyLeaderCharacterData.characterPortrait));
+        partyMembersUidList.push(partyLeaderCharacterData.uid);
 
-        partyData = new Party(PartiesDb.doc().id, partyLeaderUidCharacterData.uid, PARTY_MAX_SIZE, partyMembers, partyMembersUidList, null, []);
-        // t.set(PartiesDb, JSON.parse(JSON.stringify(newParty)));
+        partyData = new Party(partiesDb.doc().id, partyLeaderCharacterData.uid, PARTY_MAX_SIZE, partyMembers, partyMembersUidList, null, []);
+
+
+        //party leaeder si zmeni u svych rare encounters partyId na id party a prida invitovaneho hraje jako watchera
+        await t.get(partyLeaderRareEncountersDb).then(query => {
+          query.docs.forEach(doc => {
+            let encounter: EncounterDocument = doc.data();
+            console.log("docLeader: " + encounter.uid);
+
+            encounter.partyId = partyData!.uid;
+            if (!encounter.watchersList.includes(callerCharacterUid)) encounter.watchersList.push(callerCharacterUid);
+            partyLeaderRareEncounters.push(encounter);
+          });
+        });
+
+
       }
-      //parta uz existuje, tak se tam jen pridame
+      //parta uz existuje, tak tam jen pridame invitovaneho hrace a vzajemne priadame rare encountery
       else {
 
         console.log("Parta uz existuje pridam te do ni");
-        //TODO: tady transakce failne a nesmaze se tim padem ten partyInvite
+
         if (partyData.partyMembers.length == partyData.partySizeMax) {
           // await t.delete(partyInviteDb);
           throw "Party is already full!";  //TODO: tady transakce failne a nesmaze se tim padem ten partyInvite, dat tam return misto throwM??? ale pak klient tezko zjisti ze byla full nejak?
@@ -497,66 +521,53 @@ exports.acceptPartyInvite = functions.https.onCall(async (data, context) => {//1
           });
         });
 
+
       }
 
 
-      //TODO: tady je IISUE ZE POCITAM JEN S 1x PERSONAL ENCOUNTER, MUZE JICH BYT 10 + RARE ECNOUNTERY.....umoznil sem totiz cestovat hracum ikdyz maji encounter...
+      //invitovany hrac si zmeni u svych rare encounters partyId na id party a prida party membery jako watchery
+      await t.get(callerRareEncountersDb).then(query => {
+        query.docs.forEach(doc => {
+          let encounter: EncounterDocument = doc.data();
+          console.log("docCaller: " + encounter.uid);
 
-      //ziskam  personal encounter invitovaneho hace pokud existuje....
-      // let callerPersonalEncounter: EncounterDocument | undefined;
-      // await t.get(callerPersonalEncounters).then(querry => {
-      //   querry.docs.forEach(doc => {
-      //     callerPersonalEncounter = doc.data();
-      //     console.log("jo invitovany hrac ma encounter personal :" + callerPersonalEncounter?.uid);
-      //   });
-      // });
-
-      // //...  pokud existuje, jako watchery pridam sve party membery
-      // if (callerPersonalEncounter != undefined) {
-      //   partyData.partyMembersUidList.forEach(partyMemberUid => {
-      //     console.log("je tam uz tento watacher? :" + partyMemberUid);
-      //     if (!callerPersonalEncounter!.watchersList.includes(partyMemberUid))
-      //       callerPersonalEncounter!.watchersList.push(partyMemberUid);
-      //     console.log("pridavam jako watchera :" + partyMemberUid);
-      //   });
-
-      // }
-
-      //ziskam  personal encounter party  pokud existuje....
-      let partyMonsteEncounter: EncounterDocument | undefined;
-      await t.get(partyMonsterEncounters).then(querry => {
-        querry.docs.forEach(doc => {
-          partyMonsteEncounter = doc.data();
-          partyMonsteEncounter?.watchersList.push(callerCharacterUid); //pridam sebe do watcher listu,
+          encounter.partyId = partyData!.uid;
+          console.log("   encounter.partyId: " + encounter.partyId);
+          partyData?.partyMembers.forEach(partyMember => { if (!encounter.watchersList.includes(partyMember.uid)) encounter.watchersList.push(partyMember.uid); });
+          callerRareEncounters.push(encounter);
         });
       });
 
-      // //...  pokud existuje, jako watchery pridam sve party membery 
-      // if (partyMonsteEncounter != undefined) {
-      //   partyData.partyMembersUidList.forEach(partyMemberUid => {
-      //     if (!leaderPersonalEncounter!.watchersList.includes(partyMemberUid))
-      //       leaderPersonalEncounter!.watchersList.push(partyMemberUid);
-      //   });
-
-      // }
-
-      // if (callerPersonalEncounter != undefined)
-      //   t.set(encountersDb.doc(callerPersonalEncounter.uid), JSON.parse(JSON.stringify(callerPersonalEncounter)), { merge: true });
-
-      if (partyMonsteEncounter != undefined)
-        t.set(encountersDb.doc(partyMonsteEncounter.uid), JSON.parse(JSON.stringify(partyMonsteEncounter)), { merge: true });
+      //invitovany hrac se prida jako watcher do vsech party encounteru
+      await t.get(partyRareEncountersDb).then(query => {
+        query.docs.forEach(doc => {
+          let encounter: EncounterDocument = doc.data();
+          if (!encounter.watchersList.includes(callerCharacterUid)) encounter.watchersList.push(callerCharacterUid);
+          partyRareEncounters.push(encounter);
+        });
+      });
 
       if (dungeonEncounterData != undefined)
-        t.set(encountersDb.doc(dungeonEncounterData.uid), JSON.parse(JSON.stringify(dungeonEncounterData)), { merge: true });
+        batch.set(encountersDb.doc(dungeonEncounterData.uid), JSON.parse(JSON.stringify(dungeonEncounterData)), { merge: true });
 
-      t.set(PartiesDb.doc(partyData.uid), JSON.parse(JSON.stringify(partyData)), { merge: true });
+      for (const doc of partyLeaderRareEncounters) {
+        batch.set(encountersDb.doc(doc.uid), JSON.parse(JSON.stringify(doc)), { merge: true });
+      }
 
+      for (const doc of callerRareEncounters) {
+        batch.set(encountersDb.doc(doc.uid), JSON.parse(JSON.stringify(doc)), { merge: true });
+      }
 
+      for (const doc of partyRareEncounters) {
+        batch.set(encountersDb.doc(doc.uid), JSON.parse(JSON.stringify(doc)), { merge: true });
+      }
+
+      batch.set(partiesDb.doc(partyData.uid), JSON.parse(JSON.stringify(partyData)), { merge: true });
 
       //smazeme party invite
-      t.delete(partyInviteDb);
+      batch.delete(partyInviteDb);
 
-
+      batch.commit();
 
 
     });
@@ -644,6 +655,7 @@ exports.declinePartyInvite = functions.https.onCall(async (data, context) => {
 exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 W
 
 
+  const batch = admin.firestore().batch();
   //TODO KDYZ ochazi party leader at preda nekomu leadership!
   var callerCharacterUid: string = data.callerCharacterUid;
 
@@ -689,7 +701,6 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
       if (partyData == null)
         throw ("Database error! You are not in any party!");
 
-      const partyMonsterEncountersDb = encountersDb.where("foundByCharacterUid", "==", partyData.uid).withConverter(encounterDocumentConverter);
 
 
       //pokud sem v endless dungeonu, nemuzu odejit z party...
@@ -699,6 +710,13 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
 
       //dungeon encounter party
       const dungeonEncounterDb = admin.firestore().collection('encounters').where("foundByCharacterUid"/*"foundByPartyUid"*/, "==", partyData.uid).where("encounterContext", "==", ENCOUNTER_CONTEXT.DUNGEON);
+
+      //rare encountery party ktere nejsou moje
+      const rarePartyEncountersNotMineDb = encountersDb.where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).where("partyId", "==", partyData.uid).where("foundByCharacterUid", "!=", callerCharacterData.uid).withConverter(encounterDocumentConverter)
+
+      //rare encountery party ktere jsou moje
+      const rarePartyEncountersMineDb = encountersDb.where("encounterContext", "==", ENCOUNTER_CONTEXT.PERSONAL).where("partyId", "==", partyData.uid).where("foundByCharacterUid", "==", callerCharacterData.uid).withConverter(encounterDocumentConverter)
+
 
       //Smazu ostatni party membery jako watchery ze sveho personal encounteru
 
@@ -737,9 +755,10 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
       // });
 
 
-
+      const rarePartyEncountersNotMine: EncounterDocument[] = [];
+      const rarePartyEncountersMine: EncounterDocument[] = [];
       let dungeonEncounterData: EncounterDocument | undefined;
-      let partyMonsteEncounterData: EncounterDocument | undefined;
+      // let partyMonsteEncounterData: EncounterDocument | undefined;
 
       //jsem posledni clen co odchazi z party....smazu ji i vsechny partyInvite  .....i vsechny dungeon encountery kterych sem watcher(je to totiz lingering dungeon encounter ktery bez party neexistuje) 
       if (partyData.partyMembers.length == 2) {
@@ -748,28 +767,32 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
         //a pujde znovu dungeonu tak bude mit spatny PoI ne nazacatku ale nekde kde byl predtim....!!!!
         const partyInviteDb = admin.firestore().collection('partyInvites').where("partyLeaderUid", "==", partyData.partyLeaderUid);
 
-        //   //smazu vsechny PartyInvite
-        //   await t.get(partyInviteDb).then(querry => {
-        //     querry.docs.forEach(doc => {
-        //       // let data : PartyInvite  = doc.data();
-        //       t.delete(admin.firestore().collection('partyInvites').doc(doc.id));
-        //     });
+        //odchazejici hrac sebe vyhodi jako watchera z rare encounteru party(ostatnich party memberu)
+        await t.get(rarePartyEncountersNotMineDb).then(query => {
+          query.docs.forEach(doc => {
+            let encounter: EncounterDocument = doc.data();
+            //partyData?.partyMembers.forEach(partyMember => { if (!encounter.watchersList.includes(partyMember.uid)) encounter.watchersList.push(partyMember.uid); });
+            encounter.watchersList = encounter.watchersList.filter(item => item !== callerCharacterUid);//samzu sebe z watcher listu,
+            rarePartyEncountersNotMine.push(encounter);
+          });
+        });
 
-        //   });
-        //  // smazu ten dungeon encounter .....NEJDOU DELAT SET A DELETE ZA SEBOUT!..
-        //   await t.get(dungeonEncounterDb).then(querry => {
-        //     querry.docs.forEach(doc => {
-        //       t.delete(encountersDb.doc(doc.id));
-        //     });
-
-        //   });
-
-        //   //smazu partu
-        //   t.delete(partiesDb.doc(partyData.uid));
+        //odchazejici hrac smaze party membery jako watchery ze svych rare encounteru...pripadne je i vyhodi z boje
+        //TODO: toto je docela hnus pro hrace co bojujou a debil odejde z party...mozna to vyladit 
+        await t.get(rarePartyEncountersMineDb).then(query => {
+          query.docs.forEach(doc => {
+            let encounter: EncounterDocument = doc.data();
+            encounter.partyId = "";
+            /// partyData?.partyMembers.forEach(partyMember => { if (!encounter.watchersList.includes(partyMember.uid)) encounter.watchersList.push(partyMember.uid); });
+            encounter.watchersList = [];
+            encounter.watchersList.push(callerCharacterUid);// encounter.watchersList.filter(item => item !== callerCharacterUid);//samzu sebe z watcher listu,
+            rarePartyEncountersMine.push(encounter);
+          });
+        });
 
         const partyInviteDocsToDelete: FirebaseFirestore.DocumentReference[] = [];
         const dungeonEncounterDocsToDelete: FirebaseFirestore.DocumentReference[] = [];
-        const partyMonsterDocsToDelete: FirebaseFirestore.DocumentReference[] = [];
+        // const partyMonsterDocsToDelete: FirebaseFirestore.DocumentReference[] = [];
 
         // Gather all the PartyInvite documents to delete
         await t.get(partyInviteDb).then(query => {
@@ -786,32 +809,34 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
         });
 
         // Gather all the Monster Encounter documents to delete
-        await t.get(partyMonsterEncountersDb).then(query => {
-          query.docs.forEach(doc => {
-            partyMonsterDocsToDelete.push(encountersDb.doc(doc.id));
-          });
-        });
+        // await t.get(partyMonsterEncountersDb).then(query => {
+        //   query.docs.forEach(doc => {
+        //     partyMonsterDocsToDelete.push(encountersDb.doc(doc.id));
+        //   });
+        // });
 
         // Delete all the PartyInvite documents
         for (const docRef of partyInviteDocsToDelete) {
-          t.delete(docRef);
+          batch.delete(docRef);
         }
 
         // Delete all the Dungeon Encounter documents
         for (const docRef of dungeonEncounterDocsToDelete) {
-          t.delete(docRef);
+          batch.delete(docRef);
         }
 
         // Delete all the monster party documents
-        for (const docRef of partyMonsterDocsToDelete) {
-          t.delete(docRef);
-        }
+        // for (const docRef of partyMonsterDocsToDelete) {
+        //   t.delete(docRef);
+        // }
 
         // Delete the party
-        t.delete(partiesDb.doc(partyData.uid));
+        batch.delete(partiesDb.doc(partyData.uid));
 
       }
       else {
+
+
         //smazu sebe jako watchera  z dungeon encounteru, pokud teda parta  v dungeonu nejaky vytvorila..
 
         await t.get(dungeonEncounterDb).then(querry => {
@@ -826,26 +851,50 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
         });
 
 
-        //smazu sebe jako watchera z party monster encouneru
+        //smazu sebe jako watchera z rare party monster encouneru
 
-        await t.get(partyMonsterEncountersDb).then(querry => {
-          querry.docs.forEach(doc => {
-            partyMonsteEncounterData = doc.data();
-            if (partyMonsteEncounterData) {
-              if (partyMonsteEncounterData.watchersList.includes(callerCharacterUid)) {
-                partyMonsteEncounterData.watchersList = partyMonsteEncounterData.watchersList.filter(item => item !== callerCharacterUid);//samzu sebe z watcher listu,
-                //partyMonsteEncounterData.watchersList.splice(partyMonsteEncounterData.watchersList.indexOf(callerCharacterUid), 1); //samzu sebe z watcher listu,
-              }
-              //pokud sem vybral perk tak to smazu
-              let myPerkChoice = partyMonsteEncounterData.perkChoices.find(choice => choice.characterUid == callerCharacterUid)
-              if (myPerkChoice) {
-                partyMonsteEncounterData.perkChoices.splice(partyMonsteEncounterData.perkChoices.indexOf(myPerkChoice), 1); //samzu muj vyber perku
-              }
 
-            }
-
+        //odchazejici hrac sebe vyhodi jako watchera z rare encounteru party(ostatnich party memberu)
+        await t.get(rarePartyEncountersNotMineDb).then(query => {
+          query.docs.forEach(doc => {
+            let encounter: EncounterDocument = doc.data();
+            //partyData?.partyMembers.forEach(partyMember => { if (!encounter.watchersList.includes(partyMember.uid)) encounter.watchersList.push(partyMember.uid); });
+            encounter.watchersList = encounter.watchersList.filter(item => item !== callerCharacterUid);//samzu sebe z watcher listu,
+            rarePartyEncountersNotMine.push(encounter);
           });
         });
+
+        //odchazejici hrac smaze party membery jako watchery ze svych rare encounteru...pripadne je i vyhodi z boje
+        //TODO: toto je docela hnus pro hrace co bojujou a debil odejde z party...mozna to vyladit 
+        await t.get(rarePartyEncountersMineDb).then(query => {
+          query.docs.forEach(doc => {
+            let encounter: EncounterDocument = doc.data();
+            encounter.partyId = "";
+            /// partyData?.partyMembers.forEach(partyMember => { if (!encounter.watchersList.includes(partyMember.uid)) encounter.watchersList.push(partyMember.uid); });
+            encounter.watchersList = [];
+            encounter.watchersList.push(callerCharacterUid);// encounter.watchersList.filter(item => item !== callerCharacterUid);//samzu sebe z watcher listu,
+            rarePartyEncountersMine.push(encounter);
+          });
+        });
+
+        // await t.get(partyMonsterEncountersDb).then(querry => {
+        //   querry.docs.forEach(doc => {
+        //     partyMonsteEncounterData = doc.data();
+        //     if (partyMonsteEncounterData) {
+        //       if (partyMonsteEncounterData.watchersList.includes(callerCharacterUid)) {
+        //         partyMonsteEncounterData.watchersList = partyMonsteEncounterData.watchersList.filter(item => item !== callerCharacterUid);//samzu sebe z watcher listu,
+        //         //partyMonsteEncounterData.watchersList.splice(partyMonsteEncounterData.watchersList.indexOf(callerCharacterUid), 1); //samzu sebe z watcher listu,
+        //       }
+        //       //pokud sem vybral perk tak to smazu
+        //       let myPerkChoice = partyMonsteEncounterData.perkChoices.find(choice => choice.characterUid == callerCharacterUid)
+        //       if (myPerkChoice) {
+        //         partyMonsteEncounterData.perkChoices.splice(partyMonsteEncounterData.perkChoices.indexOf(myPerkChoice), 1); //samzu muj vyber perku
+        //       }
+
+        //     }
+
+        //   });
+        // });
 
 
         //smazu svoje zaznamy z party
@@ -890,7 +939,8 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
         // });
 
 
-        t.set(partiesDb.doc(partyData.uid), JSON.parse(JSON.stringify(partyData)), { merge: true });
+        batch.set(partiesDb.doc(partyData.uid), JSON.parse(JSON.stringify(partyData)), { merge: true });
+
 
       }
 
@@ -905,14 +955,23 @@ exports.leaveParty = functions.https.onCall(async (data, context) => {//1 R , 1 
       //   t.set(encountersDb.doc(leaverPersonalEncounter.uid), JSON.parse(JSON.stringify(leaverPersonalEncounter)), { merge: true });
       // }
 
+
+      for (const doc of rarePartyEncountersMine) {
+        batch.set(encountersDb.doc(doc.uid), JSON.parse(JSON.stringify(doc)), { merge: true });
+      }
+
+      for (const doc of rarePartyEncountersNotMine) {
+        batch.set(encountersDb.doc(doc.uid), JSON.parse(JSON.stringify(doc)), { merge: true });
+      }
+
       if (dungeonEncounterData) {
-        t.set(encountersDb.doc(dungeonEncounterData.uid), JSON.parse(JSON.stringify(dungeonEncounterData)), { merge: true });
+        batch.set(encountersDb.doc(dungeonEncounterData.uid), JSON.parse(JSON.stringify(dungeonEncounterData)), { merge: true });
       }
-      if (partyMonsteEncounterData) {
-        t.set(encountersDb.doc(partyMonsteEncounterData.uid), JSON.parse(JSON.stringify(partyMonsteEncounterData)), { merge: true });
-      }
+      // if (partyMonsteEncounterData) {
+      //   t.set(encountersDb.doc(partyMonsteEncounterData.uid), JSON.parse(JSON.stringify(partyMonsteEncounterData)), { merge: true });
+      // }
 
-
+      batch.commit();
       return "Party Left!";
     });
 

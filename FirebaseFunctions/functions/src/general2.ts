@@ -34,8 +34,8 @@ export function applySkillEffect(_caster: CombatMember, _encounter: EncounterDoc
 
 
   //pokud combatFlow ma nejaky zaznam uz se bojovalo, takze nekdo odesel po startu boje, takze ok, at se bojuje dal
-  if (_encounter.combatantList.length < _encounter.maxCombatants && _encounter.combatFlow.length == 0)
-    throw "Not enough players in combat! Need " + (_encounter.maxCombatants - _encounter.combatantList.length) + " more!";
+  // if (_encounter.combatantList.length < _encounter.maxCombatants && _encounter.combatFlow.length == 0)
+  //   throw "Not enough players in combat! Need " + (_encounter.maxCombatants - _encounter.combatantList.length) + " more!";
 
   let ignoreManaPrice: boolean = false;
   if (_caster.characterClass != _skillUsed.characterClass && _skillUsed.characterClass != CHARACTER_CLASS.ANY)
@@ -550,11 +550,9 @@ export function applySkillEffect(_caster: CombatMember, _encounter: EncounterDoc
         _encounter.dealDamageToCombatEntity(_caster, _caster, _skillUsed.amounts[0], _skillUsed.skillGroupId, _encounter);
         break;
       }
-    case SKILL.CURSE_MANA_COST_INCREASE:
-      {
-        // _encounter.dealDamageToCombatEntity(_caster, _caster, _skillUsed.amounts[0], _skillUsed.skillId);
-        break;
-      }
+
+
+
     default:
       // throw "Cannot find any skill with Id - " + _skillUsed.skillId;
       break;
@@ -690,6 +688,11 @@ export function drawNewSkills(_skillsInHand: Combatskill[], _skillsDrawDeck: Com
 
   });
 
+  //ACID_BLISTERS CURSE
+  let acitBlistersCurses = _skillsInHand.filter(skill => skill.skillId == SKILL.CURSE_ACID_BLISTER);
+  if (acitBlistersCurses.length > 0) {
+    _skillsInHand.forEach(skill => { skill.addDefense(acitBlistersCurses[0].amounts[0] * acitBlistersCurses.length * -1, true) });
+  }
 
   //aplikuji CONFUSION CURSE
   let confusionCurses = _skillsInHand.filter(skill => skill.skillId == SKILL.CURSE_MANA_COST_INCREASE);
@@ -773,6 +776,12 @@ export function drawSkill(_combatMember: CombatMember, _amountToDraw: number): C
 
   //remove drawn cards from draw deck
   _combatMember.skillsDrawDeck.splice(0, numberOfSkillsToBeDrawn);
+
+  //ACID_BLISTERS CURSE
+  let acitBlistersCurses = drawnSkills.filter(skill => skill.skillId == SKILL.CURSE_ACID_BLISTER);
+  if (acitBlistersCurses.length > 0) {
+    _combatMember.skillsInHand.forEach(skill => { skill.addDefense(acitBlistersCurses[0].amounts[0] * acitBlistersCurses.length * -1, true) });
+  }
 
   //pokud sem drawnul zrovna tuto kletbu
   let confusionCurses = drawnSkills.filter(skill => skill.skillId == SKILL.CURSE_MANA_COST_INCREASE)

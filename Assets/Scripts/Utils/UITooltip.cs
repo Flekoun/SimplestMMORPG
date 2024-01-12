@@ -26,13 +26,33 @@ public class UITooltip : MonoBehaviour
     private RectTransform canvasRectTransform;
     private Camera uiCamera;
     // Start is called before the first frame update
+
+    //private void Reset()
+    //{
+    //    ContentContainerDetail.Hide();
+    //    UICombatSkillVisuals.gameObject.SetActive(false);
+    //    UICombatBuffDescription.gameObject.SetActive(false);
+    //    HeaderText.gameObject.SetActive(false);
+    //    BodyText.gameObject.SetActive(false);
+    //    HeaderText.SetText("");
+    //    BodyText.SetText("");
+
+    //    StringId = string.Empty;
+    //    ContentDisplayable = null;
+    //    CombatSkill = null;
+    //    OffsetY = 0;
+
+    //}
     public void Setup(string _def, IContentDisplayable _contentDisplayable, CombatSkill _combatSkill, CombatBuff _combatBuff, int _manaLeft, Transform _parent, float _offSetY, int[] _values = null)
     {
+
+
+
         Parent = _parent;
         StringId = _def;
         ContentDisplayable = _contentDisplayable;
         CombatSkill = _combatSkill;
-        OffsetY = _offSetY;
+        //   OffsetY = _offSetY;
 
         if (!string.IsNullOrEmpty(StringId))
         {
@@ -65,7 +85,7 @@ public class UITooltip : MonoBehaviour
             VerticalLayout.padding.left = 33;
             VerticalLayout.padding.right = 33;
 
-            ContentContainerDetail.Show(_contentDisplayable);
+            ContentContainerDetail.Show(ContentDisplayable);
 
         }
         else if (CombatSkill != null)
@@ -86,56 +106,49 @@ public class UITooltip : MonoBehaviour
 
     }
 
-    private void CheckForBoundaries()
-    {
-
-
-        this.transform.position = Parent.position;
-
-        float x = 1;
-        float y = 1;
-
-
-        if (this.transform.position.x > 0)
-            x = -1;
-        else
-            x = 1;
-
-        if (this.transform.position.y < 0)
-        {
-            HeaderText.transform.SetAsFirstSibling();
-            y = 1;
-        }
-        else
-        {
-            HeaderText.transform.SetAsLastSibling();
-            y = -1;
-        }
-
-
-        //if (!string.IsNullOrEmpty(StringId))
-        //{
-        this.transform.localScale = new Vector3(x, y, this.transform.localScale.z);
-        HeaderText.transform.localScale = new Vector3(x, y, HeaderText.transform.localScale.z);
-        BodyText.transform.localScale = new Vector3(x, y, BodyText.transform.localScale.z);
-        ContentContainerDetail.transform.localScale = new Vector3(x, y, BodyText.transform.localScale.z);
-        //}
-    }
-
-
-
-
-    //void Start()
+    //private void CheckForBoundaries()
     //{
-    //    Canvas canvas = GetComponentInParent<Canvas>();
-    //    uiCamera = canvas.worldCamera;
-    //    if (canvas != null)
-    //        canvasRectTransform = canvas.GetComponent<RectTransform>();
+
+
+    //    this.transform.position = Parent.position;
+
+    //    float x = 1;
+    //    float y = 1;
+
+
+    //    if (this.transform.position.x > 0)
+    //        x = -1;
+    //    else
+    //        x = 1;
+
+    //    if (this.transform.position.y < 0)
+    //    {
+    //        HeaderText.transform.SetAsFirstSibling();
+    //        y = 1;
+    //    }
+    //    else
+    //    {
+    //        HeaderText.transform.SetAsLastSibling();
+    //        y = -1;
+    //    }
+
+
+    //    //if (!string.IsNullOrEmpty(StringId))
+    //    //{
+    //    this.transform.localScale = new Vector3(x, y, this.transform.localScale.z);
+    //    HeaderText.transform.localScale = new Vector3(x, y, HeaderText.transform.localScale.z);
+    //    BodyText.transform.localScale = new Vector3(x, y, BodyText.transform.localScale.z);
+    //    ContentContainerDetail.transform.localScale = new Vector3(x, y, BodyText.transform.localScale.z);
+    //    //}
     //}
+
+
+
+
 
     public void EnsureFullyVisible(RectTransform tooltipRect)
     {
-        this.transform.position = Parent.position;
+        // this.transform.position = Parent.position;
 
         if (uiCamera == null)
             return;
@@ -145,7 +158,7 @@ public class UITooltip : MonoBehaviour
         Vector2 adjustedPosition = screenPoint;
 
         float tooltipWidth = tooltipRect.rect.width;
-        float tooltipHeight = tooltipRect.rect.height + OffsetY;
+        float tooltipHeight = tooltipRect.rect.height;
 
         // Check left boundary
         if (screenPoint.x - tooltipWidth * tooltipRect.pivot.x < 0)
@@ -184,16 +197,15 @@ public class UITooltip : MonoBehaviour
     public void Show()
     {
 
-        Canvas canvas = GetComponentInParent<Canvas>();
-        uiCamera = canvas.worldCamera;
-        if (canvas != null)
-            canvasRectTransform = canvas.GetComponent<RectTransform>();
+        //Canvas canvas = GetComponentInParent<Canvas>();
+        //uiCamera = canvas.worldCamera;
+        //if (canvas != null)
+        //    canvasRectTransform = canvas.GetComponent<RectTransform>();
 
         Model.gameObject.SetActive(true);
-        // CheckForBoundaries();
-        Debug.Log("Initial Tooltip Position: " + this.transform.position);
-        EnsureFullyVisible(this.transform as RectTransform);
-        Debug.Log("Adjusted Tooltip Position: " + this.transform.position);
+        // Debug.Log("Initial Tooltip Position: " + this.transform.position);
+      //  EnsureFullyVisible(this.transform as RectTransform);
+        //    Debug.Log("Adjusted Tooltip Position: " + this.transform.position);
 
 
     }
@@ -201,6 +213,6 @@ public class UITooltip : MonoBehaviour
     public void Hide()
     {
         Model.gameObject.SetActive(false);
-
+        //Reset();
     }
 }

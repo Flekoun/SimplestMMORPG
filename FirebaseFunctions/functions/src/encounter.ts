@@ -3,17 +3,17 @@
 
 import * as functions from "firebase-functions";
 
-import { CHARACTER_CLASS, CharacterDocument, characterDocumentConverter, compareWorldPosition, ContentContainer, DECK_SHUFFLE_FATIGUE_PENALTY, FLEE_FATIGUE_PENALTY, generateContentContainer, getCurrentDateTime, getCurrentDateTimeVersionSecondsAdd, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, INSTAKILL, millisToSeconds, PlayerData, QuerryForParty, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInCombatAtAnyEncounter, QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition, randomIntFromInterval, rollForRandomItems, SimpleTally, UpdateCharacterLocationInHisParty, validateCallerBulletProof, WorldPosition } from ".";
+import { CHARACTER_CLASS, CharacterDocument, characterDocumentConverter, compareWorldPosition, ContentContainer, CURRENCY_ID, DECK_SHUFFLE_FATIGUE_PENALTY, FLEE_FATIGUE_PENALTY, generateContentContainer, getCurrentDateTime, getCurrentDateTimeVersionSecondsAdd, getExpAmountFromEncounterForGivenCharacterLevel, getMillisPassedSinceTimestamp, INSTAKILL, millisToSeconds, PlayerData, QuerryForParty, QuerryHasCharacterAnyUnclaimedEncounterResult, QuerryIfCharacterIsInCombatAtAnyEncounter, QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition, randomIntFromInterval, RARE_BOSS_SPAWN_CHANCE, rollForRandomItems, SimpleTally, TIME_COST_TO_EXPLORE_POI, UpdateCharacterLocationInHisParty, validateCallerBulletProof, WorldPosition } from ".";
 import { EncounterResult, EncounterResultContentLoot, EncounterResultEnemy, EncounterResultCombatant, RESULT_ITEM_WANT_DURATION_SECONDS, DungeonData } from "./encounterResult";
 import { BuffBonusEffect, DropTable, generateContent, generateDropFromDropTable, generateEquip, IHasChanceToSpawn, QuerryForSkillDefinitions, RARITY, shuffleArray, SkillBonusEffect } from "./equip";
 import { applySkillEffect, drawNewSkills, firestoreAutoId } from "./general2";
 
 import { Party } from "./party";
 import { PerkOfferDefinition } from "./perks";
-import { BUFF, Combatskill, getRandomCurseAsCombatSkill, SkillDefinitions, SKILL_GROUP, Buff, BUFF_GROUP } from "./skills";
+import { BUFF, Combatskill, getRandomCurseAsCombatSkill, SkillDefinitions, SKILL_GROUP, BUFF_GROUP } from "./skills";
 import { LocationConverter, MapLocation, PointOfInterest, PointOfInterestServerDataDefinitions, PointOfInterestServerDataDefinitionsConverter } from "./worldMap";
 import { BLESS } from "./specials";
-import { InboxItem } from "./utils";
+import { InboxItem } from "./inbox";
 
 
 const admin = require('firebase-admin');
@@ -69,7 +69,7 @@ export function createCombatEnemyFromDefinition(_enemyId: string, _enemyDefiniti
   console.log("_enemyId: " + _enemyId);
   const enemyStats = _enemyDefinitions.getEnemyById(_enemyId);
   const enemyHealth = randomIntFromInterval(enemyStats.healthMin, enemyStats.healthMax);
-  const newEnemy = new CombatEnemy(firestoreAutoId(), _enemyId, new CombatStats(0, 0, enemyHealth, enemyHealth, enemyHealth, 0, 0, 0, 5, 0, 0, 0, 0, [], 0, [], 0), enemyStats.level, enemyStats.mLevel, enemyStats.moveSet, enemyStats.isRare, "", [], [], 0, new EnemyDefinitionMoveSetSkill([], 0, "", "", false, false, false, false, false, false), 0, enemyStats.monsterEssences);
+  const newEnemy = new CombatEnemy(firestoreAutoId(), _enemyId, new CombatStats(0, 0, enemyHealth, enemyHealth, enemyHealth, 0, 0, 0, 5, 0, 0, 0, 0, [], 0, [], 0), enemyStats.level, enemyStats.mLevel, enemyStats.moveSet, enemyStats.isRare, "", [], [], 0, new EnemyDefinitionMoveSetSkill([], 0, "", "", false, false, false, false, false, false), 0);
   newEnemy.nextSkill = newEnemy.chooseSkillToCast(0);
   return newEnemy;
 }
@@ -212,20 +212,21 @@ export class CombatLog {
 }
 
 
-export class EnemyDropTablesData {
+export class DropTablesData {
 
   constructor(
-    public enemyDropTables: EnemyDropTable[],
+    public enemyDropTables: DropTableGroup[],
+    public chestDropTables: DropTableGroup[],
   ) { }
 
 }
 
 
-export class EnemyDropTable {
+export class DropTableGroup {
 
   constructor(
     public dropTables: DropTable[],
-    public enemyId: string
+    public id: string
   ) { }
 
 }
@@ -284,6 +285,7 @@ export class TierDungeonDefinition {
 
 }
 
+
 export class TierMonstersDefinition {
   constructor(
 
@@ -330,8 +332,7 @@ export class EnemyDefinition {
     public level: number,
     public mLevel: number,
     public isRare: boolean,
-    public moveSet: EnemyDefinitionMoveSet[],
-    public monsterEssences: number
+    public moveSet: EnemyDefinitionMoveSet[]
   ) { }
 
 
@@ -383,8 +384,8 @@ export class CombatEnemy extends CombatEntity {
     public buffs: CombatBuff[],
     public blockAmount: number,
     public nextSkill: EnemyDefinitionMoveSetSkill,
-    public repeatedCastCount: number,
-    public monsterEssences: number
+    public repeatedCastCount: number
+
 
   ) { super(uid, enemyId, buffs, stats, level, blockAmount) }
 
@@ -725,7 +726,7 @@ export class CombatEnemy extends CombatEntity {
     if (target != null)
       this.targetUid = target.id;
     else
-      this.targetUid = null;
+      this.targetUid = _combatantUid;// null;//nechci prece aby byl target null ne? Aspon nekdo?
   }
 
 
@@ -748,7 +749,7 @@ export class CombatEnemy extends CombatEntity {
     if (target != null)
       this.targetUid = target.id;
     else
-      this.targetUid = null;
+      this.targetUid = _combatantUid;// null; //nechci prece aby byl target null ne? Aspon nekdo?
 
   }
 
@@ -1133,6 +1134,15 @@ export class CombatBuff {
             _encounter.dealDamageToCombatEntity(_ownerOfThisBuff, _source, this.amounts[0], this.buffGroupId, _encounter);
         }
         break;
+      case BUFF.COUNTERSTRIKE_BUFF_1:
+        {
+          if (_source != _ownerOfThisBuff) //nechci si davat dmg sam sobe
+          {
+            _encounter.dealDamageToCombatEntity(_ownerOfThisBuff, _source, _damageAmount, this.buffGroupId, _encounter);
+            _ownerOfThisBuff.removeBuff(this);
+          }
+        }
+        break;
         // case BUFF.COUNTERSTRIKE_BUFF_1:
         //   {
         //     if (_source != _ownerOfThisBuff) //nechci si davat dmg sam sobe
@@ -1174,15 +1184,15 @@ export class CombatBuff {
       //       _encounter.dealDamageToCombatEntity(_ownerOfThisBuff, _source, this.amounts[0], this.buffGroupId, _encounter);
       //   }
       //   break;
-      case BUFF.COUNTERSTRIKE_BUFF_1:
-        {
-          if (_source != _ownerOfThisBuff) //nechci si davat dmg sam sobe
-          {
-            _encounter.dealDamageToCombatEntity(_ownerOfThisBuff, _source, _damageAmount, this.buffGroupId, _encounter);
-            _ownerOfThisBuff.removeBuff(this);
-          }
-        }
-        break;
+      // case BUFF.COUNTERSTRIKE_BUFF_1:
+      //   {
+      //     if (_source != _ownerOfThisBuff) //nechci si davat dmg sam sobe
+      //     {
+      //       _encounter.dealDamageToCombatEntity(_ownerOfThisBuff, _source, _damageAmount, this.buffGroupId, _encounter);
+      //       _ownerOfThisBuff.removeBuff(this);
+      //     }
+      //   }
+      //   break;
 
       default:
         break;
@@ -1413,8 +1423,8 @@ export class EncounterDocument {
     public perksOffersRare: PerkOfferDefinition[],
     public forbiddenCharacterUids: string[], //hraci v tomhle listu se nemuzou pridat do encounteru...pouzivam v dungeonech, kdyz surrendernes tak uz se nemuzes vratit aby sis nerestoval atp?(neni lepsi zakazat rest a cestovani kdyz si v dungeonu?)
     public typeOfOrigin: string, //z ktereho typeId daneho point of interestu byl encounter vytvoren....tedy defakto ID te internal definice
-    public tier: number //pokud je encounter vytvoreny z monster encounter tak tier monstera, pokud dung tak asi floor dungu je tu,...
-
+    public tier: number, //pokud je encounter vytvoreny z monster encounter tak tier monstera, pokud dung tak asi floor dungu je tu,...
+    public partyId: string // id party se tu vyplnuje v pripade ze se joines do party, tak jako flag pak pro dalsi vyhledavani ostatnimi hraci
   ) { }
 
   //tohle neni optimalni, pouzivam jen proti zaseku, kdy je moc hracu a nemaji vybirat z dosti perku....takze je pak poustim hned do hry...nicmene mel bych je pustit jen kdyz uz neni zadny perk na vybrani...
@@ -1565,7 +1575,7 @@ export class EncounterDocument {
   //   this.chatLog += _entry + "\n";
   // }
 
-  convertEnemiesToEncounterResultEnemies(_dropTablesData: EnemyDropTablesData, _skillDefinitions: SkillDefinitions): EncounterResultEnemy[] {
+  convertEnemiesToEncounterResultEnemies(_dropTablesData: DropTablesData, _skillDefinitions: SkillDefinitions): EncounterResultEnemy[] {
 
     let result: EncounterResultEnemy[] = [];
 
@@ -1573,7 +1583,7 @@ export class EncounterDocument {
       let enemyDropTables: DropTable[] | null = null;
       //ziskam droptable pro enemy 
       for (const dropTable of _dropTablesData.enemyDropTables) {
-        if (dropTable.enemyId == enemy.enemyId) {
+        if (dropTable.id == enemy.enemyId) {
           enemyDropTables = dropTable.dropTables;
         }
       }
@@ -1582,13 +1592,13 @@ export class EncounterDocument {
         throw "Database error - Cant find drop table for enemy :" + enemy.enemyId;
 
       let encounterResultLoot: EncounterResultContentLoot[] = [];
-      generateDropFromDropTable(enemyDropTables, enemy.mLevel, _skillDefinitions).forEach(content => {
+      generateDropFromDropTable(enemyDropTables, enemy.mLevel, _skillDefinitions, CHARACTER_CLASS.ANY).forEach(content => {
         // enemy.generateDrop(enemyDropTables).forEach(content => {
         console.log("pushuje novy conent: " + content.getItem().itemId);
         encounterResultLoot.push(new EncounterResultContentLoot(content, [], null))
       });
 
-      result.push(new EncounterResultEnemy(enemy.enemyId, enemy.displayName, enemy.level, encounterResultLoot, enemy.monsterEssences));
+      result.push(new EncounterResultEnemy(enemy.enemyId, enemy.displayName, enemy.level, encounterResultLoot));
     });
 
     return result;
@@ -1631,7 +1641,8 @@ export class EncounterDocument {
   resetsAllBlockCombatMembers() {
 
     this.combatants.forEach(combatant => {
-      combatant.blockAmount = 0;
+      if (!combatant.hasBless(BLESS.TOWER_GUARD))
+        combatant.blockAmount = 0;
     });
 
   }
@@ -1787,8 +1798,12 @@ export class EncounterDocument {
       });
     }
     //pridam threat 1:0,5 heal vsem enemy
-    if (_caster instanceof CombatMember)
-      this.addThreatForCombatantOnAllEnemies(_caster.characterUid, _amount / 2);
+    if (_caster instanceof CombatMember) {
+      if (_caster.hasBless(BLESS.GLASS_CANNON))
+        this.addThreatForCombatantOnAllEnemies(_caster.characterUid, _amount);
+      else
+        this.addThreatForCombatantOnAllEnemies(_caster.characterUid, _amount / 2);
+    }
 
     totalAmount = _amount;
     return { totalAmount };
@@ -1839,6 +1854,8 @@ export class EncounterDocument {
     }
 
     //snizime zraneni o block
+    let shieldShatterd = _target.blockAmount <= _amount && _target.blockAmount > 0;
+
     let blockedAmount = _target.blockAmount;
     console.log("reductionAmount: " + blockedAmount);
     _amount -= blockedAmount;
@@ -1850,8 +1867,10 @@ export class EncounterDocument {
       blockedAmount -= _target.blockAmount;
       _amount = 0;
     }
-    else
+    else {
       _target.blockAmount = 0;
+    }
+
 
     let dmgBlockedAmount = "";
     if (blockedAmount > 0)
@@ -1891,9 +1910,29 @@ export class EncounterDocument {
         }
       });
     }
+
     //pridam threat 1:1 dmg
-    if (_target instanceof CombatEnemy && _attacker instanceof CombatMember)
-      _target.addThreatForCombatant(_attacker.characterUid, totalAmount);
+    if (_target instanceof CombatEnemy && _attacker instanceof CombatMember) {
+      if (_attacker.hasBless(BLESS.GLASS_CANNON))
+        _target.addThreatForCombatant(_attacker.characterUid, totalAmount * 2);
+      else
+        _target.addThreatForCombatant(_attacker.characterUid, totalAmount);
+    }
+
+    //TOWER_GUARD BLESS
+    if (shieldShatterd) {
+      if (_target instanceof CombatMember) {
+        if (_target.hasBless(BLESS.TOWER_GUARD)) { //punish for shattered shield
+          let punishDamage = Math.round(_target.stats.healthMax * 0.3);
+          _target.takeHealth(punishDamage, _attacker, _encounter);
+          let entry = "<b>" + _target.displayName + "</b>" + " suffered <color=\"red\">" + punishDamage + "</color> damage " + " ({" + "TOWER_GUARD" + "})";
+          this.addEntryToCombatLog(entry);
+          this.combatFlow.push(new CombatFlowEntry(_target.uid, _target.uid, BLESS.TOWER_GUARD, punishDamage, false, false));
+          this.enemies.forEach(enemy => { enemy.setThreatForCombatant(_target.uid, 0); });
+
+        }
+      }
+    }
 
     if (_target.stats.health == 0 && _target instanceof CombatMember) //player Died
     {
@@ -2092,12 +2131,12 @@ export const encounterDocumentConverter = {
       });
 
 
-      enemies.push(new CombatEnemy(enemy.uid, enemy.enemyId, enemy.stats, enemy.level, enemy.mLevel, enemy.moveSet, enemy.isRare, enemy.targetUid, enemy.threatMetter, buffs, enemy.blockAmount, enemy.nextSkill, enemy.repeatedCastCount, enemy.monsterEssences));
+      enemies.push(new CombatEnemy(enemy.uid, enemy.enemyId, enemy.stats, enemy.level, enemy.mLevel, enemy.moveSet, enemy.isRare, enemy.targetUid, enemy.threatMetter, buffs, enemy.blockAmount, enemy.nextSkill, enemy.repeatedCastCount));
     });
     //let combatMembers :CombatMember[]=[];
     // Object.assign(combatMembers, data.combatants)
 
-    return new EncounterDocument(data.uid, enemies, combatants, data.combatantList, data.randomIndex, data.expireDate, data.foundByCharacterUid, data.maxCombatants, data.watchersList, data.isFull, data.foundByName, data.encounterContext, data.position, data.turnNumber, data.combatLog, data.expireDateTurn, data.combatFlow, data.bonusLoot, data.curseCount, data.perksOffers, data.perkChoices, data.joinPrice, data.perksOffersRare, data.forbiddenCharacterUids, data.typeOfOrigin, data.tier);
+    return new EncounterDocument(data.uid, enemies, combatants, data.combatantList, data.randomIndex, data.expireDate, data.foundByCharacterUid, data.maxCombatants, data.watchersList, data.isFull, data.foundByName, data.encounterContext, data.position, data.turnNumber, data.combatLog, data.expireDateTurn, data.combatFlow, data.bonusLoot, data.curseCount, data.perksOffers, data.perkChoices, data.joinPrice, data.perksOffersRare, data.forbiddenCharacterUids, data.typeOfOrigin, data.tier, data.partyId);
   }
 };
 
@@ -2108,7 +2147,7 @@ exports.applySkillOnEncounter = functions.https.onCall(async (data, context) => 
 
   const encounterUid = data.encounterUid;
   const callerCharacterUid = data.characterUid;
-  const uid = data.uid;
+  const skillUids = data.skillUids;
 
   const targetUid: string = data.targetUid;
 
@@ -2132,61 +2171,59 @@ exports.applySkillOnEncounter = functions.https.onCall(async (data, context) => 
         }
       });
 
-      if (myCombatEntry == undefined)
+      if (!myCombatEntry)
         throw "cannot find your combat entry in encounter! How can you try to attack?! character Id ! - " + callerCharacterUid;
 
       //tohle neni optimalni, pouzivam jen proti zaseku, kdy je moc hracu a nemaji vybirat z dosti perku....takze je pak poustim hned do hry...nicmene mel bych je pustit jen kdyz uz neni zadny perk na vybrani...
       //...takze z tohodle pak spis udelat neo jako areThereAnyPerkLeftForChoice
-      if (encounterData.perkChoices.length < encounterData.combatants.length && encounterData.areThereEnoughPerksLeftForChoice())
-        throw "Waiting for " + (encounterData.combatants.length - encounterData.perkChoices.length) + " more player to choose perk";
+      // if (encounterData.perkChoices.length < encounterData.combatants.length && encounterData.areThereEnoughPerksLeftForChoice())
+      //   throw "Waiting for " + (encounterData.combatants.length - encounterData.perkChoices.length) + " more player to choose perk";
 
 
       //Najdu skill ktery chces pouzit
       let skillToUse: Combatskill | undefined;
 
+      skillUids.forEach(skillUid => {
 
-      myCombatEntry.skillsInHand.forEach(item => {
+
+        myCombatEntry!.skillsInHand.forEach(item => {
+
+          if (item.uid == skillUid) {
+            skillToUse = item;
+            console.log("found a skill you want to apply : " + item.uid + " id: " + item.skillId);
+          }
+        });
+
+        if (skillToUse == undefined)
+          throw "cannot find skill you want to use in your hand?! skill slot Id ! - " + skillUid;
 
 
-        if (item.uid == uid) {
-          skillToUse = item;
-          console.log("found a skill you want to apply : " + item.uid + " id: " + item.skillId);
+        if (skillToUse.alreadyUsed)
+          throw "Skill already used! - " + skillUid;
+
+        if (myCombatEntry!.stats.health <= 0)
+          throw "You are dead. Cannot cast skill!";
+
+        //let combatLog: CombatLog = new CombatLog([]); //Currently Unused, vraci to defakto jako return co se stalo pri tomhle apply skillu, celkem neuzitecne
+        //pouziju skill
+        try {
+          applySkillEffect(myCombatEntry!, encounterData, skillToUse, targetUid);//, combatLog);
+          // encounterData.chatLog += myCombatEntry.displayName + " casted " + skillToUse.skillId + "\n";
+        } catch (error) {
+
+          throw error;
         }
+        skillToUse.alreadyUsed = true;
       });
-
-      if (skillToUse == undefined)
-        throw "cannot find skill you want to use in your hand?! skill slot Id ! - " + uid;
-
-
-      if (skillToUse.alreadyUsed)
-        throw "Skill already used! - " + uid;
-
-      if (myCombatEntry.stats.health <= 0)
-        throw "You are dead. Cannot cast skill!";
-
-      //let combatLog: CombatLog = new CombatLog([]); //Currently Unused, vraci to defakto jako return co se stalo pri tomhle apply skillu, celkem neuzitecne
-      //pouziju skill
-      try {
-        applySkillEffect(myCombatEntry, encounterData, skillToUse, targetUid);//, combatLog);
-        // encounterData.chatLog += myCombatEntry.displayName + " casted " + skillToUse.skillId + "\n";
-      } catch (error) {
-
-        throw error;
-      }
-      skillToUse.alreadyUsed = true;
 
       //zvednu si pocet utoku o 1
       // encounterData.increaseAttackCountForCharacter(callerCharacterUid);
 
       //zkontroluju jestli nahodou nejsou vsichni enemy po smrti
       if (encounterData.checkIfAllEnemiesAreDead() || INSTAKILL) {
-
         await createEncounterResult(encounterData, callerCharacterUid, t);
-
-
       }
       else {
-
         //aktualizuju encounter
         t.set(encounterDb, JSON.parse(JSON.stringify(encounterData)), { merge: true });
       }
@@ -2216,7 +2253,7 @@ export async function createEncounterResult(_encounterData: EncounterDocument, _
     //Predpokladam ze enemy ktere zabijim jsou na lokaci kde je encounter, prece musi ne?!
     const dropTablesDb = admin.firestore().collection('_metadata_dropTables').doc(_encounterData.position.zoneId).collection("locations").doc(_encounterData.position.locationId);
     const dropTablesDoc = await t.get(dropTablesDb);
-    let dropTablesData: EnemyDropTablesData = dropTablesDoc.data();
+    let dropTablesData: DropTablesData = dropTablesDoc.data();
 
     const silverAmount = _encounterData.getSilverAmount();
 
@@ -2248,7 +2285,7 @@ export async function createEncounterResult(_encounterData: EncounterDocument, _
     let dungeonLoot: EncounterResultContentLoot[] = [];
     const wantItemPhaseFinished = _encounterData.combatantList.length == 1; //kdyz si v boji sam, neni treba pak hlasovat o lootu
     //prenesu jen vybrane perky do resultu
-    const encounterResult = new EncounterResult(encounterResultsDb.id, encounterResultEnemies, _encounterData.combatantList, _encounterData.combatantList, _encounterData.combatantList, resultComatants, silverAmount, wantItemPhaseFinished, _encounterData.turnNumber, expireWantItemDate, _encounterData.position, bonusLootResult, dungeonLoot, _encounterData.perkChoices, _encounterData.foundByCharacterUid, null, _encounterData.tier);
+    const encounterResult = new EncounterResult(encounterResultsDb.id, encounterResultEnemies, _encounterData.combatantList, _encounterData.combatantList, _encounterData.combatantList, resultComatants, silverAmount, wantItemPhaseFinished, _encounterData.turnNumber, expireWantItemDate, _encounterData.position, bonusLootResult, dungeonLoot, _encounterData.perkChoices, _encounterData.foundByCharacterUid, null, _encounterData.tier, _encounterData.typeOfOrigin);
 
     //pokud to byl dungeon encounter co sme dokoncili, tak jeste zvednem tier reached o 1 v parte 
     if (_encounterData.encounterContext == ENCOUNTER_CONTEXT.DUNGEON) {
@@ -2424,7 +2461,7 @@ export async function joinCharacterToEncounter(_transaction: any, _encounterData
   if (_encounterData.maxCombatants == _encounterData.combatantList.length)
     throw "Encounter is full!";
 
-  if (_callerCharacterData.currency.fatigue >= 90)
+  if (_callerCharacterData.getMaxHealthWithFatigueBlocked() <= 10)
     throw "You are too fatigued to go to battle! You need a rest!";
 
   //zaplatime time za join 
@@ -2668,6 +2705,8 @@ exports.chooseEncounterPerkOffer = functions.https.onCall(async (data, context) 
 
 
 
+
+
       const characterDoc = await t.get(characterDb);
       let characterData: CharacterDocument = characterDoc.data();
 
@@ -2691,6 +2730,7 @@ exports.chooseEncounterPerkOffer = functions.https.onCall(async (data, context) 
         throw "You have already choosen perk!";
 
 
+
       let choosenPerk = encounterData.perksOffers.find(perk => perk.uid == perkOfferUid);
 
       if (choosenPerk) //je to tedy obyc perk offer
@@ -2712,6 +2752,15 @@ exports.chooseEncounterPerkOffer = functions.https.onCall(async (data, context) 
         throw ("This perk is out of stock!");
 
       encounterData.perkChoices.push(new PerkChoiceParticipant(callerCharacterUid, choosenPerk, characterData.characterPortrait, characterData.characterClass, characterData.characterName));
+
+      //jeste dam do bonus lootu to co bylo jako reward z perku co sem vybral....delam to proto aby byl videt ten loot pak v resultu atp....proste to ted pouzivam takhle...a to jen pro rewardy fixne dane, protoze predpokladam ze rewardy jsoi jen monster essence
+      choosenPerk.rewards.forEach(reward => {
+        encounterData.bonusLoot.push(new ContentContainer(reward.content, reward.contentEquip));
+
+      });
+
+
+
 
       //Zaplatim explore time 
       // characterData.subCurrency(CURRENCY_ID.TIME, encounterData.perksOffers[0].timePrice);
@@ -2805,7 +2854,7 @@ exports.chooseEncounterPerkOffer = functions.https.onCall(async (data, context) 
       //Jen kvuli tomu ze explore bere explore time musim udelat dalsi save do db....
       t.set(characterDb, JSON.parse(JSON.stringify(characterData)), { merge: true });
 
-
+      throw "Perks are not functional now!";
       return "OK";
     });
 
@@ -2917,7 +2966,7 @@ exports.exploreDungeon = functions.https.onCall(async (data, context) => {
       //naplnime enemy podle toho jaci jsou v danem tieru
       for (const enemy of pointOfInterestNextTierData.enemies) { enemies.push(createCombatEnemyFromDefinition(enemy, zonesEnemyDefinitionsStatsData)); }
 
-      let dungeonEncounter = new EncounterDocument(encountersDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, myPartyData.uid, maxCombatants, watchersList, isFull, "Party", ENCOUNTER_CONTEXT.DUNGEON, characterData.position, 1, "Enemies in sight!\n", "0", [], [], 0, [], [], 0, [], [], pointOfInterestData.typeId, myPartyData.dungeonProgress.tierReached + 1);
+      let dungeonEncounter = new EncounterDocument(encountersDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, myPartyData.uid, maxCombatants, watchersList, isFull, "Party", ENCOUNTER_CONTEXT.DUNGEON, characterData.position, 1, "Enemies in sight!\n", "0", [], [], 0, [], [], 0, [], [], pointOfInterestData.typeId, myPartyData.dungeonProgress.tierReached + 1, myPartyData.uid);
 
       t.set(encountersDb.doc(dungeonEncounter.uid), JSON.parse(JSON.stringify(dungeonEncounter)), { merge: true });
 
@@ -3008,6 +3057,13 @@ exports.exploreMonsters = functions.https.onCall(async (data, context) => {
       if (await QuerryHasCharacterAnyUnclaimedEncounterResult(t, characterData))
         throw ("You must loot all corpses before exploring!");
 
+      if (characterData.currency.scavengePoints > 0)
+        characterData.subCurrency(CURRENCY_ID.SCAVENGE_POINTS, 1);
+      else if (characterData.currency.time >= TIME_COST_TO_EXPLORE_POI)
+        characterData.subCurrency(CURRENCY_ID.TIME, TIME_COST_TO_EXPLORE_POI);
+      else
+        throw "You dont have enough Scavenge points or Time!"
+
       // if (await QuerryIfCharacterIsWatcherInAnyEncounterOnHisPosition(t, characterData))
       //   throw ("Enemies are nearby. Cant explore!!");
       let founderId: string = characterData.uid;
@@ -3057,58 +3113,78 @@ exports.exploreMonsters = functions.https.onCall(async (data, context) => {
         var combatants: CombatMember[] = [];//combatants.push(new CombatMember(characterData.characterName, characterData.uid, characterData.characterClass, [], characterData.converSkillsToCombatSkills(), [], characterData.converStatsToCombatStats(), 0, 0, characterData.stats.level));
         var combatantList: string[] = []; //combatantList.push(callerCharacterUid);
         var watchersList: string[] = []; watchersList.push(callerCharacterUid);
+        var isFull: boolean = false;
+        let rarePerks: PerkOfferDefinition[] = [];
+        let tierPerks: PerkOfferDefinition[] = [];
+
+        const expireDate = getCurrentDateTime(2);
+
 
         //naplnime enemy podle toho jaci jsou v danem tieru
         var enemies: CombatEnemy[] = [];
-        for (const enemy of pointOfInterestNextTierData.enemies) {
-          enemies.push(createCombatEnemyFromDefinition(enemy, zonesEnemyDefinitionsStatsData));
+
+        if (Math.random() <= RARE_BOSS_SPAWN_CHANCE) {
+          let enemiesRare: string[] = [];
+          var maxCombatants: number = 3;
+
+          switch (pointOfInterestData.floorNumber) {
+            case 0:
+            case 1:
+              enemiesRare = ["SCORPID_SMALL", "SCORPID_GRAY", "SCORPID_CORRUPTED", "SCORPID_GRAY", "SCORPID_SMALL"];
+              break;
+
+            case 2:
+            case 3:
+              enemiesRare = ["IMP_VILE", "IMP_VILE", "TREASURE_GOBLIN", "BANDIT", "WOLF", "WOLF"];
+              break;
+
+            case 4:
+            case 5:
+              enemiesRare = ["MALAKA_DUNGEON_SUMMONER_CHIEF", "MALAKA_DUNGEON_SKELETON", "MALAKA_DUNGEON_SKELETON", "MALAKA_DUNGEON_SKELETON", "MALAKA_DUNGEON_SKELETON", "MALAKA_DUNGEON_SKELETON"];
+              break;
+
+            default:
+              enemiesRare = ["SCORPID_SMALL", "SCORPID_GRAY", "SCORPID_CORRUPTED", "SCORPID_GRAY", "SCORPID_SMALL"];
+              break;
+          }
+
+          for (const enemy of enemiesRare) {
+            enemies.push(createCombatEnemyFromDefinition(enemy, zonesEnemyDefinitionsStatsData));
+          }
+
+
         }
-        const expireDate = getCurrentDateTime(2);
-        var maxCombatants: number = pointOfInterestData.monsters.partySize;
-        var isFull: boolean = false;//maxCombatants <= 0;
-        //const position = new WorldPosition(zoneId, locationId);
+        else {
 
-        // let perkOffers: PerkOfferDefinition[] = pointOfInterestNextTierData.perkOffers;
-        // // pointOfInterestTierDefinitionsData.takeAChanceForARarePerk(pointOfInterestNextTierData, CHANCE_OF_DRAWING_RARE_PERK_OFFER);
+          var maxCombatants: number = pointOfInterestData.monsters.partySize;
 
-        // //doplnime rare perky tak aby byly vzdy 3 perky na vyber
-        // let numberOfPerksToFill = 3 - pointOfInterestNextTierData.perkOffers.length;
+          for (const enemy of pointOfInterestNextTierData.enemies) {
+            enemies.push(createCombatEnemyFromDefinition(enemy, zonesEnemyDefinitionsStatsData));
+          }
 
-        // for (let i = 0; i < numberOfPerksToFill; i++) {
-        //   pointOfInterestTierDefinitionsData.takeAChanceForARarePerk(pointOfInterestNextTierData, 1);
-        // }
 
-        let rarePerks: PerkOfferDefinition[] = [];
-        let rarePerksFound = locationData.perksRareOffers.find(item => item.id == pointOfInterestServerDataDefinitionsData.monsters!.perkOffersRareId)?.perks;
-        if (rarePerksFound) {
-          rarePerks = rarePerksFound;
-          rarePerks = rollForRandomItems(rarePerks, nextTierNumber + 3) as PerkOfferDefinition[];
+          let rarePerksFound = locationData.perksRareOffers.find(item => item.id == pointOfInterestServerDataDefinitionsData.monsters!.perkOffersRareId)?.perks;
+          if (rarePerksFound) {
+            rarePerks = rarePerksFound;
+            rarePerks = rollForRandomItems(rarePerks, nextTierNumber + 3) as PerkOfferDefinition[];
+          }
+          tierPerks = pointOfInterestNextTierData.perkOffers;
+
+
+
         }
 
-        let tierPerks: PerkOfferDefinition[] = pointOfInterestNextTierData.perkOffers;
-        //  let firstPerk = pointOfInterestNextTierData.perkOffers[0]; //ulozim si prvni perk, ten chci mit vzdy vylosovany
-        //  pointOfInterestNextTierData.perkOffers[0].chanceToSpawn = 0; //nastavim mu sanci na spawn na 0 aby nebyl vybrani znova nahodne
-        //rollForRandomItems(pointOfInterestNextTierData.perkOffers, pointOfInterestData.monsters.partySize) as PerkOfferDefinition[];
-        //tierPerks[0] = firstPerk;//a rucne ho nastavim jako prvni perk
-        personalEncounter = new EncounterDocument(encounterDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, founderId, maxCombatants, watchersList, isFull, foundBy, ENCOUNTER_CONTEXT.PERSONAL, characterData.position, 1, "Enemies in sight!\n", "0", [], [], 0, tierPerks, [], pointOfInterestNextTierData.entryTimePrice, rarePerks, [], pointOfInterestData.typeId, nextTierNumber);
+        personalEncounter = new EncounterDocument(encounterDb.doc().id, enemies, combatants, combatantList, Math.random(), expireDate, founderId, maxCombatants, watchersList, isFull, foundBy, ENCOUNTER_CONTEXT.PERSONAL, characterData.position, 1, "Enemies in sight!\n", "0", [], [], 0, tierPerks, [], pointOfInterestNextTierData.entryTimePrice, rarePerks, [], pointOfInterestData.typeId, nextTierNumber, myParty ? myParty.uid : "");
 
-
-        // //ziskam svoju partu
-        // let myPartyData: Party = new Party("", "", 0, [], [], null);
-        // await t.get(myPartyDb).then(querry => {
-        //   if (querry.size > 1)
-        //     throw ("You are in more than 1 party! Database error!");
-        //   querry.docs.forEach(doc => {
-        //     myPartyData = doc.data();
-        //   });
-        // });
-        // pokud je to MP encounter pridam pripadne vsechny party membery do encounteru
-        if (myParty != null && pointOfInterestData.monsters.partySize > 1)
+        // pokud je to rare encounter pridam pripadne vsechny party membery do encounteru
+        if (myParty != null && personalEncounter.maxCombatants > 1) {
           myParty.partyMembersUidList.forEach(partyMemberUid => {
             if (!personalEncounter!.watchersList.includes(partyMemberUid))
               personalEncounter!.watchersList.push(partyMemberUid);
           });
-
+          personalEncounter.partyId = myParty.uid;
+        }
+        
       }
       //  else
       //  throw "You already has created your encounter on this point of interest!";
@@ -3184,8 +3260,10 @@ exports.fleeFromEncounter = functions.https.onCall(async (data, context) => {
       if (callerCombatMemberEntry == null)
         throw "Cant find you int combat!";
 
-      if (!callerCharacterData.hasBless(BLESS.UNWEARIED))
-        callerCharacterData.addFatigue(callerCombatMemberEntry.deckShuffleCount * DECK_SHUFFLE_FATIGUE_PENALTY + FLEE_FATIGUE_PENALTY);
+      if (!callerCharacterData.hasBless(BLESS.UNWEARIED)) {
+        callerCharacterData.addFatiguePercentage(FLEE_FATIGUE_PENALTY);
+        callerCharacterData.addFatigueFlat(callerCombatMemberEntry.deckShuffleCount * DECK_SHUFFLE_FATIGUE_PENALTY);
+      }
 
       if (callerCharacterData.hasBless(BLESS.BEHEMOND)) {
         //
@@ -3203,15 +3281,16 @@ exports.fleeFromEncounter = functions.https.onCall(async (data, context) => {
       //1) but smazat a lidem co bojujou uplne posrat boj, 
       //2) nebo musim cekat nez dobojujou a pak az muzu vytvaret dalsi sve personal encountery
       //*3) (to sem mi zda ted best) nenapadne se smazu jako Uid co nasel tento encounter, tim si otevru moznost hledat dalsi personal encountery a oni at si bojujou ten muj stary 
-      if (encounterData.foundByCharacterUid == callerCharacterUid && (encounterData.encounterContext == ENCOUNTER_CONTEXT.PERSONAL || encounterData.encounterContext == ENCOUNTER_CONTEXT.WORLD_BOSS)) {
-        encounterData.foundByCharacterUid = "Founder fled the combat...";
-      }
+      // if (encounterData.foundByCharacterUid == callerCharacterUid && (encounterData.encounterContext == ENCOUNTER_CONTEXT.PERSONAL || encounterData.encounterContext == ENCOUNTER_CONTEXT.WORLD_BOSS)) {
+      //   encounterData.foundByCharacterUid = "Founder fled the combat...";
+      // }
 
 
       encounterData.removeCharacterFromCombat(callerCharacterUid);
-
       encounterData.checkForEndOfTurn();
-
+      //zakazu ti se znova pripojit do encouneru podruhe pokud nejsi founder
+      if (callerCharacterData.uid != encounterData.foundByCharacterUid)
+        encounterData.forbiddenCharacterUids.push(callerCharacterData.uid);
 
       // //pokud si byl v dungeonu, tak zustanes na PoI ale zakazu ti se znova pripojit do encouneru podruhe.
       // if (myPartyData != null && myPartyData.dungeonProgress != null) {
@@ -3231,7 +3310,7 @@ exports.fleeFromEncounter = functions.https.onCall(async (data, context) => {
       if (myPartyData != null && myPartyData.dungeonProgress != null) {
 
         //pokud si byl v dungeonu, tak zustanes na PoI ale zakazu ti se znova pripojit do encouneru podruhe.
-        encounterData.forbiddenCharacterUids.push(callerCharacterData.uid);
+        //  encounterData.forbiddenCharacterUids.push(callerCharacterData.uid);
 
         //pokud si utekl z endless dungeonu tak zazancim ze je teda finished, abys tam nemohl jit znova...
         if (myPartyData.dungeonProgress.isEndlessDungeon) {
@@ -3252,7 +3331,7 @@ exports.fleeFromEncounter = functions.https.onCall(async (data, context) => {
 
 
 
-            ////////NEUMIM UDELAT Z RETIRE FUNKCI PROTO  MUSIM DUPLIKOVAT REITRE TADY? FIX THIS
+            ////////NEUMIM UDELAT Z RETIRE FUNKCI PROTO  MUSIM DUPLIKOVAT REITRE TADY? FIX THIS .....proc tu delat retire...proste jen NASTAVIT A JE HRAC NEHRATELNY!!! mam tam myslim uz na to nejaky flag ne? v clientovi listener se postara ze se hra prepne do nejake "game over obrazovky" nebo do listu hridinu kde si ho uz retirnes
 
             const batch = admin.firestore().batch();
             const playerDb = admin.firestore().collection("players").doc(callerCharacterData.userUid);
@@ -3266,7 +3345,7 @@ exports.fleeFromEncounter = functions.https.onCall(async (data, context) => {
                 if (!inventoryItem.content)
                   continue;
                 const inboxDb = admin.firestore().collection('inboxPlayer').doc();
-                const inboxEntry = new InboxItem(inboxDb.id, callerCharacterData.userUid, generateContentContainer(generateContent(inventoryItem.content.itemId, inventoryItem.content.amount)), "Retired hero belongings", "Here are belongings of your retired hero " + callerCharacterData.characterName, getCurrentDateTime(480));
+                const inboxEntry = new InboxItem(inboxDb.id, callerCharacterData.userUid, generateContentContainer(generateContent(inventoryItem.content.itemId, inventoryItem.content.amount)), undefined, "Retired hero belongings", "Here are belongings of your retired hero " + callerCharacterData.characterName, getCurrentDateTime(480));
                 batch.set(inboxDb, JSON.parse(JSON.stringify(inboxEntry))); // Update the document in batch
 
                 //aspon nastavim amout na 0 kdyby nahodou se neco stalo a ten charakter byl pristupny at neduplikuju veci....lepsi by to bylo uplne smazat ale to se mi ted nechce kodovat
@@ -3326,7 +3405,7 @@ exports.fleeFromEncounter = functions.https.onCall(async (data, context) => {
       }
 
 
-      //pokud jsem poslednu hrac co fleenul a nikdo tam uz neni, tak smazu ten encounter cely
+
       if (encounterData.combatantList.length == 0) {
         //vylecim vsechny enemy co nejsou mrtvi na 100% a smazu buffy
         encounterData.enemies.forEach(enemy => {
@@ -3384,7 +3463,7 @@ exports.fleeFromEncounter = functions.https.onCall(async (data, context) => {
 });
 
 
-
+//nepouzivam nikde ne?
 exports.retreatFromEncounter = functions.https.onCall(async (data, context) => {
 
 

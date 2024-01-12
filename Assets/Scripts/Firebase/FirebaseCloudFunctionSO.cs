@@ -191,13 +191,13 @@ public class FirebaseCloudFunctionSO : ScriptableObject
 
     public async Task<CloudFunctionCallResult> TradeWithVendor(List<string> _itemToBuyUids, List<int> _itemToBuyAmounts, List<string> _itemToSellUids, List<int> _itemToSellAmounts, string _vendorUid)
     {
-        Debug.Log("itemsToSellUids : " + _itemToSellUids);
-        foreach (var item in _itemToSellUids)
-            Debug.Log(" itemUid : " + item);
+        //Debug.Log("itemsToSellUids : " + _itemToSellUids);
+        //foreach (var item in _itemToSellUids)
+        //    Debug.Log(" itemUid : " + item);
 
-        Debug.Log("_itemToSellAmounts : " + _itemToSellAmounts);
-        foreach (var item in _itemToSellAmounts)
-            Debug.Log(" itemAmount : " + item);
+        //Debug.Log("_itemToSellAmounts : " + _itemToSellAmounts);
+        //foreach (var item in _itemToSellAmounts)
+        //    Debug.Log(" itemAmount : " + item);
 
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
@@ -291,14 +291,15 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     }
 
 
-    public async void InnCarriage()
+    public async Task<CloudFunctionCallResult> InnCarriage(string _targetPoIId)
     {
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["targetInnId"] = _targetPoIId;
 
         Debug.Log("taking carriage in inn  ... ");
-        await CallCloudFunction("specials-innCarriage", data);
+        return await CallCloudFunction("specials-innCarriage", data);
     }
 
     public async void InnHealthRestore()
@@ -508,7 +509,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
     {
         CloudFunctionCalled();
         var data = new Dictionary<string, object>();
-        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["playerUid"] = AccountDataSO.PlayerData.uid;
         data["inboxItemUid"] = _inboxItemUid;
 
 
@@ -573,6 +574,21 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         return await CallCloudFunction("consumeConsumable", data);
         //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("eatFood").CallAsync(data).ContinueWith(OnCloudFuntionResult);
         //  CloudFunctionFinished();
+    }
+
+
+    public async Task<CloudFunctionCallResult> UseTeleportScroll(string _targetPoI, string _teleportScrollUid)
+    {
+        CloudFunctionCalled();
+        var data = new Dictionary<string, object>();
+        data["characterUid"] = AccountDataSO.CharacterData.uid;
+        data["targetPoI"] = _targetPoI;
+        data["teleportScrollUid"] = _teleportScrollUid;
+
+        Debug.Log("using teleport scroll ... ");
+
+        return await CallCloudFunction("useTeleportScroll", data);
+
     }
 
 
@@ -782,7 +798,7 @@ public class FirebaseCloudFunctionSO : ScriptableObject
         data["characterUid"] = AccountDataSO.CharacterData.uid;
         data["encounterUid"] = _encounterId;
 
-        Debug.Log("Joining encounter... ");
+//        Debug.Log("Joining encounter... ");
 
         //await FirebaseFunctions.DefaultInstance.GetHttpsCallable("encounter-joinEncounter").CallAsync(data).ContinueWith(OnCloudFuntionResult);
 
@@ -884,13 +900,13 @@ public class FirebaseCloudFunctionSO : ScriptableObject
 
     //}
 
-    public async Task<CloudFunctionCallResult> ApplySkillOnEncounter(string _encounterId, string _uid, string _targetUid)
+    public async Task<CloudFunctionCallResult> ApplySkillOnEncounter(string _encounterId, List<string> _skillUids, string _targetUid)
     {
         CloudFunctionCalled(true);
         var data = new Dictionary<string, object>();
         data["characterUid"] = AccountDataSO.CharacterData.uid;
         data["encounterUid"] = _encounterId;
-        data["uid"] = _uid;
+        data["skillUids"] = _skillUids;
         data["targetUid"] = _targetUid;
 
         return await CallCloudFunction("encounter-applySkillOnEncounter", data);

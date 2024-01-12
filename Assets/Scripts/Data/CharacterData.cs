@@ -705,53 +705,12 @@ namespace simplestmmorpg.data
         [FirestoreProperty]
         public int totalDamagePower { get; set; }
 
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int exp { get; set; }
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int expNeededToReachNextLevel { get; set; }
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int expNeededToReachLastLevel { get; set; }
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int level { get; set; }
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int baseHealth { get; set; }
+        [field: SerializeField]
+        [FirestoreProperty]
+        public int restFoodLimit { get; set; }
 
 
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int baseMana { get; set; }
 
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int baseCritChance { get; set; }
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int totalMaxMana { get; set; }
-
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int totalMaxHealth { get; set; }
-
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int currentHealth { get; set; }
-
-        //[field: SerializeField]
-        //[FirestoreProperty]
-        //public int healthBlockedByFatigue { get; set; }
 
     }
 

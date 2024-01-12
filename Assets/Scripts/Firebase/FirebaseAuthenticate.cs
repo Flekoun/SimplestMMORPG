@@ -76,6 +76,7 @@ public class FirebaseAuthenticate : MonoBehaviour
                     OnSignedOutEvent.Invoke();
             }
             user = auth.CurrentUser;
+            
             if (signedIn)
             {
                 Debug.Log("Signed in " + user.UserId);

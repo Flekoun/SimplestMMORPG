@@ -133,6 +133,10 @@ namespace simplestmmorpg.data
         public int tier { get; set; }
 
 
+        [field: SerializeField]
+        [FirestoreProperty]
+        public string partyId { get; set; }
+
 
 
 
@@ -721,7 +725,7 @@ namespace simplestmmorpg.data
             {
                 if (item.manaCost <= stats.mana)
                 {
-                    Debug.Log("Mas manu : " + item.manaCost + " moje mana : " + stats.mana);
+                    //                    Debug.Log("Mas manu : " + item.manaCost + " moje mana : " + stats.mana);
 
                     return true;
                 }

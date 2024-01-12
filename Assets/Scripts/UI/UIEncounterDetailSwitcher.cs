@@ -16,7 +16,7 @@ public class UIEncounterDetailSwitcher : MonoBehaviour
 
     public void Show(EncounterData _data)
     {
-        Debug.Log("SHOW!");
+        //        Debug.Log("SHOW!");
         AccountDataSO.OnCharacterDataChanged += Refresh;
         AccountDataSO.OnEncounterDataChanged += Refresh;
 
@@ -33,7 +33,7 @@ public class UIEncounterDetailSwitcher : MonoBehaviour
 
         bool IAmComabatantInThisEncounter = Data.IsParticipatingInCombat(AccountDataSO.CharacterData.uid);
         bool IAmFounderOfThisEncounter = Data.foundByCharacterUid == AccountDataSO.CharacterData.uid;
-        bool PerkChoiceFinished = (Data.PendingPerksChoicesAmount() == 0);
+        bool PerkChoiceFinished = true;//(Data.PendingPerksChoicesAmount() == 0);
 
         IEncounterDetailPanel newActivePanel = null;
 
@@ -43,14 +43,14 @@ public class UIEncounterDetailSwitcher : MonoBehaviour
             if (newActivePanel != UIEncounterDetailPanel_CombatView)
                 UIChatMessageSpawner.ShowCombatLog();
 
-            Debug.Log("UKAZUJU COMBAT VIEW");
+            //  Debug.Log("UKAZUJU COMBAT VIEW");
             newActivePanel = UIEncounterDetailPanel_CombatView;
 
 
         }
         else //jinak podle toho co je to za encounter 
         {
-            Debug.Log("UKAZUJU PERK VIEW");
+            //            Debug.Log("UKAZUJU PERK VIEW");
             if (Data.encounterContext == Utils.ENCOUNTER_CONTEXT.PERSONAL)
                 newActivePanel = UIEncounterDetailPanel_MonsterEncounterView;
             else if (Data.encounterContext == Utils.ENCOUNTER_CONTEXT.DUNGEON)
@@ -73,7 +73,9 @@ public class UIEncounterDetailSwitcher : MonoBehaviour
 
     public void Hide()
     {
-        Debug.Log("HIDE!");
+
+
+        //Debug.Log("HIDE!");
         AccountDataSO.OnCharacterDataChanged -= Refresh;
         AccountDataSO.OnEncounterDataChanged -= Refresh;
 
@@ -91,11 +93,11 @@ public class UIEncounterDetailSwitcher : MonoBehaviour
 
         if (ActiveEncounterPanel != null)
         {
-            Debug.Log("Volam refresh!");
+            //            Debug.Log("Volam refresh!");
             ActiveEncounterPanel.Refresh();
         }
-        else
-            Debug.Log("neVolam refresh!");
+        //    else
+        //        Debug.Log("neVolam refresh!");
     }
 
 

@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Xml;
 using Firebase.Auth;
 using Firebase.Extensions;
 using Firebase.Firestore;
@@ -108,7 +109,7 @@ public class FirebaseCloudFunctionSO_Admin : ScriptableObject
 
 
 
-    public async void SaveDropTablesEnemy(EnemyDropTablesData _enemyDropTable, string _zoneId, string _locationId)
+    public async void SaveDropTablesEnemy(DropTablesData _enemyDropTable, string _zoneId, string _locationId)
     {
 
         CloudFunctionCalled();
@@ -152,7 +153,7 @@ public class FirebaseCloudFunctionSO_Admin : ScriptableObject
         await CallCloudFunction("adminTools-saveTiers", data);
     }
 
-    public async void SaveMapGeneratorPointsOfInterest(InternalDefinition _definition)
+    public async void SaveInternalDefinitionsMapGenerator(InternalDefinition _definition)
     {
         ////odstranim vsechny properties ktere jsou null.....protoze rewardsGenerated mi vraci hafo null prootze implementuje ten IContentDisplayable a ten kokot z nejakeho duvovu serializuje vsechny porperty z toho interfacu...
         //var json = JsonConvert.SerializeObject(_tiers);
@@ -175,7 +176,7 @@ public class FirebaseCloudFunctionSO_Admin : ScriptableObject
         data["definition"] = definition;
 
 
-        await CallCloudFunction("adminTools-saveMapGeneratorPointsOfInterest", data);
+        await CallCloudFunction("adminTools-saveInternalDefinitionsMapGenerator", data);
     }
 
     public async void GenerateLocationMap(DijkstraMap _map, string _zoneId, string _locationId)
@@ -216,7 +217,7 @@ public class FirebaseCloudFunctionSO_Admin : ScriptableObject
             return resultError;
 
         }
-        string json = JsonConvert.SerializeObject(_task.Result.Data, Formatting.Indented);
+        string json = JsonConvert.SerializeObject(_task.Result.Data, Newtonsoft.Json.Formatting.Indented);
         return json;
 
 

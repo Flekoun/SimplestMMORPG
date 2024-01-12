@@ -107,23 +107,23 @@ public class UIEnterDungeon : MonoBehaviour
         foreach (var item in AccountDataSO.PointOfInterestData.dungeon.rewards)
         {
             var content = PrefabFactory.CreateGameObject<UIContentItem>(ContentContainerPrefab, DungeonRewardParent);
-            content.SetData(item.GetContent());
-            content.OnClicked += OnContentClicked;
+            content.SetData(item.GetContent(), true);
+            // content.OnClicked += OnContentClicked;
         }
 
         foreach (var item in AccountDataSO.PointOfInterestData.dungeon.rewardsRandomEquip)
         {
             var equip = PrefabFactory.CreateGameObject<UIRandomEquip>(UIRandomEquipPrefab, DungeonRewardParent);
             equip.SetData(item);
-            equip.OnClicked += OnRewardRandomEquipClicked;
+            // equip.OnClicked += OnRewardRandomEquipClicked;
         }
 
 
         foreach (var item in AccountDataSO.PointOfInterestData.dungeon.rewardsGenerated)
         {
             var content = PrefabFactory.CreateGameObject<UIContentItem>(ContentContainerPrefab, DungeonRewardParent);
-            content.SetData(item);
-            content.OnClicked += OnContentClicked;
+            content.SetData(item, true);
+            // content.OnClicked += OnContentClicked;
         }
 
         if (AccountDataSO.PointOfInterestData.dungeon.isEndlessDungeon)
@@ -162,16 +162,16 @@ public class UIEnterDungeon : MonoBehaviour
     }
 
 
-    private void OnRewardRandomEquipClicked(UIRandomEquip _item)
-    {
-        UIManager.instance.SpawnPromptPanel("You will get random " + Utils.ColorizeGivenText(_item.Data.rarity, Utils.GetRarityColor(_item.Data.rarity)) + " " + _item.Data.equipSlotId, "Random loot", null, null).HideDeclineButton();
-    }
+    //private void OnRewardRandomEquipClicked(UIRandomEquip _item)
+    //{
+    //    // UIManager.instance.SpawnPromptPanel("You will get random " + Utils.ColorizeGivenText(_item.Data.rarity, Utils.GetRarityColor(_item.Data.rarity)) + " " + _item.Data.equipSlotId, "Random loot", null, null).HideDeclineButton();
+    //}
 
 
-    private void OnContentClicked(UIContentItem _item)
-    {
-        UIManager.instance.ContextInfoPanel.ShowContentContainerDetail(_item.Data);
-    }
+    //private void OnContentClicked(UIContentItem _item)
+    //{
+    //    //   UIManager.instance.ContextInfoPanel.ShowContentContainerDetail(_item.Data);
+    //}
 
     public void Show()
     {
